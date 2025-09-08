@@ -1,0 +1,314 @@
+{% load static %}
+
+
+
+	<link rel="stylesheet" href="/static/assets/css/style.css">
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <!-- Logo -->
+    <div class="sidebar-logo active">
+        <a href="/" class="logo logo-normal">
+            <img src="/static/assets/img/logo-white-afarinick.png" style="width: 60px; height: 60px;"
+                alt="Img"><span>HRM</span>
+        </a>
+        <a href="/" class="logo logo-white">
+            <img src="/static/assets/img/logo-white-afarinick.png" style="width: 60px; height: 60px;"
+                alt="Img"><span>HRM</span>
+        </a>
+        <a href="/" class="logo-small">
+            <img src="/static/assets/img/logo-white-afarinick.png " style="width: 60px; height: 60px;"
+                alt="Img"><span>HRM</span>
+        </a>
+        <a id="toggle_btn" href="javascript:void(0);">
+            <i data-feather="chevrons-left" class="feather-16"></i>
+        </a>
+    </div>
+    <!-- /Logo -->
+    <div class="modern-profile p-3 pb-0">
+        <div class="text-center rounded bg-light p-3 mb-4 user-profile">
+            <div class="avatar avatar-lg online mb-3">
+                <img src="/static/assets/img/customer/customer15.jpg" alt="Img" class="img-fluid rounded-circle">
+            </div>
+            <h6 class="fs-14 fw-bold mb-1">Adrian Herman</h6>
+            <p class="fs-12 mb-0">System Admin</p>
+        </div>
+        <div class="sidebar-nav mb-3">
+            <ul class="nav nav-tabs nav-tabs-solid nav-tabs-rounded nav-justified bg-transparent" role="tablist">
+                <li class="nav-item"><a class="nav-link active border-0" href="/#">Menu</a></li>
+                <li class="nav-item"><a class="nav-link border-0" href="chat.html">Chats</a></li>
+                <li class="nav-item"><a class="nav-link border-0" href="email.html">Inbox</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="sidebar-header p-3 pb-0 pt-2">
+        <div class="text-center rounded bg-light p-2 mb-4 sidebar-profile d-flex align-items-center">
+            <div class="avatar avatar-md onlin">
+                <img src="/static/assets/img/customer/customer15.jpg" alt="Img" class="img-fluid rounded-circle">
+            </div>
+            <div class="text-start sidebar-profile-info ms-2">
+                <h6 class="fs-14 fw-bold mb-1">Adrian Herman</h6>
+                <p class="fs-12">System Admin</p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between menu-item mb-3">
+            <div>
+                <a href="/" class="btn btn-sm btn-icon bg-light">
+                    <i class="ti ti-layout-grid-remove"></i>
+                </a>
+            </div>
+            <div>
+                <a href="chat.html" class="btn btn-sm btn-icon bg-light">
+                    <i class="ti ti-brand-hipchat"></i>
+                </a>
+            </div>
+            <div>
+                <a href="email.html" class="btn btn-sm btn-icon bg-light position-relative">
+                    <i class="ti ti-message"></i>
+                </a>
+            </div>
+            <div class="notification-item">
+                <a href="activities.html" class="btn btn-sm btn-icon bg-light position-relative">
+                    <i class="ti ti-bell"></i>
+                    <span class="notification-status-dot"></span>
+                </a>
+            </div>
+            <div class="me-0">
+                <a href="general-settings.html" class="btn btn-sm btn-icon bg-light">
+                    <i class="ti ti-settings"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="sidebar-inner slimscroll">
+        <div id="sidebar-menu" class="sidebar-menu">
+            <ul>
+                <li class="submenu-open">
+                    <h6 class="submenu-hdr">Main</h6>
+                    <ul>
+                        <li class="submenu">
+                            <a href="javascript:void(0);" class="subdrop"><i
+                                    class="ti ti-layout-grid fs-16 me-2"></i><span>Dashboard</span><span
+                                    class="menu-arrow"></span></a>
+                            <ul>
+                                <li><a href="/" class="active">Overview</a></li>
+                                <li><a href="admin-dashboard.html">Analytics</a></li>
+                                <li><a href="sales-dashboard.html">Reports</a></li>
+                            </ul>
+                        </li>
+                        <li class="submenu">
+                            <a href="javascript:void(0);"><i class="ti ti-user-edit fs-16 me-2"></i><span>General</span><span class="menu-arrow"></span></a>
+                            <ul>
+                                <li><a href="/all-farmers/">All Farmers</a></li>
+                                <li><a href="/farmer-children/">Farmer Children</a></li>
+                                <li><a href="/risk-assessment/">Risk Classification</a></li>
+                                <li><a href="/communities/">Communities</a></li>
+                            </ul>
+                        </li>
+                        <li class="submenu">
+                            <a href="javascript:void(0);"><i
+                                    class="ti ti-brand-apple-arcade fs-16 me-2"></i><span>Application</span><span
+                                    class="menu-arrow"></span></a>
+                            <ul>
+                                <li><a href="chat.html">Chat</a></li>
+                                <li class="submenu submenu-two"><a href="javascript:void(0);">Call<span
+                                            class="menu-arrow inside-submenu"></span></a>
+                                    <ul>
+                                        <li><a href="video-call.html">Video Call</a></li>
+                                        <li><a href="audio-call.html">Audio Call</a></li>
+                                        <li><a href="call-history.html">Call History</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="calendar.html">Calendar</a></li>
+                                <li><a href="contacts.html">Contacts</a></li>
+                                <li><a href="email.html">Email</a></li>
+                                <li><a href="todo.html">To Do</a></li>
+                                <li><a href="notes.html">Notes</a></li>
+                                <li><a href="file-manager.html">File Manager</a></li>
+                                <li><a href="projects.html">Projects</a></li>
+                                <li class="submenu submenu-two"><a href="javascript:void(0);">Ecommerce<span
+                                            class="menu-arrow inside-submenu"></span></a>
+                                    <ul>
+                                        <li><a href="products.html">Products</a></li>
+                                        <li><a href="orders.html">Orders</a></li>
+                                        <li><a href="customers.html">Customers</a></li>
+                                        <li><a href="cart.html">Cart</a></li>
+                                        <li><a href="checkout.html">Checkout</a></li>
+                                        <li><a href="wishlist.html">Wishlist</a></li>
+                                        <li><a href="reviews.html">Reviews</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="social-feed.html">Social Feed</a></li>
+                                <li><a href="search-list.html">Search List</a></li>
+                            </ul>
+                        </li>
+                        <li class="submenu">
+                            <a href="javascript:void(0);"><i
+                                    class="ti ti-layout-sidebar-right-collapse fs-16 me-2"></i><span>Layouts</span><span
+                                    class="menu-arrow"></span></a>
+                            <ul>
+                                <li><a href="layout-horizontal.html">Horizontal</a></li>
+                                <li><a href="layout-detached.html">Detached</a></li>
+                                <li><a href="layout-two-column.html">Two Column</a></li>
+                                <li><a href="layout-hovered.html">Hovered</a></li>
+                                <li><a href="layout-boxed.html">Boxed</a></li>
+                                <li><a href="layout-rtl.html">RTL</a></li>
+                                <li><a href="layout-dark.html">Dark</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+
+
+                <li class="submenu-open">
+                    <h6 class="submenu-hdr">Settings</h6>
+                    <ul>
+                        <li class="submenu">
+                            <a href="javascript:void(0);"><i class="ti ti-settings fs-16 me-2"></i><span>General
+                                    Settings</span><span class="menu-arrow"></span></a>
+                            <ul>
+                                <li><a href="general-settings.html">Profile</a></li>
+                                <li><a href="security-settings.html">Security</a></li>
+                                <li><a href="notification.html">Notifications</a></li>
+                                <li><a href="connected-apps.html">Connected Apps</a></li>
+                            </ul>
+                        </li>
+                        <li class="submenu">
+                            <a href="javascript:void(0);"><i class="ti ti-world fs-16 me-2"></i><span>Website
+                                    Settings</span><span class="menu-arrow"></span></a>
+                            <ul>
+                                <li><a href="system-settings.html">System Settings</a></li>
+                                <li><a href="company-settings.html">Company Settings </a></li>
+                                <li><a href="localization-settings.html">Localization</a></li>
+                                <li><a href="prefixes.html">Prefixes</a></li>
+                                <li><a href="preference.html">Preference</a></li>
+                                <li><a href="appearance.html">Appearance</a></li>
+                                <li><a href="social-authentication.html">Social Authentication</a></li>
+                                <li><a href="language-settings.html">Language</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="submenu">
+                            <a href="javascript:void(0);"><i class="ti ti-device-desktop fs-16 me-2"></i>
+                                <span>System Settings</span><span class="menu-arrow"></span>
+                            </a>
+                            <ul>
+                                <li class="submenu submenu-two"><a href="javascript:void(0);">Email<span
+                                            class="menu-arrow inside-submenu"></span></a>
+                                    <ul>
+                                        <li><a href="email-settings.html">Email Settings</a></li>
+                                        <li><a
+                                                href="https://dreamspos.dreamstechnologies.com/html/template/email-template.html">Email
+                                                Template</a></li>
+                                    </ul>
+                                </li>
+                                <li class="submenu submenu-two"><a href="javascript:void(0);">SMS<span
+                                            class="menu-arrow inside-submenu"></span></a>
+                                    <ul>
+                                        <li><a href="sms-settings.html">SMS Settings</a></li>
+                                        <li><a
+                                                href="https://dreamspos.dreamstechnologies.com/html/template/sms-template.html">SMS
+                                                Template</a></li>
+                                    </ul>
+                                </li>
+
+                            </ul>
+                        </li>
+
+
+                        <li>
+                            <a href="signin.html"><i class="ti ti-logout fs-16 me-2"></i><span>Logout</span> </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sidebar-logo {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+    }
+
+    .sidebar-logo a {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .logo span {
+        color: #fff;
+        font-size: 27px;
+        font-weight: 700;
+        margin-left: 12px;
+        letter-spacing: 0.5px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-white span {
+        color: #fff;
+    }
+
+    .logo img {
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .logo:hover img {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .logo-small {
+        display: none;
+    }
+
+    #toggle_btn {
+        position: absolute;
+        right: 15px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    #toggle_btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(180deg);
+    }
+
+    #toggle_btn i {
+        color: #fff;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+
+        .logo-normal,
+        .logo-white {
+            display: none;
+        }
+
+        .logo-small {
+            display: flex;
+        }
+
+        .logo-small span {
+            display: none;
+        }
+    }
+</style>

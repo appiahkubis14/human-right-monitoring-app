@@ -1,0 +1,976 @@
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+
+    <div class="content container-fluid">
+        <br>
+        <!-- Page Header -->
+        <div class="page-header" style="display: flex;justify-content: space-between;">
+            <div class="col">
+                <h3 class="page-title">Communities Management</h3>
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                    <li class="breadcrumb-item active">General</li>
+                    <li class="breadcrumb-item active">Communities</li>
+                </ul>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addCommunityModal">
+                    <i class="ti ti-plus me-1"></i> Add Community
+                </button>
+                <button class="btn btn-outline-secondary" id="exportBtn">
+                    <i class="ti ti-download me-1"></i> Export
+                </button>
+            </div>
+        </div>
+        <!-- /Page Header -->
+
+        <!-- Community Stats Cards -->
+        <div class="row">
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Total Communities</h6>
+                                <h4 class="mb-0">8</h4>
+                            </div>
+                            <div class="avatar bg-light-primary">
+                                <i class="ti ti-building-community fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Total Farmers</h6>
+                                <h4 class="mb-0">247</h4>
+                            </div>
+                            <div class="avatar bg-light-info">
+                                <i class="ti ti-users fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Children at Risk</h6>
+                                <h4 class="mb-0">68</h4>
+                            </div>
+                            <div class="avatar bg-light-danger">
+                                <i class="ti ti-alert-triangle fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Interventions</h6>
+                                <h4 class="mb-0">32</h4>
+                            </div>
+                            <div class="avatar bg-light-success">
+                                <i class="ti ti-heart fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Community Stats Cards -->
+
+        <!-- Community Management Table -->
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="communityTable" class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Community ID</th>
+                                        <th>Community Name</th>
+                                        <th>Region</th>
+                                        <th>District</th>
+                                        <th>Farmers</th>
+                                        <th>Children</th>
+                                        <th>High Risk Cases</th>
+                                        <th>Interventions</th>
+                                        <th>Last Assessment</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>COM-001</td>
+                                        <td>North Community</td>
+                                        <td>Ashanti</td>
+                                        <td>Atwima Nwabiagya</td>
+                                        <td>42</td>
+                                        <td>67</td>
+                                        <td>12</td>
+                                        <td>8</td>
+                                        <td>15 Dec 2023</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-end">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewCommunityModal"><i class="ti ti-eye me-2"></i>View Details</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal"><i class="ti ti-edit me-2"></i>Edit Community</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-users me-2"></i>View Farmers</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-report me-2"></i>Generate Report</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>COM-002</td>
+                                        <td>South Community</td>
+                                        <td>Ashanti</td>
+                                        <td>Bosomtwe</td>
+                                        <td>38</td>
+                                        <td>59</td>
+                                        <td>9</td>
+                                        <td>6</td>
+                                        <td>12 Dec 2023</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-end">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewCommunityModal"><i class="ti ti-eye me-2"></i>View Details</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal"><i class="ti ti-edit me-2"></i>Edit Community</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-users me-2"></i>View Farmers</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-report me-2"></i>Generate Report</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>COM-003</td>
+                                        <td>East Community</td>
+                                        <td>Eastern</td>
+                                        <td>East Akim</td>
+                                        <td>35</td>
+                                        <td>52</td>
+                                        <td>7</td>
+                                        <td>5</td>
+                                        <td>10 Dec 2023</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-end">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewCommunityModal"><i class="ti ti-eye me-2"></i>View Details</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal"><i class="ti ti-edit me-2"></i>Edit Community</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-users me-2"></i>View Farmers</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-report me-2"></i>Generate Report</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>COM-004</td>
+                                        <td>West Community</td>
+                                        <td>Western</td>
+                                        <td>Wassa Amenfi</td>
+                                        <td>45</td>
+                                        <td>71</td>
+                                        <td>15</td>
+                                        <td>9</td>
+                                        <td>14 Dec 2023</td>
+                                        <td><span class="badge bg-warning">Needs Attention</span></td>
+                                        <td class="text-end">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewCommunityModal"><i class="ti ti-eye me-2"></i>View Details</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal"><i class="ti ti-edit me-2"></i>Edit Community</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-users me-2"></i>View Farmers</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-report me-2"></i>Generate Report</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>COM-005</td>
+                                        <td>Central Community</td>
+                                        <td>Central</td>
+                                        <td>Komenda-Edina-Eguafo-Abirem</td>
+                                        <td>32</td>
+                                        <td>48</td>
+                                        <td>6</td>
+                                        <td>4</td>
+                                        <td>08 Dec 2023</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-end">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewCommunityModal"><i class="ti ti-eye me-2"></i>View Details</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal"><i class="ti ti-edit me-2"></i>Edit Community</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-users me-2"></i>View Farmers</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-report me-2"></i>Generate Report</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>COM-006</td>
+                                        <td>New Hope Community</td>
+                                        <td>Greater Accra</td>
+                                        <td>Ga West</td>
+                                        <td>28</td>
+                                        <td>41</td>
+                                        <td>4</td>
+                                        <td>2</td>
+                                        <td>05 Dec 2023</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-end">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewCommunityModal"><i class="ti ti-eye me-2"></i>View Details</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal"><i class="ti ti-edit me-2"></i>Edit Community</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-users me-2"></i>View Farmers</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-report me-2"></i>Generate Report</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>COM-007</td>
+                                        <td>Sunrise Community</td>
+                                        <td>Volta</td>
+                                        <td>Keta</td>
+                                        <td>18</td>
+                                        <td>29</td>
+                                        <td>8</td>
+                                        <td>5</td>
+                                        <td>03 Dec 2023</td>
+                                        <td><span class="badge bg-danger">Critical</span></td>
+                                        <td class="text-end">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewCommunityModal"><i class="ti ti-eye me-2"></i>View Details</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal"><i class="ti ti-edit me-2"></i>Edit Community</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-users me-2"></i>View Farmers</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-report me-2"></i>Generate Report</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>COM-008</td>
+                                        <td>Green Valley Community</td>
+                                        <td>Bono</td>
+                                        <td>Sunyani</td>
+                                        <td>29</td>
+                                        <td>43</td>
+                                        <td>7</td>
+                                        <td>3</td>
+                                        <td>01 Dec 2023</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-end">
+                                            <div class="dropdown dropdown-action">
+                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#viewCommunityModal"><i class="ti ti-eye me-2"></i>View Details</a>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal"><i class="ti ti-edit me-2"></i>Edit Community</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-users me-2"></i>View Farmers</a>
+                                                    <a class="dropdown-item" href="#"><i class="ti ti-report me-2"></i>Generate Report</a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Community Management Table -->
+    </div>
+
+    <!-- Add Community Modal -->
+    <div class="modal fade" id="addCommunityModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Community</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Community Name</label>
+                                    <input type="text" class="form-control" placeholder="Enter community name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Region</label>
+                                    <select class="form-select">
+                                        <option value="">Select Region</option>
+                                        <option value="ashanti">Ashanti</option>
+                                        <option value="eastern">Eastern</option>
+                                        <option value="western">Western</option>
+                                        <option value="central">Central</option>
+                                        <option value="greater-accra">Greater Accra</option>
+                                        <option value="volta">Volta</option>
+                                        <option value="bono">Bono</option>
+                                        <option value="ahafo">Ahafo</option>
+                                        <option value="northern">Northern</option>
+                                        <option value="savannah">Savannah</option>
+                                        <option value="north-east">North East</option>
+                                        <option value="upper-east">Upper East</option>
+                                        <option value="upper-west">Upper West</option>
+                                        <option value="oti">Oti</option>
+                                        <option value="western-north">Western North</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>District</label>
+                                    <input type="text" class="form-control" placeholder="Enter district name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Community Leader</label>
+                                    <input type="text" class="form-control" placeholder="Enter leader's name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Leader's Contact</label>
+                                    <input type="text" class="form-control" placeholder="Enter contact number">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Primary Crop</label>
+                                    <select class="form-select">
+                                        <option value="">Select Primary Crop</option>
+                                        <option value="cocoa">Cocoa</option>
+                                        <option value="coffee">Coffee</option>
+                                        <option value="palm">Palm Oil</option>
+                                        <option value="rubber">Rubber</option>
+                                        <option value="cashew">Cashew</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="mixed">Mixed Crops</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Community Description</label>
+                                    <textarea class="form-control" rows="3" placeholder="Enter community description"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Save Community</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Add Community Modal -->
+
+    <!-- View Community Modal -->
+    <div class="modal fade" id="viewCommunityModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Community Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">North Community Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Community ID:</strong> COM-001</p>
+                                            <p><strong>Region:</strong> Ashanti</p>
+                                            <p><strong>District:</strong> Atwima Nwabiagya</p>
+                                            <p><strong>Primary Crop:</strong> Cocoa</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Community Leader:</strong> Nana Kwaku Mensah</p>
+                                            <p><strong>Contact:</strong> +233 24 123 4567</p>
+                                            <p><strong>Status:</strong> <span class="badge bg-success">Active</span></p>
+                                            <p><strong>Last Assessment:</strong> 15 Dec 2023</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6>Description</h6>
+                                        <p>The North Community is located in the Ashanti region and primarily engages in cocoa farming. The community has been part of our program since 2021 and has shown significant progress in reducing child labor incidents.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">Community Statistics</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Total Farmers:</span>
+                                        <strong>42</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Total Children:</span>
+                                        <strong>67</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>High Risk Cases:</span>
+                                        <strong class="text-danger">12</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Active Interventions:</span>
+                                        <strong class="text-success">8</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Risk Level:</span>
+                                        <strong class="text-warning">Medium</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="card-title mb-0">Recent Activities</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item px-0 py-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-light-primary me-3">
+                                                    <i class="ti ti-calendar-event fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="mb-0">Risk assessment conducted</p>
+                                                    <small class="text-muted">15 Dec 2023</small>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="list-group-item px-0 py-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-light-info me-3">
+                                                    <i class="ti ti-school fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="mb-0">Educational support program launched</p>
+                                                    <small class="text-muted">10 Dec 2023</small>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="list-group-item px-0 py-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-light-success me-3">
+                                                    <i class="ti ti-user-check fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="mb-0">5 farmers completed training</p>
+                                                    <small class="text-muted">05 Dec 2023</small>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Generate Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /View Community Modal -->
+
+    <!-- Edit Community Modal -->
+    <div class="modal fade" id="editCommunityModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Community</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Community Name</label>
+                                    <input type="text" class="form-control" value="North Community">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Region</label>
+                                    <select class="form-select">
+                                        <option value="ashanti" selected>Ashanti</option>
+                                        <option value="eastern">Eastern</option>
+                                        <option value="western">Western</option>
+                                        <option value="central">Central</option>
+                                        <option value="greater-accra">Greater Accra</option>
+                                        <option value="volta">Volta</option>
+                                        <option value="bono">Bono</option>
+                                        <option value="ahafo">Ahafo</option>
+                                        <option value="northern">Northern</option>
+                                        <option value="savannah">Savannah</option>
+                                        <option value="north-east">North East</option>
+                                        <option value="upper-east">Upper East</option>
+                                        <option value="upper-west">Upper West</option>
+                                        <option value="oti">Oti</option>
+                                        <option value="western-north">Western North</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>District</label>
+                                    <input type="text" class="form-control" value="Atwima Nwabiagya">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Community Leader</label>
+                                    <input type="text" class="form-control" value="Nana Kwaku Mensah">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Leader's Contact</label>
+                                    <input type="text" class="form-control" value="+233 24 123 4567">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Primary Crop</label>
+                                    <select class="form-select">
+                                        <option value="cocoa" selected>Cocoa</option>
+                                        <option value="coffee">Coffee</option>
+                                        <option value="palm">Palm Oil</option>
+                                        <option value="rubber">Rubber</option>
+                                        <option value="cashew">Cashew</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="mixed">Mixed Crops</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select class="form-select">
+                                        <option value="active" selected>Active</option>
+                                        <option value="needs-attention">Needs Attention</option>
+                                        <option value="critical">Critical</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Community Description</label>
+                                    <textarea class="form-control" rows="3">The North Community is located in the Ashanti region and primarily engages in cocoa farming. The community has been part of our program since 2021 and has shown significant progress in reducing child labor incidents.</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Update Community</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /Edit Community Modal -->
+    </div>
+</div>
+
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+<style>
+    /* Custom styling for DataTables */
+    .dataTables_wrapper .dataTables_filter {
+        float: right;
+        text-align: right;
+    }
+    
+    .dataTables_wrapper .dataTables_length {
+        float: left;
+    }
+    
+    .dataTables_wrapper .dataTables_info {
+        float: left;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate {
+        float: right;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    #communityTable tr.selected {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+    
+    .dt-button-collection {
+        display: none;
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+        z-index: 1000;
+    }
+    
+    .filter-container {
+        margin-bottom: 15px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    /* Status badges */
+    .badge.bg-success { background-color: #198754 !important; }
+    .badge.bg-warning { background-color: #ffc107 !important; color: #000; }
+    .badge.bg-danger { background-color: #dc3545 !important; }
+    .badge.bg-info { background-color: #0dcaf0 !important; color: #000; }
+    
+    /* Avatar colors for recent activities */
+    .avatar.bg-light-primary { background-color: rgba(13, 110, 253, 0.1) !important; color: #0d6efd; }
+    .avatar.bg-light-info { background-color: rgba(13, 202, 240, 0.1) !important; color: #0dcaf0; }
+    .avatar.bg-light-success { background-color: rgba(25, 135, 84, 0.1) !important; color: #198754; }
+</style>
+
+<!-- First load jQuery, then DataTables and its extensions -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable with comprehensive features
+    var table = $('#communityTable').DataTable({
+        processing: true,
+        dom: '<"row"<"col-md-3"l><"col-md-5"B><"col-md-4"f>>' +
+             '<"row"<"col-md-12"tr>>' +
+             '<"row"<"col-md-6"i><"col-md-6"p>>',
+        buttons: [
+            {
+                extend: 'collection',
+                text: '<i class="ti ti-settings me-1"></i> Settings',
+                className: 'btn btn-sm btn-outline-secondary dropdown-toggle',
+                buttons: [
+                    {
+                        extend: 'colvis',
+                        text: 'Column Visibility',
+                        className: 'dropdown-item'
+                    },
+                    {
+                        extend: 'pageLength',
+                        text: 'Page Length',
+                        className: 'dropdown-item'
+                    }
+                ]
+            },
+            {
+                extend: 'collection',
+                text: '<i class="ti ti-download me-1"></i> Export',
+                className: 'btn btn-sm btn-outline-secondary dropdown-toggle',
+                buttons: [
+                    {
+                        extend: 'copy',
+                        text: 'Copy to clipboard',
+                        className: 'dropdown-item',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'csv',
+                        text: 'Export as CSV',
+                        className: 'dropdown-item',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'excel',
+                        text: 'Export as Excel',
+                        className: 'dropdown-item',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        text: 'Export as PDF',
+                        className: 'dropdown-item',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: 'Print',
+                        className: 'dropdown-item',
+                        exportOptions: {
+                            columns: ':visible'
+                        },
+                        customize: function (win) {
+                            $(win.document.body).find('h1').text('Communities Management Report');
+                        }
+                    }
+                ]
+            },
+            {
+                text: '<i class="ti ti-refresh me-1"></i> Refresh',
+                className: 'btn btn-sm btn-outline-secondary',
+                action: function (e, dt, node, config) {
+                    dt.ajax.reload();
+                }
+            }
+        ],
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search communities...",
+            lengthMenu: "Show _MENU_ entries",
+            paginate: {
+                previous: "<i class='ti ti-chevron-left'>",
+                next: "<i class='ti ti-chevron-right'>"
+            },
+            info: "Showing _START_ to _END_ of _TOTAL_ communities",
+            infoEmpty: "Showing 0 to 0 of 0 communities",
+            infoFiltered: "(filtered from _MAX_ total communities)"
+        },
+        pageLength: 10,
+        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+        responsive: true,
+        ordering: true,
+        order: [[1, 'asc']], // Default sort by Community Name ascending
+        columnDefs: [
+            { 
+                orderable: false, 
+                targets: -1, // Actions column
+                searchable: false
+            },
+            {
+                targets: [4, 5, 6, 7], // Numeric columns
+                type: 'num'
+            }
+        ]
+    });
+
+    // Style DataTable buttons
+    $('.dt-buttons .btn').removeClass('btn-secondary');
+    
+    // Export button click handler
+    $('#exportBtn').on('click', function() {
+        $('.dt-button-collection').show();
+    });
+    
+    // Add filter container above the table
+    $('<div class="filter-container"><h6>Filter Communities</h6><div class="row"></div></div>').insertBefore('#communityTable_wrapper');
+    
+    // Region filter
+    $('<div class="col-md-3 mb-2"><label>Region: </label>' +
+      '<select id="regionFilter" class="form-select form-select-sm">' +
+      '<option value="">All Regions</option>' +
+      '<option value="ashanti">Ashanti</option>' +
+      '<option value="eastern">Eastern</option>' +
+      '<option value="western">Western</option>' +
+      '<option value="central">Central</option>' +
+      '<option value="greater-accra">Greater Accra</option>' +
+      '<option value="volta">Volta</option>' +
+      '<option value="bono">Bono</option>' +
+      '</select></div>').appendTo('.filter-container .row');
+    
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            var region = $('#regionFilter').val();
+            if (!region) {
+                return true;
+            }
+            
+            var rowRegion = data[2].toLowerCase(); // Region is in column index 2
+            return rowRegion.indexOf(region.toLowerCase()) !== -1;
+        }
+    );
+    
+    $('#regionFilter').on('change', function() {
+        table.draw();
+    });
+    
+    // Status filter
+    $('<div class="col-md-3 mb-2"><label>Status: </label>' +
+      '<select id="statusFilter" class="form-select form-select-sm">' +
+      '<option value="">All Status</option>' +
+      '<option value="active">Active</option>' +
+      '<option value="needs attention">Needs Attention</option>' +
+      '<option value="critical">Critical</option>' +
+      '</select></div>').appendTo('.filter-container .row');
+    
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            var status = $('#statusFilter').val();
+            if (!status) {
+                return true;
+            }
+            
+            var rowStatus = data[9].toLowerCase(); // Status is in column index 9
+            return rowStatus.indexOf(status.toLowerCase()) !== -1;
+        }
+    );
+    
+    $('#statusFilter').on('change', function() {
+        table.draw();
+    });
+    
+    // Risk Level filter
+    $('<div class="col-md-3 mb-2"><label>High Risk Cases: </label>' +
+      '<select id="riskFilter" class="form-select form-select-sm">' +
+      '<option value="">All Levels</option>' +
+      '<option value="10">10+ Cases</option>' +
+      '<option value="5">5+ Cases</option>' +
+      '<option value="1">Has Cases</option>' +
+      '<option value="0">No Cases</option>' +
+      '</select></div>').appendTo('.filter-container .row');
+    
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            var riskFilter = $('#riskFilter').val();
+            if (!riskFilter) {
+                return true;
+            }
+            
+            var riskCases = parseInt(data[6]); // High risk cases is in column index 6
+            if (riskFilter === "10") return riskCases >= 10;
+            if (riskFilter === "5") return riskCases >= 5;
+            if (riskFilter === "1") return riskCases >= 1;
+            if (riskFilter === "0") return riskCases === 0;
+            return true;
+        }
+    );
+    
+    $('#riskFilter').on('change', function() {
+        table.draw();
+    });
+    
+    // Add clear filters button
+    $('<div class="col-md-3 mb-2"><label>&nbsp;</label><br>' +
+      '<button class="btn btn-sm btn-outline-secondary w-100" id="clearFilters">Clear Filters</button></div>')
+      .appendTo('.filter-container .row')
+      .on('click', function() {
+          $('#regionFilter, #statusFilter, #riskFilter').val('');
+          table.search('').columns().search('').draw();
+      });
+    
+    // Row selection highlighting
+    $('#communityTable tbody').on('click', 'tr', function() {
+        $(this).toggleClass('selected');
+    });
+    
+    // Add a custom button to get selected rows
+    // $('<button class="btn btn-sm btn-primary ms-2" id="getSelected">Get Selected Communities</button>')
+    //     .insertAfter('#clearFilters')
+    //     .on('click', function() {
+    //         var selectedRows = table.rows('.selected').data();
+    //         var selectedCount = selectedRows.length;
+            
+    //         if (selectedCount > 0) {
+    //             var communityNames = [];
+    //             for (var i = 0; i < selectedCount; i++) {
+    //                 communityNames.push(selectedRows[i][1]); // Community name is in column index 1
+    //             }
+    //             alert('Selected communities: ' + communityNames.join(', '));
+    //         } else {
+    //             alert('No communities selected.');
+    //         }
+    //     });
+    
+    // High risk cases color coding
+    $('#communityTable tbody tr').each(function() {
+        var riskCases = parseInt($(this).find('td:eq(6)').text());
+        if (riskCases >= 10) {
+            $(this).find('td:eq(6)').css('color', '#dc3545').css('font-weight', 'bold');
+        } else if (riskCases >= 5) {
+            $(this).find('td:eq(6)').css('color', '#ffc107').css('font-weight', 'bold');
+        } else if (riskCases > 0) {
+            $(this).find('td:eq(6)').css('color', '#fd7e14').css('font-weight', 'bold');
+        }
+    });
+});
+</script>
+{% endblock %}

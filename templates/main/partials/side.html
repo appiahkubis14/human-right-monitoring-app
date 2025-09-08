@@ -1,0 +1,365 @@
+
+        <div class="sidebar" id="sidebar">
+                    <!-- Logo -->
+                    <style>
+                        .sidebar-logo {
+                            display: flex;
+                            align-items: center;
+                            padding: 15px 20px;
+                            background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                            position: relative;
+                            }
+
+                            .sidebar-logo a {
+                            display: flex;
+                            align-items: center;
+                            text-decoration: none;
+                            transition: all 0.3s ease;
+                            }
+
+                            .logo span {
+                            color: #fff;
+                            font-size: 27px;
+                            font-weight: 700;
+                            margin-left: 12px;
+                            letter-spacing: 0.5px;
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                            }
+
+                            .logo-white span {
+                            color: #fff;
+                            }
+
+                            .logo img {
+                            transition: all 0.3s ease;
+                            border-radius: 8px;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                            }
+
+                            .logo:hover img {
+                            transform: scale(1.05);
+                            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+                            }
+
+                            .logo-small {
+                            display: none;
+                            }
+
+                            #toggle_btn {
+                            position: absolute;
+                            right: 15px;
+                            color: #fff;
+                            background: rgba(255, 255, 255, 0.1);
+                            width: 30px;
+                            height: 30px;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: all 0.3s ease;
+                            }
+
+                            #toggle_btn:hover {
+                            background: rgba(255, 255, 255, 0.2);
+                            transform: rotate(180deg);
+                            }
+
+                            #toggle_btn i {
+                            color: #fff;
+                            }
+
+                            /* Responsive adjustments */
+                            @media (max-width: 992px) {
+                            .logo-normal, .logo-white {
+                                display: none;
+                            }
+                            
+                            .logo-small {
+                                display: flex;
+                            }
+                            
+                            .logo-small span {
+                                display: none;
+                            }
+                        }
+        </style>
+
+        <div class="sidebar-logo active">
+            <a href="/" class="logo logo-normal">
+                <img src="/static/assets/img/logo-white-afarinick.png" style="width: 60px; height: 60px;" alt="Img"><span>HRM</span>
+            </a>
+            <a href="/" class="logo logo-white">
+                <img src="/static/assets/img/logo-white-afarinick.png" style="width: 60px; height: 60px;" alt="Img"><span>HRM</span>
+            </a>
+            <a href="/" class="logo-small">
+                <img src="/static/assets/img/logo-white-afarinick.png " style="width: 60px; height: 60px;" alt="Img"><span>HRM</span>
+            </a>
+            <a id="toggle_btn" href="javascript:void(0);">
+                <i data-feather="chevrons-left" class="feather-16"></i>
+            </a>
+        </div>
+
+
+			<!-- /Logo -->
+			<div class="modern-profile p-3 pb-0">
+				<div class="text-center rounded bg-light p-3 mb-4 user-profile">
+					<div class="avatar avatar-lg online mb-3">
+						<img src="/static/assets/img/customer/customer15.jpg" alt="Img" class="img-fluid rounded-circle">
+					</div>
+					<h6 class="fs-14 fw-bold mb-1">Adrian Herman</h6>
+					<p class="fs-12 mb-0">System Admin</p>
+				</div>
+				<div class="sidebar-nav mb-3">
+					<ul class="nav nav-tabs nav-tabs-solid nav-tabs-rounded nav-justified bg-transparent" role="tablist">
+						<li class="nav-item"><a class="nav-link active border-0" href="/#">Menu</a></li>
+						<li class="nav-item"><a class="nav-link border-0" href="chat.html">Chats</a></li>
+						<li class="nav-item"><a class="nav-link border-0" href="email.html">Inbox</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="sidebar-header p-3 pb-0 pt-2">
+				<div class="text-center rounded bg-light p-2 mb-4 sidebar-profile d-flex align-items-center">
+					<div class="avatar avatar-md onlin">
+						<img src="/static/assets/img/customer/customer15.jpg" alt="Img" class="img-fluid rounded-circle">
+					</div>
+					<div class="text-start sidebar-profile-info ms-2">
+						<h6 class="fs-14 fw-bold mb-1">Adrian Herman</h6>
+						<p class="fs-12">System Admin</p>
+					</div>
+				</div>
+				<div class="d-flex align-items-center justify-content-between menu-item mb-3">
+					<div>
+						<a href="/" class="btn btn-sm btn-icon bg-light">
+							<i class="ti ti-layout-grid-remove"></i>
+						</a>
+					</div>
+					<div>
+						<a href="chat.html" class="btn btn-sm btn-icon bg-light">
+							<i class="ti ti-brand-hipchat"></i>
+						</a>
+					</div>
+					<div>
+						<a href="email.html" class="btn btn-sm btn-icon bg-light position-relative">
+							<i class="ti ti-message"></i>
+						</a>
+					</div>
+					<div class="notification-item">
+						<a href="activities.html" class="btn btn-sm btn-icon bg-light position-relative">
+							<i class="ti ti-bell"></i>
+							<span class="notification-status-dot"></span>
+						</a>
+					</div>
+					<div class="me-0">
+						<a href="general-settings.html" class="btn btn-sm btn-icon bg-light">
+							<i class="ti ti-settings"></i>
+						</a>
+					</div>
+				</div>
+			</div>
+			
+			<div class="sidebar-inner slimscroll">
+    <div id="sidebar-menu" class="sidebar-menu">
+        <ul>
+            <!-- Dashboard Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);" class="subdrop">
+                    <i class="ti ti-layout-grid fs-16 me-2"></i>
+                    <span>Dashboard</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="/" class="active">Overview</a></li>
+                    <li><a href="analytics.html">Analytics</a></li>
+                    <li><a href="reports.html">Reports</a></li>
+                </ul>
+            </li>
+            
+            <!-- Farmer Management Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);">
+                    <i class="ti ti-users fs-16 me-2"></i>
+                    <span>General</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="/all-farmers/">All Farmers</a></li>
+                    <li><a href="/farmer-children/">Farmer Children</a></li>
+                    <li><a href="/risk-assessment/">Risk Classification</a></li>
+                    <li><a href="/communities/">Communities</a></li>
+                </ul>
+            </li>
+            
+            <!-- Survey Management Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);">
+                    <i class="ti ti-clipboard-list fs-16 me-2"></i>
+                    <span>Surveys</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="cover-forms.html">Cover Questionnaire</a></li>
+                    <li><a href="consent-forms.html">Consent & Location</a></li>
+                    <li><a href="identification-forms.html">Farmer Identification</a></li>
+                    <li><a href="workers-forms.html">Workers in Farm</a></li>
+                </ul>
+            </li>
+            
+            <!-- Household Management Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);">
+                    <i class="ti ti-home fs-16 me-2"></i>
+                    <span>Household Data</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="adult-household.html">Adult Members</a></li>
+                    <li><a href="children-household.html">Child Members</a></li>
+                    <li><a href="child-details.html">Child Details</a></li>
+                    <li><a href="child-education.html">Education Details</a></li>
+                </ul>
+            </li>
+            
+            <!-- Child Labour Assessment Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);">
+                    <i class="ti ti-report-search fs-16 me-2"></i>
+                    <span>Assessment</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="light-tasks.html">Light Tasks</a></li>
+                    <li><a href="heavy-tasks.html">Heavy Tasks</a></li>
+                    <li><a href="work-assessment.html">Work Assessment</a></li>
+                    <li><a href="health-assessment.html">Health Impact</a></li>
+                </ul>
+            </li>
+            
+            <!-- Remediation Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);">
+                    <i class="ti ti-heart fs-16 me-2"></i>
+                    <span>Remediation</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="child-remediation.html">Child Remediation</a></li>
+                    <li><a href="sensitization.html">Household Sensitization</a></li>
+                    <li><a href="intervention-plans.html">Intervention Plans</a></li>
+                </ul>
+            </li>
+            
+            <!-- Data & Reports Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);">
+                    <i class="ti ti-chart-bar fs-16 me-2"></i>
+                    <span>Data & Reports</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="data-export.html">Data Export</a></li>
+                    <li><a href="compliance-reports.html">Compliance Reports</a></li>
+                    <li><a href="trend-analysis.html">Trend Analysis</a></li>
+                    <li><a href="survey-completion.html">Survey Completion</a></li>
+                </ul>
+            </li>
+            
+            <!-- System Settings Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);">
+                    <i class="ti ti-settings fs-16 me-2"></i>
+                    <span>Settings</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="user-management.html">User Management</a></li>
+                    <li><a href="enumerator-management.html">Enumerator Management</a></li>
+                    <li><a href="form-settings.html">Form Settings</a></li>
+                    <li><a href="api-integration.html">API Integration</a></li>
+                </ul>
+            </li>
+            
+            <!-- Help Section -->
+            <li class="submenu">
+                <a href="javascript:void(0);">
+                    <i class="ti ti-help fs-16 me-2"></i>
+                    <span>Help & Support</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <ul>
+                    <li><a href="documentation.html">Documentation</a></li>
+                    <li><a href="training-materials.html">Training Materials</a></li>
+                    <li><a href="faq.html">FAQ</a></li>
+                    <li><a href="contact-support.html">Contact Support</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get current page URL
+    var currentUrl = window.location.href.split('?')[0]; // Remove query parameters
+    
+    // Select all navigation links
+    var navLinks = document.querySelectorAll('#sidebar-menu a');
+    
+    // Remove active class from all links
+    navLinks.forEach(function(link) {
+        link.classList.remove('active');
+        link.parentElement.classList.remove('active');
+    });
+    
+    // Add active class to current page link
+    navLinks.forEach(function(link) {
+        if (link.href === currentUrl) {
+            link.classList.add('active');
+            
+            // Also activate parent menu items
+            let parentMenu = link.closest('.submenu');
+            if (parentMenu) {
+                parentMenu.querySelector('a').classList.add('active');
+                
+                // Expand the parent menu
+                let submenu = parentMenu.querySelector('ul');
+                if (submenu) {
+                    submenu.style.display = 'block';
+                }
+            }
+        }
+    });
+    
+    // Handle click events for menu items with submenus
+    var menuItems = document.querySelectorAll('.submenu > a');
+    menuItems.forEach(function(item) {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Toggle active class for the clicked menu
+            this.classList.toggle('active');
+            
+            // Toggle the submenu
+            var submenu = this.nextElementSibling;
+            if (submenu.style.display === 'block') {
+                submenu.style.display = 'none';
+            } else {
+                submenu.style.display = 'block';
+            }
+            
+            // Close other open menus if needed
+            document.querySelectorAll('.submenu > a').forEach(function(otherItem) {
+                if (otherItem !== item && otherItem.classList.contains('active')) {
+                    otherItem.classList.remove('active');
+                    otherItem.nextElementSibling.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
+		</div>
+		<!-- /Sidebar -->
+
+

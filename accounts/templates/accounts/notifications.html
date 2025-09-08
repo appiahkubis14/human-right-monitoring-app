@@ -1,0 +1,350 @@
+{% extends 'base/web_base.html' %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box" style="display: flex;justify-content: space-between;">
+                    
+                    <h4 class="page-title">Notifications</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="javascript: void(0);">Account</a></li>
+                            <li class="breadcrumb-item active">Notifications</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Filters -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label for="notification-type" class="form-label">Notification Type</label>
+                                <select class="form-select" id="notification-type">
+                                    <option selected>All Notifications</option>
+                                    <option>Marketplace</option>
+                                    <option>Farm Alerts</option>
+                                    <option>Payments</option>
+                                    <option>System</option>
+                                    <option>Community</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="notification-status" class="form-label">Status</label>
+                                <select class="form-select" id="notification-status">
+                                    <option selected>All Statuses</option>
+                                    <option>Unread</option>
+                                    <option>Read</option>
+                                    <option>Archived</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button class="btn btn-primary w-100">
+                                    <i class="mdi mdi-filter-outline me-1"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Actions -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <button class="btn btn-outline-secondary me-2">
+                                    <i class="mdi mdi-email-open-outline me-1"></i> Mark all as read
+                                </button>
+                                <button class="btn btn-outline-danger">
+                                    <i class="mdi mdi-delete-outline me-1"></i> Clear all
+                                </button>
+                            </div>
+                            <div>
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" id="email-notifications" checked>
+                                    <label class="form-check-label" for="email-notifications">Email Notifications</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <!-- Unread Notification - Marketplace -->
+                            <a href="#" class="list-group-item list-group-item-action unread-notification">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs me-3">
+                                            <span class="avatar-title bg-soft-primary rounded-circle">
+                                                <i class="mdi mdi-cart-outline text-primary"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h5 class="font-14 mb-1">New contract offer received</h5>
+                                        <p class="text-muted mb-0">AgroTrade Ltd offered GHS 5,200 for your maize harvest</p>
+                                        <small class="text-muted">5 minutes ago</small>
+                                    </div>
+                                    <div class="flex-shrink-0 ms-3">
+                                        <span class="badge bg-primary rounded-pill">Marketplace</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- Unread Notification - Farm Alert -->
+                            <a href="#" class="list-group-item list-group-item-action unread-notification">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs me-3">
+                                            <span class="avatar-title bg-soft-warning rounded-circle">
+                                                <i class="mdi mdi-alert-outline text-warning"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h5 class="font-14 mb-1">Irrigation alert for Green Valley Farm</h5>
+                                        <p class="text-muted mb-0">Soil moisture levels below threshold in Section B</p>
+                                        <small class="text-muted">2 hours ago</small>
+                                    </div>
+                                    <div class="flex-shrink-0 ms-3">
+                                        <span class="badge bg-warning rounded-pill">Farm Alert</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- Read Notification - Payment -->
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs me-3">
+                                            <span class="avatar-title bg-soft-success rounded-circle">
+                                                <i class="mdi mdi-cash-multiple text-success"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h5 class="font-14 mb-1">Payment received</h5>
+                                        <p class="text-muted mb-0">GHS 3,800 from FreshProduce Ltd for tomato supply</p>
+                                        <small class="text-muted">Yesterday, 4:30 PM</small>
+                                    </div>
+                                    <div class="flex-shrink-0 ms-3">
+                                        <span class="badge bg-success rounded-pill">Payment</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- Read Notification - Community -->
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs me-3">
+                                            <span class="avatar-title bg-soft-info rounded-circle">
+                                                <i class="mdi mdi-forum-outline text-info"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h5 class="font-14 mb-1">New reply to your forum post</h5>
+                                        <p class="text-muted mb-0">Kofi Mensah replied to your question about pest control</p>
+                                        <small class="text-muted">Yesterday, 11:20 AM</small>
+                                    </div>
+                                    <div class="flex-shrink-0 ms-3">
+                                        <span class="badge bg-info rounded-pill">Community</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- System Notification -->
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs me-3">
+                                            <span class="avatar-title bg-soft-secondary rounded-circle">
+                                                <i class="mdi mdi-cog-outline text-secondary"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h5 class="font-14 mb-1">System maintenance scheduled</h5>
+                                        <p class="text-muted mb-0">Platform will be unavailable on Aug 25, 2:00 AM - 4:00 AM</p>
+                                        <small class="text-muted">2 days ago</small>
+                                    </div>
+                                    <div class="flex-shrink-0 ms-3">
+                                        <span class="badge bg-secondary rounded-pill">System</span>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <!-- Archived Notification -->
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs me-3">
+                                            <span class="avatar-title bg-soft-primary rounded-circle">
+                                                <i class="mdi mdi-weather-rainy text-primary"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h5 class="font-14 mb-1">Weather alert for your region</h5>
+                                        <p class="text-muted mb-0">Heavy rainfall expected in Ashanti region tomorrow</p>
+                                        <small class="text-muted">3 days ago</small>
+                                    </div>
+                                    <div class="flex-shrink-0 ms-3">
+                                        <span class="badge bg-primary rounded-pill">Farm Alert</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="row mt-3">
+                            <div class="col-sm-12 col-md-5">
+                                <div class="dataTables_info" id="datatable_info" role="status" aria-live="polite">
+                                    Showing 1 to 6 of 24 notifications
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-7">
+                                <div class="dataTables_paginate paging_simple_numbers float-end">
+                                    <ul class="pagination pagination-rounded">
+                                        <li class="paginate_button page-item previous disabled">
+                                            <a href="#" class="page-link"><i class="mdi mdi-chevron-left"></i></a>
+                                        </li>
+                                        <li class="paginate_button page-item active">
+                                            <a href="#" class="page-link">1</a>
+                                        </li>
+                                        <li class="paginate_button page-item">
+                                            <a href="#" class="page-link">2</a>
+                                        </li>
+                                        <li class="paginate_button page-item">
+                                            <a href="#" class="page-link">3</a>
+                                        </li>
+                                        <li class="paginate_button page-item">
+                                            <a href="#" class="page-link">4</a>
+                                        </li>
+                                        <li class="paginate_button page-item next">
+                                            <a href="#" class="page-link"><i class="mdi mdi-chevron-right"></i></a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
+</div>
+
+<!-- Notification Settings Modal -->
+<div class="modal fade" id="notificationSettingsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Notification Preferences</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <h5 class="mb-3">Notification Types</h5>
+                    <div class="mb-3">
+                        <div class="form-check form-switch mb-2">
+                            <input type="checkbox" class="form-check-input" id="marketplace-notifications" checked>
+                            <label class="form-check-label" for="marketplace-notifications">Marketplace Notifications</label>
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input type="checkbox" class="form-check-input" id="farm-alerts" checked>
+                            <label class="form-check-label" for="farm-alerts">Farm Alerts</label>
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input type="checkbox" class="form-check-input" id="payment-notifications" checked>
+                            <label class="form-check-label" for="payment-notifications">Payment Notifications</label>
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input type="checkbox" class="form-check-input" id="community-notifications">
+                            <label class="form-check-label" for="community-notifications">Community Updates</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="system-notifications" checked>
+                            <label class="form-check-label" for="system-notifications">System Notifications</label>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">Delivery Methods</h5>
+                    <div class="mb-3">
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" id="in-app-notifications" checked>
+                            <label class="form-check-label" for="in-app-notifications">In-App Notifications</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" id="email-notifications-modal" checked>
+                            <label class="form-check-label" for="email-notifications-modal">Email Notifications</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="sms-notifications">
+                            <label class="form-check-label" for="sms-notifications">SMS Notifications</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .unread-notification {
+        background-color: rgba(114, 124, 245, 0.05);
+        border-left: 3px solid #727cf5;
+    }
+    .list-group-item {
+        border-radius: 0.25rem;
+        margin-bottom: 5px;
+        transition: all 0.2s;
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark as read functionality
+    document.querySelectorAll('.unread-notification').forEach(item => {
+        item.addEventListener('click', function() {
+            this.classList.remove('unread-notification');
+        });
+    });
+
+    // Initialize notification settings modal
+    var notificationSettingsModal = new bootstrap.Modal(document.getElementById('notificationSettingsModal'));
+    
+    // Example: This would be triggered by a settings button
+    // document.getElementById('notification-settings-btn').addEventListener('click', function() {
+    //     notificationSettingsModal.show();
+    // });
+});
+</script>
+{% endblock content %}
