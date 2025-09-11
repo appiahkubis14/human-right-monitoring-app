@@ -9,17 +9,7 @@ from django.views import View
 import json
 from .models import ChildInHouseholdTbl, districtStaffTbl, houseHoldTbl, staffTbl, districtTbl
 
-
-
-
-
-
-
-
-
-
-
-
+from django.db import models
 
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
@@ -1400,26 +1390,26 @@ def escalate_query_api(request, query_id):
             'message': f'Error escalating query: {str(e)}'
         }, status=500)
 
-@login_required
-@require_http_methods(["GET"])
-def get_enumerators_api(request):
-    """Get list of enumerators for dropdowns"""
-    try:
-        enumerators = staffTbl.objects.filter(
-            Q(designation__name__icontains='NSP') | Q(designation__name__icontains='field'),
-            delete_field='no'
-        ).values('id', 'first_name', 'last_name', 'staffid')
+# @login_required
+# @require_http_methods(["GET"])
+# def get_enumerators_api(request):
+#     """Get list of enumerators for dropdowns"""
+#     try:
+#         enumerators = staffTbl.objects.filter(
+#             Q(designation__name__icontains='NSP') | Q(designation__name__icontains='field'),
+#             delete_field='no'
+#         ).values('id', 'first_name', 'last_name', 'staffid')
         
-        return JsonResponse({
-            'success': True,
-            'data': list(enumerators)
-        })
+#         return JsonResponse({
+#             'success': True,
+#             'data': list(enumerators)
+#         })
         
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Error fetching enumerators: {str(e)}'
-        }, status=500)
+#     except Exception as e:
+#         return JsonResponse({
+#             'success': False,
+#             'message': f'Error fetching enumerators: {str(e)}'
+#         }, status=500)
 
 @login_required
 @require_http_methods(["GET"])
@@ -1790,4 +1780,1023 @@ def request_clarification_api(request, query_id):
         return JsonResponse({
             'success': False,
             'message': f'Error sending clarification request: {str(e)}'
+        }, status=500)
+    
+
+
+
+##################################################################################################################
+
+# pci/views.py
+import json
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.contrib.auth.decorators import login_required
+
+from .models import pciTbl, districtTbl, societyTbl, staffTbl, districtStaffTbl
+from datetime import datetime
+
+@login_required
+def community_pci_view(request):
+    """Render the main PCI management page"""
+    return render(request, 'core/community_pci.html')
+
+@login_required
+@require_http_methods(["GET"])
+def pci_list_api(request):
+    """API endpoint to get filtered PCI assessments"""
+    try:
+        # Get filter parameters
+        status = request.GET.get('status', '')
+        district_id = request.GET.get('district', '')
+        community_id = request.GET.get('community', '')
+        enumerator_id = request.GET.get('enumerator', '')
+        
+        # Build query filters
+        filters = {}
+        if status:
+            filters['status'] = status
+        if community_id:
+            filters['society_id'] = community_id
+        if enumerator_id:
+            filters['enumerator_id'] = enumerator_id
+        
+        # If district filter is applied, filter by communities in that district
+        if district_id:
+            communities_in_district = societyTbl.objects.filter(
+                districtTbl_foreignkey_id=district_id
+            ).values_list('id', flat=True)
+            filters['society_id__in'] = list(communities_in_district)
+        
+        # Get PCI assessments
+        pci_assessments = pciTbl.objects.filter(**filters).select_related(
+            'society', 'society__districtTbl_foreignkey', 'enumerator'
+        ).order_by('-created_at')
+        
+        # Prepare data for response
+        data = []
+        for pci in pci_assessments:
+            data.append({
+                'id': pci.id,
+                'assessment_id': f"PCI-{pci.id:04d}",
+                'community': str(pci.society) if pci.society else 'N/A',
+                'district': str(pci.society.districtTbl_foreignkey.district) if pci.society and pci.society.districtTbl_foreignkey else 'N/A',
+                'enumerator': f"{pci.enumerator.staffTbl_foreignkey.first_name} {pci.enumerator.staffTbl_foreignkey.last_name}" if pci.enumerator else 'N/A',
+                'total_index': float(pci.total_index),
+                'status': pci.status,
+                'assessment_date': pci.created_at.strftime('%Y-%m-%d'),
+                'water_access': pci.access_to_protected_water,
+                'adult_labor': pci.hire_adult_labourers,
+                'awareness': pci.awareness_raising_session,
+                'women_leaders': pci.women_leaders,
+                'pre_school': pci.pre_school,
+                'primary_school': pci.primary_school,
+                'separate_toilets': pci.separate_toilets,
+                'provide_food': pci.provide_food,
+                'scholarships': pci.scholarships,
+                'corporal_punishment': pci.corporal_punishment
+            })
+        
+        # Get statistics
+        total_assessments = pciTbl.objects.count()
+        low_risk_count = pciTbl.objects.filter(status='low_risk').count()
+        medium_risk_count = pciTbl.objects.filter(status='medium_risk').count()
+        high_risk_count = pciTbl.objects.filter(status='high_risk').count()
+        
+        statistics = {
+            'total_assessments': total_assessments,
+            'low_risk_count': low_risk_count,
+            'medium_risk_count': medium_risk_count,
+            'high_risk_count': high_risk_count
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': data,
+            'statistics': statistics
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching PCI data: {str(e)}'
+        }, status=500)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_pci_api(request):
+    """API endpoint to create a new PCI assessment"""
+    try:
+        data = json.loads(request.body)
+        print(data)
+        
+        # Validate required fields
+        required_fields = [
+            'society_id', 'enumerator_id', 'assessment_date',
+            'access_to_protected_water', 'hire_adult_labourers',
+            'awareness_raising_session', 'women_leaders', 'pre_school',
+            'primary_school', 'separate_toilets', 'provide_food',
+            'scholarships', 'corporal_punishment'
+        ]
+        
+        for field in required_fields:
+            if field not in data or data[field] is None:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Missing required field: {field}'
+                }, status=400)
+        
+        # Check if society exists
+        society = get_object_or_404(societyTbl, id=data['society_id'])
+        
+        # Check if enumerator exists
+        enumerator = get_object_or_404(districtStaffTbl, id=data['enumerator_id'])
+        
+        # Parse assessment date
+        try:
+            assessment_date = datetime.strptime(data['assessment_date'], '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid date format. Use YYYY-MM-DD.'
+            }, status=400)
+        
+        # Create PCI assessment
+        with transaction.atomic():
+            pci = pciTbl(
+                society=society,
+                enumerator=enumerator,
+                access_to_protected_water=data['access_to_protected_water'],
+                hire_adult_labourers=data['hire_adult_labourers'],
+                awareness_raising_session=data['awareness_raising_session'],
+                women_leaders=data['women_leaders'],
+                pre_school=data['pre_school'],
+                primary_school=data['primary_school'],
+                separate_toilets=data['separate_toilets'],
+                provide_food=data['provide_food'],
+                scholarships=data['scholarships'],
+                corporal_punishment=data['corporal_punishment']
+            )
+            
+            # Calculate total index and status
+            pci.calculate_total_index()
+            pci.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'PCI assessment created successfully',
+            'data': {
+                'id': pci.id,
+                'total_index': float(pci.total_index),
+                'status': pci.status
+            }
+        })
+        
+    except societyTbl.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Society not found'
+        }, status=404)
+        
+    except staffTbl.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Enumerator not found'
+        }, status=404)
+        
+    except ValidationError as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Validation error: {str(e)}'
+        }, status=400)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error creating PCI assessment: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def pci_detail_api(request, pci_id):
+    """API endpoint to get detailed PCI assessment information"""
+    try:
+        pci = get_object_or_404(pciTbl, id=pci_id)
+        
+        # Prepare indicators data
+        indicators = [
+            {
+                'name': 'Access to Protected Water',
+                'description': 'Do most households have access to protected water?',
+                'score': pci.access_to_protected_water
+            },
+            {
+                'name': 'Adult Labor Hiring',
+                'description': 'Do households hire adult laborers?',
+                'score': pci.hire_adult_labourers
+            },
+            {
+                'name': 'Awareness Raising Sessions',
+                'description': 'Child labor awareness sessions in past year?',
+                'score': pci.awareness_raising_session
+            },
+            {
+                'name': 'Women in Leadership',
+                'description': 'Are there women among community leaders?',
+                'score': pci.women_leaders
+            },
+            {
+                'name': 'Pre-school Availability',
+                'description': 'Is there at least one pre-school?',
+                'score': pci.pre_school
+            },
+            {
+                'name': 'Primary School Availability',
+                'description': 'Is there at least one primary school?',
+                'score': pci.primary_school
+            },
+            {
+                'name': 'Separate Toilets in Schools',
+                'description': 'Separate toilets for boys and girls?',
+                'score': pci.separate_toilets
+            },
+            {
+                'name': 'School Food Provision',
+                'description': 'Do schools provide food?',
+                'score': pci.provide_food
+            },
+            {
+                'name': 'Scholarship Access',
+                'description': 'Children access scholarships for high school?',
+                'score': pci.scholarships
+            },
+            {
+                'name': 'No Corporal Punishment',
+                'description': 'Absence of corporal punishment in schools?',
+                'score': pci.corporal_punishment
+            }
+        ]
+        
+        data = {
+            'id': pci.id,
+            'assessment_id': f"PCI-{pci.id:04d}",
+            'community': str(pci.society) if pci.society else 'N/A',
+            'district': str(pci.society.districtTbl_foreignkey.district) if pci.society and pci.society.districtTbl_foreignkey else 'N/A',
+            'enumerator': f"{pci.enumerator.staffTbl_foreignkey.first_name} {pci.enumerator.staffTbl_foreignkey.last_name}" if pci.enumerator else 'N/A',
+            'total_index': float(pci.total_index),
+            'status': pci.status,
+            'assessment_date': pci.created_at.strftime('%Y-%m-%d'),
+            'indicators': indicators
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': data
+        })
+        
+    except pciTbl.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'PCI assessment not found'
+        }, status=404)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching PCI details: {str(e)}'
+        }, status=500)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def delete_pci_api(request, pci_id):
+    """API endpoint to delete a PCI assessment"""
+    try:
+        pci = get_object_or_404(pciTbl, id=pci_id)
+        pci.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'PCI assessment deleted successfully'
+        })
+        
+    except pciTbl.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'PCI assessment not found'
+        }, status=404)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error deleting PCI assessment: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_districts_api(request):
+    """API endpoint to get all districts"""
+    try:
+        districts = districtTbl.objects.all().values('id', 'district')
+        return JsonResponse(list(districts), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': f'Error fetching districts: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_communities_api(request):
+    """API endpoint to get all communities"""
+    try:
+        communities = societyTbl.objects.all().values('id', 'society')
+        return JsonResponse(list(communities), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': f'Error fetching communities: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_enumerators_api(request):
+    """API endpoint to get all enumerators (staff with appropriate roles)"""
+    try:
+        # You might want to filter staff by role (e.g., enumerators only)
+        # In your view
+        enumerators = districtStaffTbl.objects.values(
+            'id',
+            'staffTbl_foreignkey__first_name', 
+            'staffTbl_foreignkey__last_name',
+            'staffTbl_foreignkey__staffid'  # Add this line
+        )
+        print(enumerators)
+        return JsonResponse({
+            'success': True,
+            'data': list(enumerators)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching enumerators: {str(e)}'
+        }, status=500)
+    
+
+################################################################################################################################
+
+
+# farmer_children/views.py
+import json
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q, Count, Case, When, Value, IntegerField
+from django.core.serializers.json import DjangoJSONEncoder
+
+from .models import ChildInHouseholdTbl, houseHoldTbl, farmerTbl, societyTbl, districtTbl
+from datetime import datetime
+
+@login_required
+def farmer_children_view(request):
+    """Render the main Farmer Children management page"""
+    return render(request, 'farmer_children/farmer_children.html')
+
+@login_required
+@require_http_methods(["GET"])
+def farmer_children_list_api(request):
+    """API endpoint to get filtered farmer children"""
+    try:
+        # Get filter parameters
+        farmer_id = request.GET.get('farmer', '')
+        community_id = request.GET.get('community', '')
+        district_id = request.GET.get('district', '')
+        gender = request.GET.get('gender', '')
+        education_status = request.GET.get('education_status', '')
+        work_status = request.GET.get('work_status', '')
+        
+        # Build query filters
+        filters = {}
+        if farmer_id:
+            filters['houseHold__farmer_id'] = farmer_id
+        if gender:
+            filters['child_gender'] = gender
+        if education_status:
+            if education_status == 'enrolled':
+                filters['child_educated'] = 1
+            elif education_status == 'not_enrolled':
+                filters['child_educated'] = 0
+        
+        # If community filter is applied
+        if community_id:
+            filters['houseHold__farmer__society_name_id'] = community_id
+        
+        # If district filter is applied, filter by communities in that district
+        if district_id:
+            communities_in_district = societyTbl.objects.filter(
+                districtTbl_foreignkey_id=district_id
+            ).values_list('id', flat=True)
+            filters['houseHold__farmer__society_name_id__in'] = list(communities_in_district)
+        
+        # Work status filter
+        work_filters = Q()
+        if work_status == 'working':
+            work_filters = Q(work_in_house='yes') | Q(work_on_cocoa='yes')
+        elif work_status == 'not_working':
+            work_filters = Q(work_in_house='no') & Q(work_on_cocoa='no')
+        
+        # Get farmer children with related data
+        children = ChildInHouseholdTbl.objects.filter(
+            **filters
+        ).filter(work_filters).select_related(
+            'houseHold',
+            'houseHold__farmer',
+            'houseHold__farmer__society_name',
+            'houseHold__farmer__society_name__districtTbl_foreignkey'
+        ).order_by('-created_at')
+        
+        # Prepare data for response
+        data = []
+        for child in children:
+            farmer = child.houseHold.farmer if child.houseHold and child.houseHold.farmer else None
+            society = farmer.society_name if farmer else None
+            district = society.districtTbl_foreignkey if society else None
+            
+            # Determine work status
+            work_status = 'Not Working'
+            if child.work_in_house == 'yes' or child.work_on_cocoa == 'yes':
+                work_status = 'Working'
+            
+            # Determine education status
+            education_status = 'Not Enrolled'
+            if child.child_educated == 1:
+                education_status = 'Enrolled'
+            
+            data.append({
+                'id': child.id,
+                'child_id': f"CHD-{child.id:04d}",
+                'first_name': child.child_first_name,
+                'last_name': child.child_surname,
+                'full_name': f"{child.child_first_name} {child.child_surname}",
+                'gender': child.child_gender,
+                'age': datetime.now().year - child.child_year_birth if child.child_year_birth else 'N/A',
+                'year_of_birth': child.child_year_birth,
+                'education_status': education_status,
+                'work_status': work_status,
+                'farmer_name': f"{farmer.first_name} {farmer.last_name}" if farmer else 'N/A',
+                'farmer_code': farmer.farmer_code if farmer else 'N/A',
+                'community': society.society if society else 'N/A',
+                'district': district.district if district else 'N/A',
+                'created_at': child.created_at.strftime('%Y-%m-%d'),
+                'has_birth_certificate': child.child_birth_certificate,
+                'school_name': child.child_school_name,
+                'grade': child.child_grade,
+                'household_tasks': child.performed_tasks if child.performed_tasks else []
+            })
+        
+        # Get statistics
+        total_children = ChildInHouseholdTbl.objects.count()
+        enrolled_count = ChildInHouseholdTbl.objects.filter(child_educated=1).count()
+        not_enrolled_count = ChildInHouseholdTbl.objects.filter(child_educated=0).count()
+        working_count = ChildInHouseholdTbl.objects.filter(
+            Q(work_in_house='yes') | Q(work_on_cocoa='yes')
+        ).count()
+        not_working_count = total_children - working_count
+        male_count = ChildInHouseholdTbl.objects.filter(child_gender='Male').count()
+        female_count = ChildInHouseholdTbl.objects.filter(child_gender='Female').count()
+        
+        # Age distribution
+        age_distribution = ChildInHouseholdTbl.objects.annotate(
+            age=datetime.now().year - models.F('child_year_birth')
+        ).values('age').annotate(
+            count=Count('id')
+        ).order_by('age')
+        
+        statistics = {
+            'total_children': total_children,
+            'enrolled_count': enrolled_count,
+            'not_enrolled_count': not_enrolled_count,
+            'working_count': working_count,
+            'not_working_count': not_working_count,
+            'male_count': male_count,
+            'female_count': female_count,
+            'age_distribution': list(age_distribution)
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': data,
+            'statistics': statistics
+        }, encoder=DjangoJSONEncoder)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching farmer children data: {str(e)}'
+        }, status=500)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_farmer_child_api(request):
+    """API endpoint to create a new farmer child record"""
+    try:
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        required_fields = [
+            'household_id', 'child_first_name', 'child_surname',
+            'child_gender', 'child_year_birth'
+        ]
+        
+        for field in required_fields:
+            if field not in data or data[field] is None:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Missing required field: {field}'
+                }, status=400)
+        
+        # Check if household exists
+        household = get_object_or_404(houseHoldTbl, id=data['household_id'])
+        
+        # Validate year of birth (child must be between 5-17 years old)
+        current_year = datetime.now().year
+        child_age = current_year - data['child_year_birth']
+        if not (5 <= child_age <= 17):
+            return JsonResponse({
+                'success': False,
+                'message': 'Child must be between 5 and 17 years old'
+            }, status=400)
+        
+        # Create child record
+        with transaction.atomic():
+            child = ChildInHouseholdTbl(
+                houseHold=household,
+                child_first_name=data['child_first_name'],
+                child_surname=data['child_surname'],
+                child_gender=data['child_gender'],
+                child_year_birth=data['child_year_birth'],
+                child_birth_certificate=data.get('child_birth_certificate', 'no'),
+                child_educated=data.get('child_educated', 0),
+                child_school_name=data.get('child_school_name', ''),
+                child_grade=data.get('child_grade', ''),
+                work_in_house=data.get('work_in_house', 'no'),
+                work_on_cocoa=data.get('work_on_cocoa', 'no'),
+                performed_tasks=data.get('performed_tasks', [])
+            )
+            
+            child.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Child record created successfully',
+            'data': {
+                'id': child.id,
+                'full_name': f"{child.child_first_name} {child.child_surname}"
+            }
+        })
+        
+    except houseHoldTbl.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Household not found'
+        }, status=404)
+        
+    except ValidationError as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Validation error: {str(e)}'
+        }, status=400)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error creating child record: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def farmer_child_detail_api(request, child_id):
+    """API endpoint to get detailed child information"""
+    try:
+        child = get_object_or_404(ChildInHouseholdTbl, id=child_id)
+        
+        # Get related data
+        farmer = child.houseHold.farmer if child.houseHold else None
+        society = farmer.society_name if farmer else None
+        district = society.districtTbl_foreignkey if society else None
+        
+        # Prepare education data
+        education_data = {
+            'is_enrolled': child.child_educated == 1,
+            'school_name': child.child_school_name,
+            'school_type': child.school_type,
+            'grade': child.child_grade,
+            'school_attendance': child.child_school_7days,
+            'basic_needs': child.basic_need_available.split(',') if child.basic_need_available else [],
+            'assessment': {
+                'calculation': child.calculation_response,
+                'reading': child.reading_response,
+                'writing': child.writing_response
+            }
+        }
+        
+        # Prepare work data
+        work_data = {
+            'house_work': child.work_in_house == 'yes',
+            'cocoa_work': child.work_on_cocoa == 'yes',
+            'work_frequency': child.work_frequency,
+            'tasks_performed': child.performed_tasks.split(',') if child.performed_tasks else [],
+            'supervision': child.under_supervision if hasattr(child, 'under_supervision') else 'no'
+        }
+        
+        # Prepare health data
+        health_data = {
+            'injuries': child.suffered_injury == 'yes',
+            'injury_cause': child.wound_cause,
+            'injury_time': child.wound_time,
+            'frequent_pains': child.child_often_pains == 'yes',
+            'health_help': child.help_child_health.split(',') if child.help_child_health else []
+        }
+        
+        data = {
+            'id': child.id,
+            'child_id': f"CHD-{child.id:04d}",
+            'first_name': child.child_first_name,
+            'last_name': child.child_surname,
+            'full_name': f"{child.child_first_name} {child.child_surname}",
+            'gender': child.child_gender,
+            'year_of_birth': child.child_year_birth,
+            'age': datetime.now().year - child.child_year_birth,
+            'birth_certificate': child.child_birth_certificate,
+            'birth_certificate_reason': child.child_birth_certificate_reason,
+            
+            # Family information
+            'farmer': {
+                'id': farmer.id if farmer else None,
+                'name': f"{farmer.first_name} {farmer.last_name}" if farmer else 'N/A',
+                'code': farmer.farmer_code if farmer else 'N/A'
+            },
+            'community': society.society if society else 'N/A',
+            'district': district.district if district else 'N/A',
+            
+            # Education information
+            'education': education_data,
+            
+            # Work information
+            'work': work_data,
+            
+            # Health information
+            'health': health_data,
+            
+            # Additional information
+            'created_at': child.created_at.strftime('%Y-%m-%d'),
+            'updated_at': child.updated_at.strftime('%Y-%m-%d') if child.updated_at else 'N/A'
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': data
+        })
+        
+    except ChildInHouseholdTbl.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Child record not found'
+        }, status=404)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching child details: {str(e)}'
+        }, status=500)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def delete_farmer_child_api(request, child_id):
+    """API endpoint to delete a child record"""
+    try:
+        child = get_object_or_404(ChildInHouseholdTbl, id=child_id)
+        child.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Child record deleted successfully'
+        })
+        
+    except ChildInHouseholdTbl.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Child record not found'
+        }, status=404)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error deleting child record: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_farmers_api(request):
+    """API endpoint to get all farmers"""
+    try:
+        farmers = farmerTbl.objects.all().values('id', 'first_name', 'last_name', 'farmer_code')
+        return JsonResponse(list(farmers), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': f'Error fetching farmers: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_communities_api(request):
+    """API endpoint to get all communities"""
+    try:
+        communities = societyTbl.objects.all().values('id', 'society')
+        return JsonResponse(list(communities), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': f'Error fetching communities: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_districts_api(request):
+    """API endpoint to get all districts"""
+    try:
+        districts = districtTbl.objects.all().values('id', 'district')
+        return JsonResponse(list(districts), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({
+            'error': f'Error fetching districts: {str(e)}'
+        }, status=500)
+    
+
+
+#########################################################################################################
+
+# views.py
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q, Count
+from .models import RiskAssessment, ChildInHouseholdTbl, houseHoldTbl, farmerTbl, societyTbl, districtTbl
+from .risk_assessment_utils import RiskAssessmentCalculator
+
+@login_required
+def risk_assessment_view(request):
+    """Render the main risk assessment page"""
+    return render(request, 'core/risk-assessment.html')
+
+@login_required
+@require_http_methods(["GET"])
+def risk_assessment_list_api(request):
+    """API endpoint to get filtered risk assessments"""
+    try:
+        # Get filter parameters
+        risk_level = request.GET.get('risk_level', '')
+        farmer_id = request.GET.get('farmer', '')
+        community_id = request.GET.get('community', '')
+        district_id = request.GET.get('district', '')
+        gender = request.GET.get('gender', '')
+        
+        # Build query filters
+        filters = {}
+        if risk_level:
+            filters['risk_level'] = risk_level
+        
+        if gender:
+            filters['child__child_gender'] = gender
+        
+        # If farmer filter is applied
+        if farmer_id:
+            filters['child__houseHold__farmer_id'] = farmer_id
+        
+        # If community filter is applied
+        if community_id:
+            filters['child__houseHold__farmer__society_name_id'] = community_id
+        
+        # If district filter is applied
+        if district_id:
+            communities_in_district = societyTbl.objects.filter(
+                districtTbl_foreignkey_id=district_id
+            ).values_list('id', flat=True)
+            filters['child__houseHold__farmer__society_name_id__in'] = list(communities_in_district)
+        
+        # Get risk assessments with related data
+        risk_assessments = RiskAssessment.objects.filter(
+            **filters
+        ).select_related(
+            'child',
+            'child__houseHold',
+            'child__houseHold__farmer',
+            'child__houseHold__farmer__society_name',
+            'child__houseHold__farmer__society_name__districtTbl_foreignkey'
+        ).prefetch_related(
+            'heavy_task_risks',
+            'light_task_risks'
+        ).order_by('-assessment_date')
+        
+        # Prepare data for response
+        data = []
+        for assessment in risk_assessments:
+            child = assessment.child
+            household = child.houseHold if child.houseHold else None
+            farmer = household.farmer if household else None
+            society = farmer.society_name if farmer else None
+            district = society.districtTbl_foreignkey if society else None
+            
+            data.append({
+                'id': assessment.id,
+                'child_id': child.id,
+                'child_name': f"{child.child_first_name} {child.child_surname}",
+                'child_age': RiskAssessmentCalculator.calculate_child_age(child),
+                'child_gender': child.child_gender,
+                'risk_level': assessment.risk_level,
+                'risk_level_display': assessment.get_risk_level_display(),
+                'assessment_date': assessment.assessment_date.strftime('%Y-%m-%d'),
+                'farmer_name': f"{farmer.first_name} {farmer.last_name}" if farmer else 'N/A',
+                'farmer_code': farmer.farmer_code if farmer else 'N/A',
+                'community': society.society if society else 'N/A',
+                'district': district.district if district else 'N/A',
+                'heavy_task_count': assessment.heavy_task_risks.count(),
+                'light_task_count': assessment.light_task_risks.count(),
+                'is_active': assessment.is_active
+            })
+        
+        # Get statistics
+        total_assessments = RiskAssessment.objects.count()
+        no_risk_count = RiskAssessment.objects.filter(risk_level='no_risk').count()
+        light_risk_count = RiskAssessment.objects.filter(risk_level='light_risk').count()
+        heavy_risk_count = RiskAssessment.objects.filter(risk_level='heavy_risk').count()
+        both_risk_count = RiskAssessment.objects.filter(risk_level='both_risk').count()
+        
+        statistics = {
+            'total_assessments': total_assessments,
+            'no_risk_count': no_risk_count,
+            'light_risk_count': light_risk_count,
+            'heavy_risk_count': heavy_risk_count,
+            'both_risk_count': both_risk_count
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': data,
+            'statistics': statistics
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching risk assessment data: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def risk_assessment_detail_api(request, assessment_id):
+    """API endpoint to get detailed risk assessment information"""
+    try:
+        assessment = get_object_or_404(RiskAssessment, id=assessment_id)
+        child = assessment.child
+        household = child.houseHold
+        farmer = household.farmer if household else None
+        society = farmer.society_name if farmer else None
+        district = society.districtTbl_foreignkey if society else None
+        
+        # Prepare heavy task risks
+        heavy_risks = []
+        for risk in assessment.heavy_task_risks.all():
+            heavy_risks.append({
+                'task_name': risk.task_name,
+                'hours_worked': float(risk.hours_worked),
+                'detected_date': risk.risk_detected_date.strftime('%Y-%m-%d')
+            })
+        
+        # Prepare light task risks
+        light_risks = []
+        for risk in assessment.light_task_risks.all():
+            light_risks.append({
+                'task_name': risk.task_name,
+                'total_hours': float(risk.total_hours),
+                'is_supervised': risk.is_supervised,
+                'is_paid': risk.is_paid,
+                'child_age_at_assessment': risk.child_age,
+                'criteria_details': risk.criteria_details,
+                'detected_date': risk.risk_detected_date.strftime('%Y-%m-%d')
+            })
+        
+        data = {
+            'id': assessment.id,
+            'child': {
+                'id': child.id,
+                'name': f"{child.child_first_name} {child.child_surname}",
+                'age': RiskAssessmentCalculator.calculate_child_age(child),
+                'gender': child.child_gender,
+                'year_of_birth': child.child_year_birth
+            },
+            'household': {
+                'id': household.id if household else None,
+                'name': f"Household {household.id}" if household else 'N/A'
+            },
+            'farmer': {
+                'id': farmer.id if farmer else None,
+                'name': f"{farmer.first_name} {farmer.last_name}" if farmer else 'N/A',
+                'code': farmer.farmer_code if farmer else 'N/A'
+            },
+            'community': society.society if society else 'N/A',
+            'district': district.district if district else 'N/A',
+            'risk_level': assessment.risk_level,
+            'risk_level_display': assessment.get_risk_level_display(),
+            'assessment_date': assessment.assessment_date.strftime('%Y-%m-%d'),
+            'last_updated': assessment.last_updated.strftime('%Y-%m-%d'),
+            'is_active': assessment.is_active,
+            'notes': assessment.notes,
+            'heavy_task_risks': heavy_risks,
+            'light_task_risks': light_risks,
+            'total_heavy_risks': len(heavy_risks),
+            'total_light_risks': len(light_risks)
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': data
+        })
+        
+    except RiskAssessment.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Risk assessment not found'
+        }, status=404)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching risk assessment details: {str(e)}'
+        }, status=500)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def reassess_all_risks_api(request):
+    """API endpoint to trigger reassessment of all risks"""
+    try:
+        results = RiskAssessmentCalculator.assess_all_children()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Risk reassessment completed successfully',
+            'data': results
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error during risk reassessment: {str(e)}'
+        }, status=500)
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def reassess_child_risk_api(request, child_id):
+    """API endpoint to reassess risk for a specific child"""
+    try:
+        child = get_object_or_404(ChildInHouseholdTbl, id=child_id)
+        risk_assessment = RiskAssessmentCalculator.perform_risk_assessment(child)
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Risk assessment completed for {child.child_first_name} {child.child_surname}',
+            'data': {
+                'risk_level': risk_assessment.risk_level,
+                'risk_level_display': risk_assessment.get_risk_level_display()
+            }
+        })
+        
+    except ChildInHouseholdTbl.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Child not found'
+        }, status=404)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error during risk assessment: {str(e)}'
         }, status=500)

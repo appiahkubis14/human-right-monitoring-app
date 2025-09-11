@@ -1,0 +1,625 @@
+<!-- risk_assessment/risk_assessment.html -->
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <br>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="mb-3">
+                            <div>
+                                <h4 style="font-weight: bolder;">CHILD LABOR RISK ASSESSMENT</h4>
+                                <p class="mb-0">Monitor and manage child labor risk assessments</p>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-warning btn-sm me-2" id="reassessAllBtn">
+                                <i class="fas fa-sync-alt"></i> REASSESS ALL
+                            </button>
+                            <button class="btn btn-info btn-sm" id="generateReportBtn">
+                                <i class="fas fa-chart-bar"></i> GENERATE REPORT
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Risk Level</label>
+                                <select class="form-select" id="riskLevelFilter">
+                                    <option value="">All Levels</option>
+                                    <option value="no_risk">No Risk</option>
+                                    <option value="light_risk">Light Task Risk</option>
+                                    <option value="heavy_risk">Heavy Task Risk</option>
+                                    <option value="both_risk">Both Risks</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Gender</label>
+                                <select class="form-select" id="genderFilter">
+                                    <option value="">All Genders</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">District</label>
+                                <select class="form-select" id="districtFilter">
+                                    <option value="">All Districts</option>
+                                    <!-- Districts will be loaded via AJAX -->
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Community</label>
+                                <select class="form-select" id="communityFilter">
+                                    <option value="">All Communities</option>
+                                    <!-- Communities will be loaded via AJAX -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Statistics Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title">NO RISK</h6>
+                                                <h3 id="noRiskCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-shield-alt fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title">LIGHT TASK RISK</h6>
+                                                <h3 id="lightRiskCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-danger text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title">HEAVY TASK RISK</h6>
+                                                <h3 id="heavyRiskCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-radiation fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title">BOTH RISKS</h6>
+                                                <h3 id="bothRiskCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Assessment Table -->
+                        <div class="table-responsive">
+                            <table id="riskAssessmentTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>ASSESSMENT ID</th>
+                                        <th>CHILD NAME</th>
+                                        <th>AGE</th>
+                                        <th>GENDER</th>
+                                        <th>RISK LEVEL</th>
+                                        <th>HEAVY TASKS</th>
+                                        <th>LIGHT TASKS</th>
+                                        <th>FARMER</th>
+                                        <th>COMMUNITY</th>
+                                        <th>DISTRICT</th>
+                                        <th>ASSESSMENT DATE</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Assessment Details Modal -->
+        <div class="modal fade" id="riskDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title">Risk Assessment Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="riskDetails">
+                            <!-- Risk details will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+ <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    const riskTable = $('#riskAssessmentTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "{% url 'risk_assessment_list_api' %}",
+            type: "GET",
+            data: function(d) {
+                return {
+                    risk_level: $('#riskLevelFilter').val(),
+                    gender: $('#genderFilter').val(),
+                    district: $('#districtFilter').val(),
+                    community: $('#communityFilter').val()
+                };
+            },
+            dataSrc: function(json) {
+                updateStatistics(json.statistics);
+                return json.data;
+            }
+        },
+        columns: [
+            { data: 'id' },
+            { data: 'child_name' },
+            { data: 'child_age' },
+            { data: 'child_gender' },
+            { 
+                data: 'risk_level',
+                render: function(data, type, row) {
+                    let badgeClass = 'bg-secondary';
+                    if (data === 'no_risk') badgeClass = 'bg-success';
+                    else if (data === 'light_risk') badgeClass = 'bg-warning';
+                    else if (data === 'heavy_risk') badgeClass = 'bg-danger';
+                    else if (data === 'both_risk') badgeClass = 'bg-info';
+                    
+                    return `<span class="badge ${badgeClass}">${row.risk_level_display}</span>`;
+                }
+            },
+            { data: 'heavy_task_count' },
+            { data: 'light_task_count' },
+            { data: 'farmer_name' },
+            { data: 'community' },
+            { data: 'district' },
+            { data: 'assessment_date' },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm view-risk-btn" data-id="${data}" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-warning btn-sm reassess-btn" data-child="${row.child_id}" title="Reassess">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                },
+                orderable: false
+            }
+        ],
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: "copy",
+                text: '<i class="fas fa-copy"></i> Copy',
+                className: "btn btn-sm btn-outline-secondary",
+            },
+            {
+                extend: "csv",
+                text: '<i class="fas fa-file-csv"></i> CSV',
+                className: "btn btn-sm btn-outline-success",
+            },
+            {
+                extend: "excel",
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: "btn btn-sm btn-outline-primary",
+            },
+            {
+                extend: "pdf",
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: "btn btn-sm btn-outline-danger",
+            }
+        ],
+        language: {
+            emptyTable: "No risk assessments found.",
+            zeroRecords: "No matching assessments found."
+        }
+    });
+
+    // Load filter options
+    function loadFilterOptions() {
+        // Load districts
+        $.ajax({
+            url: "{% url 'get_districts_api' %}",
+            type: "GET",
+            success: function(data) {
+                $('#districtFilter').empty().append('<option value="" selected>All Districts</option>');
+                $.each(data, function(index, item) {
+                    $('#districtFilter').append($('<option>', {
+                        value: item.id,
+                        text: item.district
+                    }));
+                });
+            }
+        });
+
+        // Load communities
+        $.ajax({
+            url: "{% url 'get_communities_api' %}",
+            type: "GET",
+            success: function(data) {
+                $('#communityFilter').empty().append('<option value="" selected>All Communities</option>');
+                $.each(data, function(index, item) {
+                    $('#communityFilter').append($('<option>', {
+                        value: item.id,
+                        text: item.society
+                    }));
+                });
+            }
+        });
+    }
+
+    // Update statistics
+    function updateStatistics(stats) {
+        $('#noRiskCount').text(stats.no_risk_count);
+        $('#lightRiskCount').text(stats.light_risk_count);
+        $('#heavyRiskCount').text(stats.heavy_risk_count);
+        $('#bothRiskCount').text(stats.both_risk_count);
+    }
+
+    // Filter change events
+    $('#riskLevelFilter, #genderFilter, #districtFilter, #communityFilter').change(function() {
+        riskTable.ajax.reload();
+    });
+
+    // ----- VIEW RISK ASSESSMENT DETAILS -----
+    $(document).on('click', '.view-risk-btn', function() {
+        const assessmentId = $(this).data('id');
+        viewRiskDetails(assessmentId);
+    });
+
+    function viewRiskDetails(assessmentId) {
+        $.ajax({
+            url: "{% url 'risk_assessment_detail_api' 0 %}".replace('0', assessmentId),
+            type: "GET",
+            beforeSend: function() {
+                showLoadingAlert('Loading risk assessment details...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    displayRiskDetails(response.data);
+                    $('#riskDetailModal').modal('show');
+                } else {
+                    showErrorAlert(response.message || 'Failed to load risk assessment details');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load risk assessment details');
+            }
+        });
+    }
+
+    function displayRiskDetails(data) {
+        const detailsHtml = `
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h4>${data.child.name}</h4>
+                    <p class="text-muted">${data.child.age} years old • ${data.child.gender} • Born in ${data.child.year_of_birth}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge ${getRiskBadgeClass(data.risk_level)} fs-6">
+                        ${data.risk_level_display}
+                    </span>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <strong>Farmer:</strong> ${data.farmer.name} (${data.farmer.code})
+                </div>
+                <div class="col-md-6">
+                    <strong>Community:</strong> ${data.community}
+                </div>
+                <div class="col-md-6">
+                    <strong>District:</strong> ${data.district}
+                </div>
+                <div class="col-md-6">
+                    <strong>Assessment Date:</strong> ${data.assessment_date}
+                </div>
+            </div>
+
+            ${data.total_heavy_risks > 0 ? `
+            <div class="card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">Heavy Task Risks (${data.total_heavy_risks})</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Task Name</th>
+                                    <th>Hours Worked</th>
+                                    <th>Detected Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.heavy_task_risks.map(risk => `
+                                    <tr>
+                                        <td>${risk.task_name}</td>
+                                        <td>${risk.hours_worked}</td>
+                                        <td>${risk.detected_date}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+
+            ${data.total_light_risks > 0 ? `
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">Light Task Risks (${data.total_light_risks})</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Task Name</th>
+                                    <th>Hours</th>
+                                    <th>Supervised</th>
+                                    <th>Paid</th>
+                                    <th>Criteria</th>
+                                    <th>Detected Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.light_task_risks.map(risk => `
+                                    <tr>
+                                        <td>${risk.task_name}</td>
+                                        <td>${risk.total_hours}</td>
+                                        <td>${risk.is_supervised ? 'Yes' : 'No'}</td>
+                                        <td>${risk.is_paid ? 'Yes' : 'No'}</td>
+                                        <td><small>${risk.criteria_details}</small></td>
+                                        <td>${risk.detected_date}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+
+            ${data.total_heavy_risks === 0 && data.total_light_risks === 0 ? `
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> No child labor risks detected for this child.
+            </div>
+            ` : ''}
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Assessment Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Last Updated:</strong> ${data.last_updated}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Status:</strong> ${data.is_active ? 'Active' : 'Inactive'}
+                                </div>
+                            </div>
+                            ${data.notes ? `
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <strong>Notes:</strong> ${data.notes}
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#riskDetails').html(detailsHtml);
+    }
+
+    function getRiskBadgeClass(riskLevel) {
+        switch(riskLevel) {
+            case 'no_risk': return 'bg-success';
+            case 'light_risk': return 'bg-warning';
+            case 'heavy_risk': return 'bg-danger';
+            case 'both_risk': return 'bg-info';
+            default: return 'bg-secondary';
+        }
+    }
+
+    // ----- REASSESS ALL RISKS -----
+    $('#reassessAllBtn').click(function() {
+        Swal.fire({
+            title: 'Reassess All Risks?',
+            text: "This will reassess risk levels for all children. This may take several minutes.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, reassess all',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                reassessAllRisks();
+            }
+        });
+    });
+
+    function reassessAllRisks() {
+        $.ajax({
+            url: "{% url 'reassess_all_risks_api' %}",
+            type: "POST",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Reassessing all risks... This may take a while.');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert(`Risk reassessment completed. 
+                        Assessed: ${response.data.assessed_children} children
+                        No Risk: ${response.data.no_risk}
+                        Light Risk: ${response.data.light_risk}
+                        Heavy Risk: ${response.data.heavy_risk}
+                        Both Risks: ${response.data.both_risk}
+                    `);
+                    riskTable.ajax.reload();
+                } else {
+                    showErrorAlert(response.message || 'Failed to reassess risks');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'reassess all risks');
+            }
+        });
+    }
+
+    // ----- REASSESS INDIVIDUAL CHILD -----
+    $(document).on('click', '.reassess-btn', function() {
+        const childId = $(this).data('child');
+        
+        Swal.fire({
+            title: 'Reassess Child Risk?',
+            text: "This will reassess the risk level for this child.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, reassess',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                reassessChildRisk(childId);
+            }
+        });
+    });
+
+    function reassessChildRisk(childId) {
+        $.ajax({
+            url: "{% url 'reassess_child_risk_api' 0 %}".replace('0', childId),
+            type: "POST",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Reassessing child risk...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert(response.message);
+                    riskTable.ajax.reload();
+                } else {
+                    showErrorAlert(response.message || 'Failed to reassess child risk');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'reassess child risk');
+            }
+        });
+    }
+
+    // Generate Report
+    $('#generateReportBtn').click(function() {
+        showSuccessAlert('Report generation will be implemented in the next phase');
+    });
+
+    // Initialize page
+    loadFilterOptions();
+    riskTable.ajax.reload();
+});
+
+// Include helper functions from previous implementation
+// getCookie, showSuccessAlert, showErrorAlert, showLoadingAlert, handleAjaxError
+</script>
+
+<style>
+.btn-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    border: none;
+}
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-1px);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.35em 0.65em;
+}
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}

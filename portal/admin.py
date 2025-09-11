@@ -330,3 +330,197 @@ class DeadlineAssignmentAdmin(admin.ModelAdmin):
     search_fields = ['title', 'assigned_to__first_name', 'assigned_to__last_name']
     readonly_fields = ['status', 'completion_date']
     date_hierarchy = 'start_date'
+
+
+
+
+
+
+
+
+
+
+from django.contrib import admin
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
+from .models import (
+    QueryCategory, QueryPriority, QueryStatus, Query, QueryResponse,
+    QueryAttachment, FlaggedIssue, Escalation, RiskAssessment,
+    HeavyTaskRisk, LightTaskRisk, RiskAssessmentHistory
+)
+
+# Query Category
+class QueryCategoryResource(resources.ModelResource):
+    class Meta:
+        model = QueryCategory
+
+@admin.register(QueryCategory)
+class QueryCategoryAdmin(ImportExportModelAdmin):
+    resource_class = QueryCategoryResource
+    list_display = ('name', 'description', 'created_date')
+    search_fields = ('name', 'description')
+    list_filter = ('created_date',)
+
+# Query Priority
+class QueryPriorityResource(resources.ModelResource):
+    class Meta:
+        model = QueryPriority
+
+@admin.register(QueryPriority)
+class QueryPriorityAdmin(ImportExportModelAdmin):
+    resource_class = QueryPriorityResource
+    list_display = ('name', 'color', 'description', 'created_date')
+    search_fields = ('name', 'description')
+    list_filter = ('created_date',)
+
+# Query Status
+class QueryStatusResource(resources.ModelResource):
+    class Meta:
+        model = QueryStatus
+
+@admin.register(QueryStatus)
+class QueryStatusAdmin(ImportExportModelAdmin):
+    resource_class = QueryStatusResource
+    list_display = ('name', 'color', 'description', 'created_date')
+    search_fields = ('name', 'description')
+    list_filter = ('created_date',)
+
+# Query
+class QueryResource(resources.ModelResource):
+    class Meta:
+        model = Query
+
+class QueryResponseInline(admin.TabularInline):
+    model = QueryResponse
+    extra = 0
+    readonly_fields = ('created_date',)
+
+class QueryAttachmentInline(admin.TabularInline):
+    model = QueryAttachment
+    extra = 0
+    readonly_fields = ('created_date',)
+
+@admin.register(Query)
+class QueryAdmin(ImportExportModelAdmin):
+    resource_class = QueryResource
+    list_display = ('query_id', 'title', 'category', 'priority', 'status', 'assigned_to', 'created_by', 'created_date', 'is_overdue')
+    list_filter = ('category', 'priority', 'status', 'created_date', 'due_date', 'requires_follow_up', 'is_escalated')
+    search_fields = ('query_id', 'title', 'description', 'assigned_to__first_name', 'assigned_to__last_name')
+    readonly_fields = ('query_id', 'created_date', )
+    inlines = [QueryResponseInline, QueryAttachmentInline]
+    date_hierarchy = 'created_date'
+
+# Query Response
+class QueryResponseResource(resources.ModelResource):
+    class Meta:
+        model = QueryResponse
+
+@admin.register(QueryResponse)
+class QueryResponseAdmin(ImportExportModelAdmin):
+    resource_class = QueryResponseResource
+    list_display = ('query', 'responded_by', 'created_date')
+    list_filter = ('created_date',)
+    search_fields = ('query__query_id', 'responded_by__first_name', 'responded_by__last_name', 'response_text')
+    readonly_fields = ('created_date', )
+
+# Query Attachment
+class QueryAttachmentResource(resources.ModelResource):
+    class Meta:
+        model = QueryAttachment
+
+@admin.register(QueryAttachment)
+class QueryAttachmentAdmin(ImportExportModelAdmin):
+    resource_class = QueryAttachmentResource
+    list_display = ('query', 'file_name', 'uploaded_by', 'created_date')
+    list_filter = ('created_date',)
+    search_fields = ('query__query_id', 'file_name', 'uploaded_by__first_name', 'uploaded_by__last_name')
+    readonly_fields = ('created_date', )
+
+# Flagged Issue
+class FlaggedIssueResource(resources.ModelResource):
+    class Meta:
+        model = FlaggedIssue
+
+@admin.register(FlaggedIssue)
+class FlaggedIssueAdmin(ImportExportModelAdmin):
+    resource_class = FlaggedIssueResource
+    list_display = ('flag_id', 'query', 'flag_type', 'severity', 'flagged_by', 'reviewed', 'created_date')
+    list_filter = ('flag_type', 'severity', 'reviewed', 'created_date')
+    search_fields = ('flag_id', 'query__query_id', 'flagged_by__first_name', 'flagged_by__last_name', 'description')
+    readonly_fields = ('flag_id', 'created_date', )
+
+# Escalation
+class EscalationResource(resources.ModelResource):
+    class Meta:
+        model = Escalation
+
+@admin.register(Escalation)
+class EscalationAdmin(ImportExportModelAdmin):
+    resource_class = EscalationResource
+    list_display = ('escalation_id', 'query', 'escalation_type', 'priority', 'escalated_by', 'escalated_to', 'resolved', 'due_date', 'is_overdue')
+    list_filter = ('escalation_type', 'priority', 'resolved', 'created_date', 'due_date')
+    search_fields = ('escalation_id', 'query__query_id', 'escalated_by__first_name', 'escalated_by__last_name')
+    readonly_fields = ('escalation_id', 'created_date', )
+
+# Risk Assessment
+class RiskAssessmentResource(resources.ModelResource):
+    class Meta:
+        model = RiskAssessment
+
+class HeavyTaskRiskInline(admin.TabularInline):
+    model = HeavyTaskRisk
+    extra = 0
+    readonly_fields = ('risk_detected_date',)
+
+class LightTaskRiskInline(admin.TabularInline):
+    model = LightTaskRisk
+    extra = 0
+    readonly_fields = ('risk_detected_date',)
+
+@admin.register(RiskAssessment)
+class RiskAssessmentAdmin(ImportExportModelAdmin):
+    resource_class = RiskAssessmentResource
+    list_display = ('child', 'risk_level', 'assessment_date', 'last_updated', 'is_active')
+    list_filter = ('risk_level', 'is_active', 'assessment_date')
+    search_fields = ('child__first_name', 'child__last_name', 'notes')
+    readonly_fields = ('assessment_date', 'last_updated')
+    inlines = [HeavyTaskRiskInline, LightTaskRiskInline]
+
+# Heavy Task Risk
+class HeavyTaskRiskResource(resources.ModelResource):
+    class Meta:
+        model = HeavyTaskRisk
+
+@admin.register(HeavyTaskRisk)
+class HeavyTaskRiskAdmin(ImportExportModelAdmin):
+    resource_class = HeavyTaskRiskResource
+    list_display = ('risk_assessment', 'task_name', 'hours_worked', 'risk_detected_date', 'is_active')
+    list_filter = ('is_active', 'risk_detected_date')
+    search_fields = ('risk_assessment__child__first_name', 'risk_assessment__child__last_name', 'task_name')
+    readonly_fields = ('risk_detected_date',)
+
+# Light Task Risk
+class LightTaskRiskResource(resources.ModelResource):
+    class Meta:
+        model = LightTaskRisk
+
+@admin.register(LightTaskRisk)
+class LightTaskRiskAdmin(ImportExportModelAdmin):
+    resource_class = LightTaskRiskResource
+    list_display = ('risk_assessment', 'task_name', 'total_hours', 'child_age', 'meets_criteria', 'is_active')
+    list_filter = ('is_active', 'meets_criteria', 'is_supervised', 'is_paid', 'risk_detected_date')
+    search_fields = ('risk_assessment__child__first_name', 'risk_assessment__child__last_name', 'task_name')
+    readonly_fields = ('risk_detected_date',)
+
+# Risk Assessment History
+class RiskAssessmentHistoryResource(resources.ModelResource):
+    class Meta:
+        model = RiskAssessmentHistory
+
+@admin.register(RiskAssessmentHistory)
+class RiskAssessmentHistoryAdmin(ImportExportModelAdmin):
+    resource_class = RiskAssessmentHistoryResource
+    list_display = ('risk_assessment', 'previous_risk_level', 'new_risk_level', 'changed_by', 'change_date')
+    list_filter = ('previous_risk_level', 'new_risk_level', 'change_date')
+    search_fields = ('risk_assessment__child__first_name', 'risk_assessment__child__last_name', 'change_reason')
+    readonly_fields = ('change_date',)

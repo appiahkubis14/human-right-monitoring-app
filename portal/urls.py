@@ -80,11 +80,49 @@ urlpatterns = [
 
 
     #############################################################################################################
-    path('review_responses/', views.review_responses, name='create_response_api'),
+    path('review-responses/', views.review_responses, name='create_response_api'),
     path('api/responses/', views.response_list_api, name='response_list_api'),
     path('api/responses/<int:response_id>/', views.response_detail_api, name='response_detail_api'),
     path('api/queries/<int:query_id>/mark-resolved/', views.mark_query_resolved_api, name='mark_query_resolved_api'),
     path('api/queries/<int:query_id>/request-clarification/', views.request_clarification_api, name='request_clarification_api'),
 
+
+    ##############################################################################################################
+
+    path('community-pci/', views.community_pci_view, name='community_pci'),
+    
+    # API endpoints
+    path('api/pci/', views.pci_list_api, name='pci_list_api'),
+    path('api/pci/create/', views.create_pci_api, name='create_pci_api'),
+    path('api/pci/<int:pci_id>/', views.pci_detail_api, name='pci_detail_api'),
+    path('api/pci/<int:pci_id>/delete/', views.delete_pci_api, name='delete_pci_api'),
+    
+    # Filter data endpoints
+    path('api/districts/', views.get_districts_api, name='get_districts_api'),
+    path('api/communities/', views.get_communities_api, name='get_communities_api'),
+    path('api/enumerators/', views.get_enumerators_api, name='get_enumerators_api'),
+
+    ########################################################################################################
+
+    path('farmer-children/', views.farmer_children_view, name='farmer_children'),
+    
+    # API endpoints
+    path('api/farmer-children/', views.farmer_children_list_api, name='farmer_children_list_api'),
+    path('api/farmer-children/create/', views.create_farmer_child_api, name='create_farmer_child_api'),
+    path('api/farmer-children/<int:child_id>/', views.farmer_child_detail_api, name='farmer_child_detail_api'),
+    path('api/farmer-children/<int:child_id>/delete/', views.delete_farmer_child_api, name='delete_farmer_child_api'),
+    
+    # Filter data endpoints
+    path('api/farmers/', views.get_farmers_api, name='get_farmers_api'),
+    path('api/communities/', views.get_communities_api, name='get_communities_api'),
+    path('api/districts/', views.get_districts_api, name='get_districts_api'),
+
+
+    ########################################################################################################
+    path('risk-assessment/', views.risk_assessment_view, name='risk_assessment'),
+    path('api/risk-assessment/', views.risk_assessment_list_api, name='risk_assessment_list_api'),
+    path('api/risk-assessment/<int:assessment_id>/', views.risk_assessment_detail_api, name='risk_assessment_detail_api'),
+    path('api/risk-assessment/reassess-all/', views.reassess_all_risks_api, name='reassess_all_risks_api'),
+    path('api/risk-assessment/reassess-child/<int:child_id>/', views.reassess_child_risk_api, name='reassess_child_risk_api'),
 
 ]

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.forms import ValidationError
@@ -327,22 +328,27 @@ class pciTbl(timeStamp):
     updated_at = models.DateTimeField(auto_now=True)
 
     def calculate_total_index(self):
+    # Convert all fields to decimals before adding
         self.total_index = (
-            self.access_to_protected_water +
-            self.hire_adult_labourers +
-            self.awareness_raising_session +
-            self.women_leaders +
-            self.pre_school +
-            self.primary_school +
-            self.separate_toilets +
-            self.provide_food +
-            self.scholarships +
-            self.corporal_punishment
+            Decimal(self.access_to_protected_water or 0) +
+            Decimal(self.hire_adult_labourers or 0) +
+            Decimal(self.awareness_raising_session or 0) +
+            Decimal(self.women_leaders or 0) +
+            Decimal(self.pre_school or 0) +
+            Decimal(self.primary_school or 0) +
+            Decimal(self.separate_toilets or 0) +
+            Decimal(self.provide_food or 0) +
+            Decimal(self.scholarships or 0) +
+            Decimal(self.corporal_punishment or 0)
         )
-        if self.total_index <= 4:
+        
+        # Convert to float for comparison or use Decimal comparison
+        total_float = float(self.total_index)
+        
+        if total_float <= 4:
             self.status = 'high_risk'
-        elif 5 <= self.total_index <= 6:
-            self.status = 'modium_risk'
+        elif 5 <= total_float <= 6:
+            self.status = 'medium_risk'
         else:
             self.status = 'low_risk'
         self.save()
@@ -950,4 +956,102 @@ class Escalation(timeStamp):
     class Meta:
         verbose_name_plural = "Escalations"
         ordering = ['-created_date']
+
+
+##########################################################################################################################################
+
+
+# Add these models to your existing models.py
+
+class RiskAssessment(timeStamp):
+    """
+    Description: Main risk assessment model for children
+    """
+    RISK_LEVELS = (
+        ('no_risk', 'No Risk'),
+        ('light_risk', 'Light Task Risk'),
+        ('heavy_risk', 'Heavy Task Risk'),
+        ('both_risk', 'Both Light and Heavy Task Risk'),
+    )
+    
+    child = models.OneToOneField('ChildInHouseholdTbl', on_delete=models.CASCADE, related_name='risk_assessment')
+    risk_level = models.CharField(max_length=20, choices=RISK_LEVELS, default='no_risk')
+    assessment_date = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"Risk Assessment for {self.child} - {self.get_risk_level_display()}"
+    
+    class Meta:
+        verbose_name_plural = "Risk Assessments"
+        ordering = ['-assessment_date']
+
+
+class HeavyTaskRisk(timeStamp):
+    """
+    Description: Records heavy task risks for children
+    """
+    risk_assessment = models.ForeignKey(RiskAssessment, on_delete=models.CASCADE, related_name='heavy_task_risks')
+    task = models.ForeignKey('heavyTaskTbl', on_delete=models.CASCADE)
+    task_name = models.CharField(max_length=100)
+    risk_detected_date = models.DateTimeField(auto_now_add=True)
+    hours_worked = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"Heavy Task Risk: {self.task_name} for {self.risk_assessment.child}"
+    
+    class Meta:
+        verbose_name_plural = "Heavy Task Risks"
+
+
+class LightTaskRisk(timeStamp):
+    """
+    Description: Records light task risks for children with detailed criteria
+    """
+    risk_assessment = models.ForeignKey(RiskAssessment, on_delete=models.CASCADE, related_name='light_task_risks')
+    task = models.ForeignKey('lightTaskTbl', on_delete=models.CASCADE)
+    task_name = models.CharField(max_length=100)
+    risk_detected_date = models.DateTimeField(auto_now_add=True)
+    total_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    is_supervised = models.BooleanField(default=False)
+    is_paid = models.BooleanField(default=False)
+    child_age = models.IntegerField()
+    meets_criteria = models.BooleanField(default=False)
+    criteria_details = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"Light Task Risk: {self.task_name} for {self.risk_assessment.child}"
+    
+    class Meta:
+        verbose_name_plural = "Light Task Risks"
+
+
+class RiskAssessmentHistory(timeStamp):
+    """
+    Description: Tracks history of risk assessments for audit purposes
+    """
+    risk_assessment = models.ForeignKey(RiskAssessment, on_delete=models.CASCADE, related_name='history')
+    previous_risk_level = models.CharField(max_length=20)
+    new_risk_level = models.CharField(max_length=20)
+    changed_by = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True)
+    change_reason = models.TextField(blank=True, null=True)
+    change_date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Risk change: {self.previous_risk_level} → {self.new_risk_level}"
+    
+    class Meta:
+        verbose_name_plural = "Risk Assessment History"
+        ordering = ['-change_date']
+
+
+
+
+
+
+###################################################################################################
 
