@@ -1,1329 +1,1793 @@
-import json
-from datetime import datetime
-
-import requests
-from django.core.exceptions import ValidationError
-from django.core.files.storage import default_storage
-from django.db import IntegrityError
+from datetime import datetime, timedelta
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.utils.dateparse import parse_datetime
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views import View
+import json
+from .models import ChildInHouseholdTbl, districtStaffTbl, houseHoldTbl, staffTbl, districtTbl
+
+
+
+
+
+
+
+
+
+
+
+
+
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.contrib.auth.models import Group
+import json
+from .models import staffTbl
 
-from .models import (
-    Cover_tbl,
-    FarmerChild,
-    ConsentLocation_tbl,
-    FarmerIdentification_OwnerIdentificationTbl,
-    FarmerIdentification_Info_OnVisit_tbl,
-    WorkersInTheFarmTbl,
-    AdultInHouseholdTbl,
-    ChildHouseholdDetailsTbl,
-    AdultHouseholdMember,
-    ChildrenInHouseholdTbl,
-    ChildInHouseholdTbl,
-    ChildEducationDetailsTbl,
-    ChildRemediationTbl,
-    HouseholdSensitizationTbl,
-    EndOfCollection,
-)
+@method_decorator(login_required, name='dispatch')
+class StaffManagementView(View):
+    def get(self, request):
+        return render(request, 'core/staff_management.html')
 
-
-###########################################################################################
-# COVER QUESTIONNAIRE VIEWS
-###########################################################################################
-@csrf_exempt
-def cover_view(request, cover_id=None):
-    """Handles CRUD operations for Cover_tbl model"""
-    if request.method == "GET":
-        if cover_id:
-            cover = get_object_or_404(Cover_tbl, id=cover_id)
-            data = {
-                "id": cover.id,
-                "enumerator_name": cover.enumerator_name,
-                "enumerator_code": cover.enumerator_code,
-                "farmer_code": cover.farmer_code,
-                "society_code": cover.society_code,
-                "farmer_surname": cover.farmer_surname,
-                "farmer_first_name": cover.farmer_first_name,
-                "country": cover.country,
-                "region": cover.region,
-                "district": cover.district,
-                "risk_classification": cover.risk_classification,
-                "client": cover.client,
-                "num_farmer_children": cover.num_farmer_children
-            }
-            return JsonResponse(data, status=200)
-        else:
-            covers = Cover_tbl.objects.all().values()
-            return JsonResponse(list(covers), safe=False, status=200)
-
-    elif request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            cover = Cover_tbl.objects.create(
-                enumerator_name=data["enumerator_name"],
-                enumerator_code=data.get("enumerator_code", ""),
-                farmer_code=data["farmer_code"],
-                society_code=data.get("society_code", ""),
-                farmer_surname=data.get("farmer_surname", ""),
-                farmer_first_name=data.get("farmer_first_name", ""),
-                country=data.get("country", ""),
-                region=data.get("region", ""),
-                district=data.get("district", ""),
-                risk_classification=data.get("risk_classification", ""),
-                client=data.get("client", ""),
-                num_farmer_children=data.get("num_farmer_children", 0),
-            )
-            return JsonResponse({"message": "Cover created", "id": cover.id}, status=201)
-        except (KeyError, json.JSONDecodeError, ValidationError) as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    elif request.method == "PUT":
-        if not cover_id:
-            return JsonResponse({"error": "Cover ID is required for update"}, status=400)
+@login_required
+def get_staff_data(request):
+    try:
+        # Get all staff members
+        staff_members = staffTbl.objects.all()
         
-        cover = get_object_or_404(Cover_tbl, id=cover_id)
-        try:
-            data = json.loads(request.body)
-            for field, value in data.items():
-                setattr(cover, field, value)
-            cover.save()
-            return JsonResponse({"message": "Cover updated successfully"}, status=200)
-        except (json.JSONDecodeError, ValidationError) as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    elif request.method == "DELETE":
-        if not cover_id:
-            return JsonResponse({"error": "Cover ID is required for deletion"}, status=400)
-
-        cover = get_object_or_404(Cover_tbl, id=cover_id)
-        cover.delete()
-        return JsonResponse({"message": "Cover deleted successfully"}, status=200)
-
-    return JsonResponse({"error": "Method not allowed"}, status=405)
-
-
-@csrf_exempt
-def farmer_child_view(request, child_id=None):
-    """Handles CRUD operations for FarmerChild model"""
-    if request.method == "GET":
-        if child_id:
-            child = get_object_or_404(FarmerChild, id=child_id)
-            data = {
-                "id": child.id,
-                "cover": child.cover.id,
-                "name": child.name,
-                "age": child.age,
-                "gender": child.gender
-            }
-            return JsonResponse(data, status=200)
-        else:
-            children = FarmerChild.objects.all().values()
-            return JsonResponse(list(children), safe=False, status=200)
-
-    elif request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            cover = get_object_or_404(Cover_tbl, id=data["cover"])
-            child = FarmerChild.objects.create(
-                cover=cover,
-                name=data["name"],
-                age=data["age"],
-                gender=data["gender"]
-            )
-            return JsonResponse({"message": "Child created", "id": child.id}, status=201)
-        except (KeyError, json.JSONDecodeError, ValidationError) as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    elif request.method == "PUT":
-        if not child_id:
-            return JsonResponse({"error": "Child ID is required for update"}, status=400)
+        data = []
+        for staff in staff_members:
+            data.append({
+                'id': staff.id,
+                'staffid': staff.staffid,
+                'first_name': staff.first_name,
+                'last_name': staff.last_name,
+                'gender': staff.gender,
+                'contact': staff.contact,
+                'email_address': staff.email_address,
+                'designation': staff.designation.name if staff.designation else '',
+                'designation_id': staff.designation.id if staff.designation else None,
+                'district': staff.district,
+                'status': 'Active' if staff.delete_field == 'no' else 'Inactive'
+            })
         
-        child = get_object_or_404(FarmerChild, id=child_id)
-        try:
-            data = json.loads(request.body)
-            for field, value in data.items():
-                setattr(child, field, value)
-            child.save()
-            return JsonResponse({"message": "Child updated successfully"}, status=200)
-        except (json.JSONDecodeError, ValidationError) as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    elif request.method == "DELETE":
-        if not child_id:
-            return JsonResponse({"error": "Child ID is required for deletion"}, status=400)
-
-        child = get_object_or_404(FarmerChild, id=child_id)
-        child.delete()
-        return JsonResponse({"message": "Child deleted successfully"}, status=200)
-
-    return JsonResponse({"error": "Method not allowed"}, status=405)
-
-
-
-###########################################################################################
-# CONSENT AND LOCATION MODEL
-###########################################################################################
-
-class ConsentLocationView(View):
-    def get(self, request, consent_id=None):
-        if consent_id:
-            consent = get_object_or_404(ConsentLocation_tbl, id=consent_id)
-            data = {
-                "id": consent.id,
-                "interview_start_time": consent.interview_start_time,
-                "gps_point": consent.gps_point,
-                "community_type": consent.community_type,
-                "farmer_resides_in_community": consent.farmer_resides_in_community,
-                "community_name": consent.community_name,
-                "farmer_community": consent.farmer_community,
-                "farmer_available": consent.farmer_available,
-                "reason_unavailable": consent.reason_unavailable,
-                "reason_unavailable_other": consent.reason_unavailable_other,
-                "available_answer_by": consent.available_answer_by,
-                "refusal_toa_participate_reason_survey": consent.refusal_toa_participate_reason_survey,
-            }
-            return JsonResponse(data)
-        else:
-            consents = ConsentLocation_tbl.objects.all().values()
-            return JsonResponse(list(consents), safe=False)
-
-    def post(self, request):
-        try:
-            data = request.POST
-            cover = get_object_or_404(Cover_tbl, id=data.get("cover_id"))
-            consent = ConsentLocation_tbl.objects.create(
-                cover=cover,
-                interview_start_time=parse_datetime(data.get("interview_start_time")),
-                gps_point=data.get("gps_point"),
-                community_type=data.get("community_type"),
-                farmer_resides_in_community=data.get("farmer_resides_in_community"),
-                community_name=data.get("community_name", ""),
-                farmer_community=data.get("farmer_community", ""),
-                farmer_available=data.get("farmer_available"),
-                reason_unavailable=data.get("reason_unavailable", ""),
-                reason_unavailable_other=data.get("reason_unavailable_other", ""),
-                available_answer_by=data.get("available_answer_by", ""),
-                refusal_toa_participate_reason_survey=data.get("refusal_toa_participate_reason_survey", ""),
-            )
-            return JsonResponse({"message": "Consent location created successfully", "id": consent.id})
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    def put(self, request, consent_id):
-        try:
-            consent = get_object_or_404(ConsentLocation_tbl, id=consent_id)
-            data = request.POST
-            consent.interview_start_time = parse_datetime(data.get("interview_start_time", consent.interview_start_time))
-            consent.gps_point = data.get("gps_point", consent.gps_point)
-            consent.community_type = data.get("community_type", consent.community_type)
-            consent.farmer_resides_in_community = data.get("farmer_resides_in_community", consent.farmer_resides_in_community)
-            consent.community_name = data.get("community_name", consent.community_name)
-            consent.farmer_community = data.get("farmer_community", consent.farmer_community)
-            consent.farmer_available = data.get("farmer_available", consent.farmer_available)
-            consent.reason_unavailable = data.get("reason_unavailable", consent.reason_unavailable)
-            consent.reason_unavailable_other = data.get("reason_unavailable_other", consent.reason_unavailable_other)
-            consent.available_answer_by = data.get("available_answer_by", consent.available_answer_by)
-            consent.refusal_toa_participate_reason_survey = data.get("refusal_toa_participate_reason_survey", consent.refusal_toa_participate_reason_survey)
-            consent.save()
-            return JsonResponse({"message": "Consent location updated successfully"})
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    def delete(self, request, consent_id):
-        consent = get_object_or_404(ConsentLocation_tbl, id=consent_id)
-        consent.delete()
-        return JsonResponse({"message": "Consent location deleted successfully"})
-
-
-
-#################################################################################
-#FARMER IDENTIFICATION - INFORMATION ON THE VISIT
-#################################################################################
-
-@csrf_exempt
-def farmer_identification_view(request, pk=None):
-    if request.method == "GET":
-        if pk:
-            farmer_identification = get_object_or_404(FarmerIdentification_Info_OnVisit_tbl, pk=pk)
-            data = {
-                "id": farmer_identification.id,
-                "is_name_correct": farmer_identification.is_name_correct,
-                "exact_name": farmer_identification.exact_name,
-                "nationality": farmer_identification.nationality,
-                "country_origin": farmer_identification.country_origin,
-                "country_origin_other": farmer_identification.country_origin_other,
-                "is_owner": farmer_identification.is_owner,
-                "owner_status_01": farmer_identification.owner_status_01,
-                "owner_status_00": farmer_identification.owner_status_00,
-            }
-            return JsonResponse(data, status=200)
-        else:
-            farmers = FarmerIdentification_Info_OnVisit_tbl.objects.all().values()
-            return JsonResponse(list(farmers), safe=False, status=200)
-
-    elif request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            farmer_identification = FarmerIdentification_Info_OnVisit_tbl.objects.create(
-                is_name_correct=data.get("is_name_correct"),
-                exact_name=data.get("exact_name", ""),
-                nationality=data.get("nationality"),
-                country_origin=data.get("country_origin", ""),
-                country_origin_other=data.get("country_origin_other", ""),
-                is_owner=data.get("is_owner"),
-                owner_status_01=data.get("owner_status_01", ""),
-                owner_status_00=data.get("owner_status_00", ""),
-            )
-            return JsonResponse({"message": "Farmer Identification record created successfully!", "id": farmer_identification.id}, status=201)
-        except IntegrityError:
-            return JsonResponse({"error": "Duplicate entry or database error"}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
-
-    elif request.method == "PUT":
-        if not pk:
-            return JsonResponse({"error": "Missing ID for update"}, status=400)
-        try:
-            farmer_identification = get_object_or_404(FarmerIdentification_Info_OnVisit_tbl, pk=pk)
-            data = json.loads(request.body)
-            farmer_identification.is_name_correct = data.get("is_name_correct", farmer_identification.is_name_correct)
-            farmer_identification.exact_name = data.get("exact_name", farmer_identification.exact_name)
-            farmer_identification.nationality = data.get("nationality", farmer_identification.nationality)
-            farmer_identification.country_origin = data.get("country_origin", farmer_identification.country_origin)
-            farmer_identification.country_origin_other = data.get("country_origin_other", farmer_identification.country_origin_other)
-            farmer_identification.is_owner = data.get("is_owner", farmer_identification.is_owner)
-            farmer_identification.owner_status_01 = data.get("owner_status_01", farmer_identification.owner_status_01)
-            farmer_identification.owner_status_00 = data.get("owner_status_00", farmer_identification.owner_status_00)
-            farmer_identification.save()
-            return JsonResponse({"message": "Farmer Identification record updated successfully!"}, status=200)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
-
-    elif request.method == "DELETE":
-        if not pk:
-            return JsonResponse({"error": "Missing ID for deletion"}, status=400)
-        farmer_identification = get_object_or_404(FarmerIdentification_Info_OnVisit_tbl, pk=pk)
-        farmer_identification.delete()
-        return JsonResponse({"message": "Farmer Identification record deleted successfully!"}, status=200)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
-
-#################################################################################
-#OWNER IDENTIFICATION
-#################################################################################
-
-
-@csrf_exempt
-def owner_identification_view(request, pk=None):
-    if request.method == "GET":
-        if pk:
-            owner_identification = get_object_or_404(FarmerIdentification_OwnerIdentificationTbl, pk=pk)
-            data = {
-                "id": owner_identification.id,
-                "owner_identification": owner_identification.owner_identification.id if owner_identification.owner_identification else None,
-                "name_owner": owner_identification.name_owner,
-                "first_name_owner": owner_identification.first_name_owner,
-                "nationality_owner": owner_identification.nationality_owner,
-                "country_origin_owner": owner_identification.country_origin_owner,
-                "country_origin_owner_other": owner_identification.country_origin_owner_other,
-                "manager_work_length": owner_identification.manager_work_length,
-            }
-            return JsonResponse(data, status=200)
-        else:
-            owners = FarmerIdentification_OwnerIdentificationTbl.objects.all().values()
-            return JsonResponse(list(owners), safe=False, status=200)
-
-    elif request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            owner_identification = FarmerIdentification_OwnerIdentificationTbl.objects.create(
-                owner_identification=FarmerIdentification_Info_OnVisit_tbl.objects.get(id=data.get("owner_identification")) if data.get("owner_identification") else None,
-                name_owner=data.get("name_owner", ""),
-                first_name_owner=data.get("first_name_owner", ""),
-                nationality_owner=data.get("nationality_owner"),
-                country_origin_owner=data.get("country_origin_owner", ""),
-                country_origin_owner_other=data.get("country_origin_owner_other", ""),
-                manager_work_length=data.get("manager_work_length", 0),
-            )
-            return JsonResponse({"message": "Owner Identification record created successfully!", "id": owner_identification.id}, status=201)
-        except FarmerIdentification_Info_OnVisit_tbl.DoesNotExist:
-            return JsonResponse({"error": "Invalid owner_identification ID"}, status=400)
-        except IntegrityError:
-            return JsonResponse({"error": "Duplicate entry or database error"}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
-
-    elif request.method == "PUT":
-        if not pk:
-            return JsonResponse({"error": "Missing ID for update"}, status=400)
-        try:
-            owner_identification = get_object_or_404(FarmerIdentification_OwnerIdentificationTbl, pk=pk)
-            data = json.loads(request.body)
-            if data.get("owner_identification"):
-                owner_identification.owner_identification = FarmerIdentification_Info_OnVisit_tbl.objects.get(id=data.get("owner_identification"))
-            owner_identification.name_owner = data.get("name_owner", owner_identification.name_owner)
-            owner_identification.first_name_owner = data.get("first_name_owner", owner_identification.first_name_owner)
-            owner_identification.nationality_owner = data.get("nationality_owner", owner_identification.nationality_owner)
-            owner_identification.country_origin_owner = data.get("country_origin_owner", owner_identification.country_origin_owner)
-            owner_identification.country_origin_owner_other = data.get("country_origin_owner_other", owner_identification.country_origin_owner_other)
-            owner_identification.manager_work_length = data.get("manager_work_length", owner_identification.manager_work_length)
-            owner_identification.save()
-            return JsonResponse({"message": "Owner Identification record updated successfully!"}, status=200)
-        except FarmerIdentification_Info_OnVisit_tbl.DoesNotExist:
-            return JsonResponse({"error": "Invalid owner_identification ID"}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
-
-    elif request.method == "DELETE":
-        if not pk:
-            return JsonResponse({"error": "Missing ID for deletion"}, status=400)
-        owner_identification = get_object_or_404(FarmerIdentification_OwnerIdentificationTbl, pk=pk)
-        owner_identification.delete()
-        return JsonResponse({"message": "Owner Identification record deleted successfully!"}, status=200)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
- ##################################################################################
-    # WORKERS IN THE FARM
-##################################################################################
-
-@csrf_exempt
-def workers_in_farm_view(request, pk=None):
-    if request.method == "GET":
-        if pk:
-            worker = get_object_or_404(WorkersInTheFarmTbl, pk=pk)
-            data = {
-                "id": worker.id,
-                "workers_in_farm": worker.workers_in_farm.id if worker.workers_in_farm else None,
-                "recruited_workers": worker.recruited_workers,
-                "worker_recruitment_type": worker.worker_recruitment_type,
-                "worker_agreement_type": worker.worker_agreement_type,
-                "worker_agreement_other": worker.worker_agreement_other,
-                "tasks_clarified": worker.tasks_clarified,
-                "additional_tasks": worker.additional_tasks,
-                "refusal_action": worker.refusal_action,
-                "refusal_action_other": worker.refusal_action_other,
-                "salary_status": worker.salary_status,
-                "recruit_1": worker.recruit_1,
-                "recruit_2": worker.recruit_2,
-                "recruit_3": worker.recruit_3,
-                "conditions_1": worker.conditions_1,
-                "conditions_2": worker.conditions_2,
-                "conditions_3": worker.conditions_3,
-                "conditions_4": worker.conditions_4,
-                "conditions_5": worker.conditions_5,
-                "leaving_1": worker.leaving_1,
-                "leaving_2": worker.leaving_2,
-                "consent_recruitment": worker.consent_recruitment,
-            }
-            return JsonResponse(data, status=200)
-        else:
-            workers = WorkersInTheFarmTbl.objects.all().values()
-            return JsonResponse(list(workers), safe=False, status=200)
-
-    elif request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            worker = WorkersInTheFarmTbl.objects.create(
-                workers_in_farm=FarmerIdentification_Info_OnVisit_tbl.objects.get(id=data.get("workers_in_farm")) if data.get("workers_in_farm") else None,
-                recruited_workers=data.get("recruited_workers"),
-                worker_recruitment_type=data.get("worker_recruitment_type"),
-                worker_agreement_type=data.get("worker_agreement_type"),
-                worker_agreement_other=data.get("worker_agreement_other", ""),
-                tasks_clarified=data.get("tasks_clarified"),
-                additional_tasks=data.get("additional_tasks"),
-                refusal_action=data.get("refusal_action"),
-                refusal_action_other=data.get("refusal_action_other", ""),
-                salary_status=data.get("salary_status"),
-                recruit_1=data.get("recruit_1"),
-                recruit_2=data.get("recruit_2"),
-                recruit_3=data.get("recruit_3"),
-                conditions_1=data.get("conditions_1"),
-                conditions_2=data.get("conditions_2"),
-                conditions_3=data.get("conditions_3"),
-                conditions_4=data.get("conditions_4"),
-                conditions_5=data.get("conditions_5"),
-                leaving_1=data.get("leaving_1"),
-                leaving_2=data.get("leaving_2"),
-                consent_recruitment=data.get("consent_recruitment"),
-            )
-            return JsonResponse({"message": "Worker record created successfully!", "id": worker.id}, status=201)
-        except FarmerIdentification_Info_OnVisit_tbl.DoesNotExist:
-            return JsonResponse({"error": "Invalid workers_in_farm ID"}, status=400)
-        except IntegrityError:
-            return JsonResponse({"error": "Duplicate entry or database error"}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
-
-    elif request.method == "PUT":
-        if not pk:
-            return JsonResponse({"error": "Missing ID for update"}, status=400)
-        try:
-            worker = get_object_or_404(WorkersInTheFarmTbl, pk=pk)
-            data = json.loads(request.body)
-            if data.get("workers_in_farm"):
-                worker.workers_in_farm = FarmerIdentification_Info_OnVisit_tbl.objects.get(id=data.get("workers_in_farm"))
-            for field in data:
-                if hasattr(worker, field):
-                    setattr(worker, field, data[field])
-            worker.save()
-            return JsonResponse({"message": "Worker record updated successfully!"}, status=200)
-        except FarmerIdentification_Info_OnVisit_tbl.DoesNotExist:
-            return JsonResponse({"error": "Invalid workers_in_farm ID"}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
-
-    elif request.method == "DELETE":
-        if not pk:
-            return JsonResponse({"error": "Missing ID for deletion"}, status=400)
-        worker = get_object_or_404(WorkersInTheFarmTbl, pk=pk)
-        worker.delete()
-        return JsonResponse({"message": "Worker record deleted successfully!"}, status=200)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-
-
-#########################################################################################
-    # ADULT OF THE RESPONDENTS HOUSEHOLD - INFORMATION ON THE ADULTS LIVING IN THE HOUSEHOLD
-#########################################################################################
-
-@csrf_exempt
-def adult_in_household_view(request, id=None):
-    if request.method == 'GET':
-        if id:
-            # Retrieve a single record
-            adult = get_object_or_404(AdultInHouseholdTbl, id=id)
-            data = {
-                'id': adult.id,
-                'consent_id': adult.consent.id if adult.consent else None,
-                'total_adults': adult.total_adults,
-            }
-        else:
-            # Retrieve all records
-            adults = AdultInHouseholdTbl.objects.all().values('id', 'consent_id', 'total_adults')
-            data = list(adults)
-        return JsonResponse({'data': data}, status=200)
-
-    elif request.method == 'POST':
-        try:
-            body = json.loads(request.body)
-            consent_id = body.get('consent_id')
-            total_adults = body.get('total_adults')
-
-            if not consent_id or not total_adults:
-                return JsonResponse({'error': 'Missing required fields'}, status=400)
-
-            consent = get_object_or_404(ConsentLocation_tbl, id=consent_id)
-
-            adult = AdultInHouseholdTbl.objects.create(
-                consent=consent,
-                total_adults=total_adults
-            )
-
-            return JsonResponse({'message': 'Record created successfully', 'id': adult.id}, status=201)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-
-    elif request.method == 'PUT':
-        if not id:
-            return JsonResponse({'error': 'ID is required for update'}, status=400)
-
-        adult = get_object_or_404(AdultInHouseholdTbl, id=id)
-        
-        try:
-            body = json.loads(request.body)
-            consent_id = body.get('consent_id')
-            total_adults = body.get('total_adults')
-
-            if consent_id:
-                adult.consent = get_object_or_404(ConsentLocation_tbl, id=consent_id)
-            if total_adults:
-                adult.total_adults = total_adults
-
-            adult.save()
-
-            return JsonResponse({'message': 'Record updated successfully'}, status=200)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-
-    elif request.method == 'DELETE':
-        if not id:
-            return JsonResponse({'error': 'ID is required for deletion'}, status=400)
-
-        adult = get_object_or_404(AdultInHouseholdTbl, id=id)
-        adult.delete()
-        return JsonResponse({'message': 'Record deleted successfully'}, status=200)
-
-    else:
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-
-
-@csrf_exempt
-def adult_household_member_view(request, id=None):
-    if request.method == 'GET':
-        if id:
-            # Retrieve a single record
-            member = get_object_or_404(AdultHouseholdMember, id=id)
-            data = {
-                'id': member.id,
-                'household_id': member.household.id,
-                'full_name': member.full_name,
-                'relationship': member.relationship,
-                'relationship_other': member.relationship_other,
-                'gender': member.gender,
-                'nationality': member.nationality,
-                'country_origin': member.country_origin,
-                'country_origin_other': member.country_origin_other,
-                'year_birth': member.year_birth,
-                'birth_certificate': member.birth_certificate,
-                'main_work': member.main_work,
-                'main_work_other': member.main_work_other,
-            }
-        else:
-            # Retrieve all records
-            members = AdultHouseholdMember.objects.all().values(
-                'id', 'household_id', 'full_name', 'relationship', 'relationship_other',
-                'gender', 'nationality', 'country_origin', 'country_origin_other',
-                'year_birth', 'birth_certificate', 'main_work', 'main_work_other'
-            )
-            data = list(members)
-        return JsonResponse({'data': data}, status=200)
-
-    elif request.method == 'POST':
-        try:
-            body = json.loads(request.body)
-            household_id = body.get('household_id')
-            full_name = body.get('full_name')
-            relationship = body.get('relationship')
-            relationship_other = body.get('relationship_other', '')
-            gender = body.get('gender')
-            nationality = body.get('nationality')
-            country_origin = body.get('country_origin', '')
-            country_origin_other = body.get('country_origin_other', '')
-            year_birth = body.get('year_birth')
-            birth_certificate = body.get('birth_certificate')
-            main_work = body.get('main_work')
-            main_work_other = body.get('main_work_other', '')
-
-            if not household_id or not full_name or not relationship or not gender or not nationality or not year_birth or not birth_certificate or not main_work:
-                return JsonResponse({'error': 'Missing required fields'}, status=400)
-
-            if year_birth < 1900 or year_birth > datetime.now().year:
-                return JsonResponse({'error': 'Invalid year of birth'}, status=400)
-
-            household = get_object_or_404(AdultInHouseholdTbl, id=household_id)
-
-            member = AdultHouseholdMember.objects.create(
-                household=household,
-                full_name=full_name,
-                relationship=relationship,
-                relationship_other=relationship_other,
-                gender=gender,
-                nationality=nationality,
-                country_origin=country_origin,
-                country_origin_other=country_origin_other,
-                year_birth=year_birth,
-                birth_certificate=birth_certificate,
-                main_work=main_work,
-                main_work_other=main_work_other
-            )
-
-            return JsonResponse({'message': 'Record created successfully', 'id': member.id}, status=201)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-
-    elif request.method == 'PUT':
-        if not id:
-            return JsonResponse({'error': 'ID is required for update'}, status=400)
-
-        member = get_object_or_404(AdultHouseholdMember, id=id)
-        
-        try:
-            body = json.loads(request.body)
-            household_id = body.get('household_id')
-            full_name = body.get('full_name')
-            relationship = body.get('relationship')
-            relationship_other = body.get('relationship_other', '')
-            gender = body.get('gender')
-            nationality = body.get('nationality')
-            country_origin = body.get('country_origin', '')
-            country_origin_other = body.get('country_origin_other', '')
-            year_birth = body.get('year_birth')
-            birth_certificate = body.get('birth_certificate')
-            main_work = body.get('main_work')
-            main_work_other = body.get('main_work_other', '')
-
-            if household_id:
-                member.household = get_object_or_404(AdultInHouseholdTbl, id=household_id)
-            if full_name:
-                member.full_name = full_name
-            if relationship:
-                member.relationship = relationship
-            if relationship_other:
-                member.relationship_other = relationship_other
-            if gender:
-                member.gender = gender
-            if nationality:
-                member.nationality = nationality
-            if country_origin:
-                member.country_origin = country_origin
-            if country_origin_other:
-                member.country_origin_other = country_origin_other
-            if year_birth:
-                if year_birth < 1900 or year_birth > datetime.now().year:
-                    return JsonResponse({'error': 'Invalid year of birth'}, status=400)
-                member.year_birth = year_birth
-            if birth_certificate:
-                member.birth_certificate = birth_certificate
-            if main_work:
-                member.main_work = main_work
-            if main_work_other:
-                member.main_work_other = main_work_other
-
-            member.save()
-
-            return JsonResponse({'message': 'Record updated successfully'}, status=200)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-
-    elif request.method == 'DELETE':
-        if not id:
-            return JsonResponse({'error': 'ID is required for deletion'}, status=400)
-
-        member = get_object_or_404(AdultHouseholdMember, id=id)
-        member.delete()
-        return JsonResponse({'message': 'Record deleted successfully'}, status=200)
-
-    else:
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-
-
-#################################################################################
-# CHILDREN IN THE RESPONDENT'S HOUSEHOLD MODEL
-#################################################################################
-
-@csrf_exempt
-def children_in_household_view(request, id=None):
-    if request.method == 'GET':
-        if id:
-            # Retrieve a single record
-            child_household = get_object_or_404(ChildrenInHouseholdTbl, id=id)
-            data = {
-                'id': child_household.id,
-                'consent_id': child_household.consent.id if child_household.consent else None,
-                'children_present': child_household.children_present,
-                'num_children_5_to_17': child_household.num_children_5_to_17,
-            }
-        else:
-            # Retrieve all records
-            child_households = ChildrenInHouseholdTbl.objects.all().values(
-                'id', 'consent_id', 'children_present', 'num_children_5_to_17'
-            )
-            data = list(child_households)
-        return JsonResponse({'data': data}, status=200)
-
-    elif request.method == 'POST':
-        try:
-            body = json.loads(request.body)
-            consent_id = body.get('consent_id')
-            children_present = body.get('children_present')
-            num_children_5_to_17 = body.get('num_children_5_to_17')
-
-            if children_present is None or num_children_5_to_17 is None:
-                return JsonResponse({'error': 'Missing required fields'}, status=400)
-
-            if not (1 <= num_children_5_to_17 <= 19):
-                return JsonResponse({'error': 'Number of children must be between 1 and 19'}, status=400)
-
-            consent = get_object_or_404(ConsentLocation_tbl, id=consent_id) if consent_id else None
-
-            child_household = ChildrenInHouseholdTbl.objects.create(
-                consent=consent,
-                children_present=children_present,
-                num_children_5_to_17=num_children_5_to_17
-            )
-
-            return JsonResponse({'message': 'Record created successfully', 'id': child_household.id}, status=201)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-        except ValidationError as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    elif request.method == 'PUT':
-        if not id:
-            return JsonResponse({'error': 'ID is required for update'}, status=400)
-
-        child_household = get_object_or_404(ChildrenInHouseholdTbl, id=id)
-
-        try:
-            body = json.loads(request.body)
-            consent_id = body.get('consent_id')
-            children_present = body.get('children_present')
-            num_children_5_to_17 = body.get('num_children_5_to_17')
-
-            if consent_id:
-                child_household.consent = get_object_or_404(ConsentLocation_tbl, id=consent_id)
-            if children_present:
-                child_household.children_present = children_present
-            if num_children_5_to_17 is not None:
-                if not (1 <= num_children_5_to_17 <= 19):
-                    return JsonResponse({'error': 'Number of children must be between 1 and 19'}, status=400)
-                child_household.num_children_5_to_17 = num_children_5_to_17
-
-            child_household.save()
-
-            return JsonResponse({'message': 'Record updated successfully'}, status=200)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-        except ValidationError as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    elif request.method == 'DELETE':
-        if not id:
-            return JsonResponse({'error': 'ID is required for deletion'}, status=400)
-
-        child_household = get_object_or_404(ChildrenInHouseholdTbl, id=id)
-        child_household.delete()
-        return JsonResponse({'message': 'Record deleted successfully'}, status=200)
-
-    else:
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-
-@csrf_exempt
-def child_in_household_view(request, id=None):
-    if request.method == 'GET':
-        if id:
-            # Retrieve a single record
-            child = get_object_or_404(ChildInHouseholdTbl, id=id)
-            data = {
-                'id': child.id,
-                'household_id': child.household.id,
-                'child_declared_in_cover': child.child_declared_in_cover,
-                'child_identifier': child.child_identifier,
-                'child_can_be_surveyed': child.child_can_be_surveyed,
-                'child_unavailability_reason': child.child_unavailability_reason,
-                'child_not_avail': child.child_not_avail,
-                'who_answers_child_unavailable': child.who_answers_child_unavailable,
-                'who_answers_child_unavailable_other': child.who_answers_child_unavailable_other,
-                'child_first_name': child.child_first_name,
-                'child_surname': child.child_surname,
-                'child_gender': child.child_gender,
-                'child_year_birth': child.child_year_birth,
-                'child_birth_certificate': child.child_birth_certificate,
-                'child_birth_certificate_reason': child.child_birth_certificate_reason,
-            }
-        else:
-            # Retrieve all records
-            children = ChildInHouseholdTbl.objects.all().values(
-                'id', 'household_id', 'child_declared_in_cover', 'child_identifier',
-                'child_can_be_surveyed', 'child_unavailability_reason', 'child_not_avail',
-                'who_answers_child_unavailable', 'who_answers_child_unavailable_other',
-                'child_first_name', 'child_surname', 'child_gender', 'child_year_birth',
-                'child_birth_certificate', 'child_birth_certificate_reason'
-            )
-            data = list(children)
-        return JsonResponse({'data': data}, status=200)
-
-    elif request.method == 'POST':
-        try:
-            body = json.loads(request.body)
-            household_id = body.get('household_id')
-            child_declared_in_cover = body.get('child_declared_in_cover')
-            child_identifier = body.get('child_identifier')
-            child_can_be_surveyed = body.get('child_can_be_surveyed')
-            child_unavailability_reason = body.get('child_unavailability_reason', '')
-            child_not_avail = body.get('child_not_avail', '')
-            who_answers_child_unavailable = body.get('who_answers_child_unavailable', '')
-            who_answers_child_unavailable_other = body.get('who_answers_child_unavailable_other', '')
-            child_first_name = body.get('child_first_name')
-            child_surname = body.get('child_surname')
-            child_gender = body.get('child_gender')
-            child_year_birth = body.get('child_year_birth')
-            child_birth_certificate = body.get('child_birth_certificate')
-            child_birth_certificate_reason = body.get('child_birth_certificate_reason', '')
-
-            if not all([household_id, child_declared_in_cover, child_identifier, child_can_be_surveyed, 
-                        child_first_name, child_surname, child_gender, child_year_birth, child_birth_certificate]):
-                return JsonResponse({'error': 'Missing required fields'}, status=400)
-
-            if not (1 <= child_identifier <= 19):
-                return JsonResponse({'error': 'Child identifier must be between 1 and 19'}, status=400)
-
-            if not (2007 <= child_year_birth <= 2020):
-                return JsonResponse({'error': 'Year of birth must be between 2007 and 2020'}, status=400)
-
-            household = get_object_or_404(ChildrenInHouseholdTbl, id=household_id)
-
-            child = ChildInHouseholdTbl.objects.create(
-                household=household,
-                child_declared_in_cover=child_declared_in_cover,
-                child_identifier=child_identifier,
-                child_can_be_surveyed=child_can_be_surveyed,
-                child_unavailability_reason=child_unavailability_reason,
-                child_not_avail=child_not_avail,
-                who_answers_child_unavailable=who_answers_child_unavailable,
-                who_answers_child_unavailable_other=who_answers_child_unavailable_other,
-                child_first_name=child_first_name,
-                child_surname=child_surname,
-                child_gender=child_gender,
-                child_year_birth=child_year_birth,
-                child_birth_certificate=child_birth_certificate,
-                child_birth_certificate_reason=child_birth_certificate_reason
-            )
-
-            return JsonResponse({'message': 'Record created successfully', 'id': child.id}, status=201)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-        except ValidationError as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    elif request.method == 'PUT':
-        if not id:
-            return JsonResponse({'error': 'ID is required for update'}, status=400)
-
-        child = get_object_or_404(ChildInHouseholdTbl, id=id)
-
-        try:
-            body = json.loads(request.body)
-
-            household_id = body.get('household_id')
-            if household_id:
-                child.household = get_object_or_404(ChildrenInHouseholdTbl, id=household_id)
-
-            child.child_declared_in_cover = body.get('child_declared_in_cover', child.child_declared_in_cover)
-            child.child_identifier = body.get('child_identifier', child.child_identifier)
-            child.child_can_be_surveyed = body.get('child_can_be_surveyed', child.child_can_be_surveyed)
-            child.child_unavailability_reason = body.get('child_unavailability_reason', child.child_unavailability_reason)
-            child.child_not_avail = body.get('child_not_avail', child.child_not_avail)
-            child.who_answers_child_unavailable = body.get('who_answers_child_unavailable', child.who_answers_child_unavailable)
-            child.who_answers_child_unavailable_other = body.get('who_answers_child_unavailable_other', child.who_answers_child_unavailable_other)
-            child.child_first_name = body.get('child_first_name', child.child_first_name)
-            child.child_surname = body.get('child_surname', child.child_surname)
-            child.child_gender = body.get('child_gender', child.child_gender)
-            child.child_year_birth = body.get('child_year_birth', child.child_year_birth)
-            child.child_birth_certificate = body.get('child_birth_certificate', child.child_birth_certificate)
-            child.child_birth_certificate_reason = body.get('child_birth_certificate_reason', child.child_birth_certificate_reason)
-
-            if not (1 <= child.child_identifier <= 19):
-                return JsonResponse({'error': 'Child identifier must be between 1 and 19'}, status=400)
-
-            if not (2007 <= child.child_year_birth <= 2020):
-                return JsonResponse({'error': 'Year of birth must be between 2007 and 2020'}, status=400)
-
-            child.save()
-            return JsonResponse({'message': 'Record updated successfully'}, status=200)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-        except ValidationError as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    elif request.method == 'DELETE':
-        if not id:
-            return JsonResponse({'error': 'ID is required for deletion'}, status=400)
-
-        child = get_object_or_404(ChildInHouseholdTbl, id=id)
-        child.delete()
-        return JsonResponse({'message': 'Record deleted successfully'}, status=200)
-
-    else:
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-
-
-############################################
-# ChildHouseholdDetails Model
-############################################
-
-@csrf_exempt
-def child_household_details(request, id=None):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            child = ChildHouseholdDetailsTbl.objects.create(
-                child_in_household_id=data.get("child_in_household"),
-                child_born_in_community=data.get("child_born_in_community"),
-                child_country_of_birth=data.get("child_country_of_birth", ""),
-                child_country_of_birth_other=data.get("child_country_of_birth_other", ""),
-                child_relationship_to_head=data.get("child_relationship_to_head"),
-                child_relationship_to_head_other=data.get("child_relationship_to_head_other", ""),
-                child_not_live_with_family_reason=data.get("child_not_live_with_family_reason", ""),
-                child_not_live_with_family_reason_other=data.get("child_not_live_with_family_reason_other", ""),
-                child_decision_maker=data.get("child_decision_maker"),
-                child_decision_maker_other=data.get("child_decision_maker_other", ""),
-                child_agree_with_decision=data.get("child_agree_with_decision"),
-                child_seen_parents=data.get("child_seen_parents"),
-                child_last_seen_parent=data.get("child_last_seen_parent"),
-                child_living_duration=data.get("child_living_duration"),
-                child_accompanied_by=data.get("child_accompanied_by"),
-                child_accompanied_by_other=data.get("child_accompanied_by_other", ""),
-            )
-            return JsonResponse({"message": "Child household details created successfully", "id": child.id}, status=201)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
+        return JsonResponse({'success': True, 'data': data})
     
-    elif request.method == "GET":
-        if id:
-            child = get_object_or_404(ChildHouseholdDetailsTbl, id=id)
-            data = {
-                "id": child.id,
-                "child_in_household": child.child_in_household_id,
-                "child_born_in_community": child.child_born_in_community,
-                "child_country_of_birth": child.child_country_of_birth,
-                "child_country_of_birth_other": child.child_country_of_birth_other,
-                "child_relationship_to_head": child.child_relationship_to_head,
-                "child_relationship_to_head_other": child.child_relationship_to_head_other,
-                "child_not_live_with_family_reason": child.child_not_live_with_family_reason,
-                "child_not_live_with_family_reason_other": child.child_not_live_with_family_reason_other,
-                "child_decision_maker": child.child_decision_maker,
-                "child_decision_maker_other": child.child_decision_maker_other,
-                "child_agree_with_decision": child.child_agree_with_decision,
-                "child_seen_parents": child.child_seen_parents,
-                "child_last_seen_parent": child.child_last_seen_parent,
-                "child_living_duration": child.child_living_duration,
-                "child_accompanied_by": child.child_accompanied_by,
-                "child_accompanied_by_other": child.child_accompanied_by_other,
-            }
-            return JsonResponse(data, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading staff data: {str(e)}'})
+
+@login_required
+def get_staff_details(request):
+    try:
+        staff_id = request.GET.get('staff_id')
+        if not staff_id:
+            return JsonResponse({'success': False, 'message': 'Staff ID is required'})
         
-        else:
-            children = ChildHouseholdDetailsTbl.objects.all().values()
-            return JsonResponse(list(children), safe=False, status=200)
-    
-    elif request.method == "PUT":
-        child = get_object_or_404(ChildHouseholdDetailsTbl, id=id)
-        try:
-            data = json.loads(request.body)
-            for field, value in data.items():
-                setattr(child, field, value)
-            child.save()
-            return JsonResponse({"message": "Child household details updated successfully"}, status=200)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-    
-    elif request.method == "DELETE":
-        child = get_object_or_404(ChildHouseholdDetailsTbl, id=id)
-        child.delete()
-        return JsonResponse({"message": "Child household details deleted successfully"}, status=200)
-    
-    return JsonResponse({"error": "Method not allowed"}, status=405)
-
-
-############################################
-# ChildEducationDetails Model   
-############################################
-
-
-class ChildEducationDetailsView(View):
-    def get(self, request, *args, **kwargs):
-        """Retrieve all records or a specific record if an ID is provided."""
-        child_id = kwargs.get('id')
-        if child_id:
-            child = get_object_or_404(ChildEducationDetailsTbl, id=child_id)
-            return JsonResponse(self.serialize_child(child), safe=False)
+        staff = get_object_or_404(staffTbl, id=staff_id)
         
-        children = ChildEducationDetailsTbl.objects.all()
-        children_data = [self.serialize_child(child) for child in children]
-        return JsonResponse(children_data, safe=False)
-
-    @csrf_exempt
-    def post(self, request, *args, **kwargs):
-        """Create a new record."""
-        try:
-            data = json.loads(request.body)
-            child = ChildEducationDetailsTbl.objects.create(**data)
-            return JsonResponse({'message': 'Child record created', 'id': child.id}, status=201)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    @csrf_exempt
-    def put(self, request, *args, **kwargs):
-        """Update an existing record."""
-        child_id = kwargs.get('id')
-        if not child_id:
-            return JsonResponse({'error': 'ID is required for update'}, status=400)
-        
-        child = get_object_or_404(ChildEducationDetailsTbl, id=child_id)
-        try:
-            data = json.loads(request.body)
-            for key, value in data.items():
-                setattr(child, key, value)
-            child.save()
-            return JsonResponse({'message': 'Child record updated'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    @csrf_exempt
-    def delete(self, request, *args, **kwargs):
-        """Delete a record."""
-        child_id = kwargs.get('id')
-        if not child_id:
-            return JsonResponse({'error': 'ID is required for deletion'}, status=400)
-        
-        child = get_object_or_404(ChildEducationDetailsTbl, id=child_id)
-        child.delete()
-        return JsonResponse({'message': 'Child record deleted'}, status=204)
-
-    def serialize_child(self, child):
-        """Helper function to serialize the child object."""
-        return {
-            'id': child.id,
-            'child_father_location': child.child_father_location,
-            'child_father_country': child.child_father_country,
-            'child_father_country_other': child.child_father_country_other,
-            'child_mother_location': child.child_mother_location,
-            'child_mother_country': child.child_mother_country,
-            'child_mother_country_other': child.child_mother_country_other,
-            'child_educated': child.child_educated,
-            'child_school_name': child.child_school_name,
-            'school_type': child.school_type,
-            'child_grade': child.child_grade,
-            'sch_going_times': child.sch_going_times,
-            'basic_need_available': child.basic_need_available,
-            'child_schl2': child.child_schl2,
-            'child_schl_left_age': child.child_schl_left_age,
-            'calculation_response': child.calculation_response,
-            'reading_response': child.reading_response,
-            'writing_response': child.writing_response,
-            'education_level': child.education_level,
-            'child_schl_left_why': child.child_schl_left_why,
-            'child_schl_left_why_other': child.child_schl_left_why_other,
-            'child_why_no_school': child.child_why_no_school,
-
-            # Light Work Fields
-            'total_hours_light_work_school': child.total_hours_light_work_school,
-            'total_hours_light_work_non_school': child.total_hours_light_work_non_school,
-            'under_supervision': child.under_supervision,
-            'performed_tasks_12months': child.performed_tasks_12months,
-            'remuneration_received_12months': child.remuneration_received_12months,
-            'light_duty_duration_school_12': child.light_duty_duration_school_12,
-            'light_duty_duration_non_school_12': child.light_duty_duration_non_school_12,
-            'task_location_12': child.task_location_12,
-            'task_location_other_12': child.task_location_other_12,
-            'total_hours_light_work_school_12': child.total_hours_light_work_school_12,
-            'total_hours_light_work_non_school_12': child.total_hours_light_work_non_school_12,
-            'under_supervision_12': child.under_supervision_12,
-            'tasks_done_in_7days': child.tasks_done_in_7days,
-
-            # Heavy Work Fields
-            'salary_received': child.salary_received,
-            'task_location': child.task_location,
-            'task_location_other': child.task_location_other,
-            'longest_time_school_day': child.longest_time_school_day,
-            'longest_time_non_school_day': child.longest_time_non_school_day,
-            'total_hours_school_days': child.total_hours_school_days,
-            'total_hours_non_school_days': child.total_hours_non_school_days,
-            'under_supervision': child.under_supervision,
-            'heavy_tasks_12months': child.heavy_tasks_12months,
-            'salary_received_12': child.salary_received_12,
-            'task_location_12': child.task_location_12,
-            'task_location_other_12': child.task_location_other_12,
-            'child_work_who': child.child_work_who,
-            'child_work_who_other': child.child_work_who_other,
-            'child_work_why': child.child_work_why,
-            'child_work_why_other': child.child_work_why_other,
-
-            # Health & Safety Fields
-            'agrochemicals_applied': child.agrochemicals_applied,
-            'child_on_farm_during_agro': child.child_on_farm_during_agro,
-            'suffered_injury': child.suffered_injury,
-            'wound_cause': child.wound_cause,
-            'wound_cause_other': child.wound_cause_other,
-            'wound_time': child.wound_time,
-            'child_often_pains': child.child_often_pains,
-            'help_child_health': child.help_child_health,
-            'help_child_health_other': child.help_child_health_other,
-            'child_photo': child.child_photo.url if child.child_photo else None,  # Handle image field properly
+        data = {
+            'id': staff.id,
+            'staffid': staff.staffid,
+            'first_name': staff.first_name,
+            'last_name': staff.last_name,
+            'gender': staff.gender,
+            'contact': staff.contact,
+            'email_address': staff.email_address,
+            'designation_id': staff.designation.id if staff.designation else None,
+            'district': staff.district,
+            'status': 'Active' if staff.delete_field == 'no' else 'Inactive'
         }
-
-####################################################################################################
-# Child Remediation Assessment
-####################################################################################################
-
-@method_decorator(csrf_exempt, name='dispatch')
-class ChildRemediationView(View):
-    
-    def get(self, request, remediation_id=None):
-        if remediation_id:
-            remediation = get_object_or_404(ChildRemediationTbl, id=remediation_id)
-            data = {
-                "id": remediation.id,
-                "consent": remediation.consent.id if remediation.consent else None,
-                "school_fees_owed": remediation.school_fees_owed,
-                "parent_remediation": remediation.parent_remediation,
-                "parent_remediation_other": remediation.parent_remediation_other,
-                "community_remediation": remediation.community_remediation,
-                "community_remediation_other": remediation.community_remediation_other,
-            }
-            return JsonResponse(data, status=200)
         
-        all_remediations = ChildRemediationTbl.objects.all().values()
-        return JsonResponse(list(all_remediations), safe=False, status=200)
+        return JsonResponse({'success': True, 'data': data})
     
-    def post(self, request):
-        try:
-            data = json.loads(request.body)
-            remediation = ChildRemediationTbl.objects.create(
-                consent_id=data.get("consent"),
-                school_fees_owed=data.get("school_fees_owed"),
-                parent_remediation=data.get("parent_remediation"),
-                parent_remediation_other=data.get("parent_remediation_other"),
-                community_remediation=data.get("community_remediation"),
-                community_remediation_other=data.get("community_remediation_other"),
-            )
-            return JsonResponse({"message": "Remediation record created successfully", "id": remediation.id}, status=201)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-    
-    def put(self, request, remediation_id):
-        remediation = get_object_or_404(ChildRemediationTbl, id=remediation_id)
-        try:
-            data = json.loads(request.body)
-            remediation.consent_id = data.get("consent", remediation.consent_id)
-            remediation.school_fees_owed = data.get("school_fees_owed", remediation.school_fees_owed)
-            remediation.parent_remediation = data.get("parent_remediation", remediation.parent_remediation)
-            remediation.parent_remediation_other = data.get("parent_remediation_other", remediation.parent_remediation_other)
-            remediation.community_remediation = data.get("community_remediation", remediation.community_remediation)
-            remediation.community_remediation_other = data.get("community_remediation_other", remediation.community_remediation_other)
-            remediation.save()
-            return JsonResponse({"message": "Remediation record updated successfully"}, status=200)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-    
-    def delete(self, request, remediation_id):
-        remediation = get_object_or_404(ChildRemediationTbl, id=remediation_id)
-        remediation.delete()
-        return JsonResponse({"message": "Remediation record deleted successfully"}, status=200)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading staff details: {str(e)}'})
 
-
-####################################################################################################
-# Household Sensitization Assessment
-####################################################################################################
-
-class HouseholdSensitizationView(View):
-    def get(self, request, sensitization_id=None):
-        if sensitization_id:
-            sensitization = get_object_or_404(HouseholdSensitizationTbl, pk=sensitization_id)
-            data = {
-                "id": sensitization.id,
-                "consent": sensitization.consent.id if sensitization.consent else None,
-                "sensitized_good_parenting": sensitization.sensitized_good_parenting,
-                "sensitized_child_protection": sensitization.sensitized_child_protection,
-                "sensitized_safe_labour": sensitization.sensitized_safe_labour,
-                "number_of_female_adults": sensitization.number_of_female_adults,
-                "number_of_male_adults": sensitization.number_of_male_adults,
-                "picture_of_respondent": sensitization.picture_of_respondent,
-                "picture_sensitization": sensitization.picture_sensitization.url if sensitization.picture_sensitization else None,
-                "feedback_observations": sensitization.feedback_observations,
-            }
-            return JsonResponse(data, status=200)
-        
-        sensitizations = HouseholdSensitizationTbl.objects.all().values()
-        return JsonResponse(list(sensitizations), safe=False, status=200)
-
-    def post(self, request):
-        try:
-            data = json.loads(request.body)
-            sensitization = HouseholdSensitizationTbl.objects.create(
-                consent_id=data.get("consent"),
-                sensitized_good_parenting=data.get("sensitized_good_parenting"),
-                sensitized_child_protection=data.get("sensitized_child_protection"),
-                sensitized_safe_labour=data.get("sensitized_safe_labour"),
-                number_of_female_adults=data.get("number_of_female_adults"),
-                number_of_male_adults=data.get("number_of_male_adults"),
-                picture_of_respondent=data.get("picture_of_respondent"),
-                feedback_observations=data.get("feedback_observations"),
-            )
-            return JsonResponse({"message": "Sensitization record created successfully", "id": sensitization.id}, status=201)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    def put(self, request, sensitization_id):
-        sensitization = get_object_or_404(HouseholdSensitizationTbl, pk=sensitization_id)
-        try:
-            data = json.loads(request.body)
-            sensitization.sensitized_good_parenting = data.get("sensitized_good_parenting", sensitization.sensitized_good_parenting)
-            sensitization.sensitized_child_protection = data.get("sensitized_child_protection", sensitization.sensitized_child_protection)
-            sensitization.sensitized_safe_labour = data.get("sensitized_safe_labour", sensitization.sensitized_safe_labour)
-            sensitization.number_of_female_adults = data.get("number_of_female_adults", sensitization.number_of_female_adults)
-            sensitization.number_of_male_adults = data.get("number_of_male_adults", sensitization.number_of_male_adults)
-            sensitization.picture_of_respondent = data.get("picture_of_respondent", sensitization.picture_of_respondent)
-            sensitization.feedback_observations = data.get("feedback_observations", sensitization.feedback_observations)
-            sensitization.save()
-            return JsonResponse({"message": "Sensitization record updated successfully"}, status=200)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    def delete(self, request, sensitization_id):
-        sensitization = get_object_or_404(HouseholdSensitizationTbl, pk=sensitization_id)
-        sensitization.delete()
-        return JsonResponse({"message": "Sensitization record deleted successfully"}, status=204)
-
-
-####################################################################################################
-# End of Collection
-####################################################################################################
-
-@method_decorator(csrf_exempt, name='dispatch')
-class EndOfCollectionView(View):
-    
-    def get(self, request, id=None):
-        if id:
-            record = get_object_or_404(EndOfCollection, id=id)
-            data = {
-                'id': record.id,
-                'sensitization': record.sensitization.id if record.sensitization else None,
-                'feedback_enum': record.feedback_enum,
-                'picture_of_respondent': record.picture_of_respondent.url if record.picture_of_respondent else None,
-                'signature_producer': record.signature_producer.url if record.signature_producer else None,
-                'end_gps': record.end_gps,
-                'end_time': record.end_time,
-            }
-            return JsonResponse(data, status=200)
-        else:
-            records = EndOfCollection.objects.all().values()
-            return JsonResponse(list(records), safe=False, status=200)
-    
-    def post(self, request):
-        data = request.POST
-        file_data = request.FILES
-        
-        record = EndOfCollection.objects.create(
-            sensitization_id=data.get('sensitization'),
-            feedback_enum=data.get('feedback_enum'),
-            end_gps=data.get('end_gps'),
-            end_time=data.get('end_time'),
-            picture_of_respondent=file_data.get('picture_of_respondent'),
-            signature_producer=file_data.get('signature_producer'),
-        )
-        return JsonResponse({'message': 'Record created', 'id': record.id}, status=201)
-    
-    def put(self, request, id):
-        record = get_object_or_404(EndOfCollection, id=id)
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def create_staff(request):
+    try:
         data = json.loads(request.body)
         
-        record.feedback_enum = data.get('feedback_enum', record.feedback_enum)
-        record.end_gps = data.get('end_gps', record.end_gps)
-        record.end_time = data.get('end_time', record.end_time)
-        record.sensitization_id = data.get('sensitization', record.sensitization_id)
-        record.save()
+        # Validate required fields
+        required_fields = ['first_name', 'last_name', 'gender', 'contact', 'designation']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return JsonResponse({'success': False, 'message': f'Missing required field: {field}'})
         
-        return JsonResponse({'message': 'Record updated'}, status=200)
+        # Check if designation exists
+        try:
+            designation = Group.objects.get(id=data['designation'])
+        except Group.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Designation not found'})
+        
+        # Check if email already exists (if provided)
+        if data.get('email_address'):
+            if staffTbl.objects.filter(email_address=data['email_address'], delete_field='no').exists():
+                return JsonResponse({'success': False, 'message': 'Email address already exists'})
+        
+        # Create new staff member
+        staff = staffTbl(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            gender=data['gender'],
+            contact=data['contact'],
+            email_address=data.get('email_address', ''),
+            designation=designation,
+            district=data.get('district', '')
+        )
+        staff.save()
+        
+        return JsonResponse({'success': True, 'message': 'Staff member created successfully', 'staff_id': staff.id})
     
-    def delete(self, request, id):
-        record = get_object_or_404(EndOfCollection, id=id)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error creating staff member: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def update_staff(request, staff_id):
+    try:
+        staff = get_object_or_404(staffTbl, id=staff_id)
+        data = json.loads(request.body)
         
-        if record.picture_of_respondent:
-            default_storage.delete(record.picture_of_respondent.path)
-        if record.signature_producer:
-            default_storage.delete(record.signature_producer.path)
+        # Update basic fields
+        if 'first_name' in data:
+            staff.first_name = data['first_name']
+        if 'last_name' in data:
+            staff.last_name = data['last_name']
+        if 'gender' in data:
+            staff.gender = data['gender']
+        if 'contact' in data:
+            staff.contact = data['contact']
+        if 'email_address' in data:
+            # Check if email already exists (excluding current staff)
+            if staffTbl.objects.filter(email_address=data['email_address'], delete_field='no').exclude(id=staff_id).exists():
+                return JsonResponse({'success': False, 'message': 'Email address already exists'})
+            staff.email_address = data['email_address']
+        if 'district' in data:
+            staff.district = data['district']
         
-        record.delete()
-        return JsonResponse({'message': 'Record deleted'}, status=204)
+        # Update designation if provided
+        if 'designation' in data and data['designation']:
+            try:
+                designation = Group.objects.get(id=data['designation'])
+                staff.designation = designation
+            except Group.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Designation not found'})
+        
+        # Update status if provided
+        if 'status' in data:
+            staff.delete_field = 'yes' if data['status'] == 'Inactive' else 'no'
+        
+        staff.save()
+        
+        return JsonResponse({'success': True, 'message': 'Staff member updated successfully'})
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error updating staff member: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+@login_required
+def delete_staff(request, staff_id):
+    try:
+        staff = get_object_or_404(staffTbl, id=staff_id)
+        staff.delete_field = 'yes'  # Soft delete
+        staff.save()
+        return JsonResponse({'success': True, 'message': 'Staff member deleted successfully'})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error deleting staff member: {str(e)}'})
+
+@login_required
+def get_designation_options(request):
+    try:
+        designations = Group.objects.all()
+        options = [{'id': designation.id, 'name': designation.name} for designation in designations]
+        return JsonResponse(options, safe=False)
+    except Exception as e:
+        return JsonResponse([], safe=False)
+
+
+
+
+########################################################################################################################################################################
+
+
+@method_decorator(login_required, name='dispatch')
+class AssignmentsOverviewView(View):
+    def get(self, request):
+        return render(request, 'core/enumerator_assgnment.html')
+
+@login_required
+def get_assignments_data(request):
+    try:
+        # Get all district staff assignments
+        assignments = districtStaffTbl.objects.select_related(
+            'staffTbl_foreignkey', 'districtTbl_foreignkey', 'districtTbl_foreignkey__regionTbl_foreignkey'
+        ).all()
+        
+        data = []
+        for assignment in assignments:
+            data.append({
+                'id': assignment.id,
+                'staff_name': f"{assignment.staffTbl_foreignkey.first_name} {assignment.staffTbl_foreignkey.last_name}",
+                'staff_id': assignment.staffTbl_foreignkey.staffid,
+                'district': assignment.districtTbl_foreignkey.district,
+                'district_id': assignment.districtTbl_foreignkey.id,
+                'region': assignment.districtTbl_foreignkey.regionTbl_foreignkey.region if assignment.districtTbl_foreignkey.regionTbl_foreignkey else '',
+                'created_date': assignment.created_date.strftime('%Y-%m-%d %H:%M:%S') if assignment.created_date else '',
+                'status': 'Active' if assignment.delete_field == 'no' else 'Inactive'
+            })
+
+            print(data)
+        
+        return JsonResponse({'success': True, 'data': data})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading assignments: {str(e)}'})
+
+@login_required
+def get_assignment_details(request):
+    try:
+        assignment_id = request.GET.get('assignment_id')
+        if not assignment_id:
+            return JsonResponse({'success': False, 'message': 'Assignment ID is required'})
+        
+        assignment = get_object_or_404(districtStaffTbl, id=assignment_id)
+        
+        data = {
+            'id': assignment.id,
+            'staff_id': assignment.staffTbl_foreignkey.id,
+            'district_id': assignment.districtTbl_foreignkey.id,
+            'status': 'Active' if assignment.delete_field == 'no' else 'Inactive'
+        }
+        
+        return JsonResponse({'success': True, 'data': data})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading assignment details: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def create_assignment(request):
+    try:
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        required_fields = ['staff_id', 'district_id']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return JsonResponse({'success': False, 'message': f'Missing required field: {field}'})
+        
+        # Check if staff exists
+        try:
+            staff = staffTbl.objects.get(id=data['staff_id'])
+        except staffTbl.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Staff member not found'})
+        
+        # Check if district exists
+        try:
+            district = districtTbl.objects.get(id=data['district_id'])
+        except districtTbl.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'District not found'})
+        
+        # Check if assignment already exists
+        if districtStaffTbl.objects.filter(
+            staffTbl_foreignkey=staff, 
+            districtTbl_foreignkey=district,
+            delete_field='no'
+        ).exists():
+            return JsonResponse({'success': False, 'message': 'Assignment already exists for this staff and district'})
+        
+        # Create new assignment
+        assignment = districtStaffTbl(
+            staffTbl_foreignkey=staff,
+            districtTbl_foreignkey=district
+        )
+        assignment.save()
+        
+        return JsonResponse({'success': True, 'message': 'Assignment created successfully'})
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error creating assignment: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def update_assignment(request, assignment_id):
+    try:
+        assignment = get_object_or_404(districtStaffTbl, id=assignment_id)
+        data = json.loads(request.body)
+        
+        # Update district if provided
+        if 'district_id' in data and data['district_id']:
+            try:
+                district = districtTbl.objects.get(id=data['district_id'])
+                assignment.districtTbl_foreignkey = district
+            except districtTbl.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'District not found'})
+        
+        # Update status if provided
+        if 'status' in data:
+            assignment.delete_field = 'yes' if data['status'] == 'Inactive' else 'no'
+        
+        assignment.save()
+        
+        return JsonResponse({'success': True, 'message': 'Assignment updated successfully'})
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error updating assignment: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+@login_required
+def delete_assignment(request, assignment_id):
+    try:
+        assignment = get_object_or_404(districtStaffTbl, id=assignment_id)
+        assignment.delete_field = 'yes'  # Soft delete
+        assignment.save()
+        return JsonResponse({'success': True, 'message': 'Assignment deleted successfully'})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error deleting assignment: {str(e)}'})
+
+@login_required
+def get_staff_options(request):
+    try:
+        staff_members = staffTbl.objects.filter(delete_field='no')
+        options = [{'id': staff.id, 'text': f"{staff.first_name} {staff.last_name} ({staff.staffid})"} for staff in staff_members]
+        return JsonResponse(options, safe=False)
+    except Exception as e:
+        return JsonResponse([], safe=False)
+
+@login_required
+def get_district_options(request):
+    try:
+        districts = districtTbl.objects.filter(delete_field='no').select_related('regionTbl_foreignkey')
+        options = [{'id': district.id, 'text': f"{district.district} ({district.regionTbl_foreignkey.region if district.regionTbl_foreignkey else 'No Region'})"} for district in districts]
+        return JsonResponse(options, safe=False)
+    except Exception as e:
+        return JsonResponse([], safe=False)
+    
+
+
+
+###########################################################################################################################################################################################################
+
+
+# views.py
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.utils import timezone
+import json
+from .models import DeadlineAssignment, PriorityLevel, DeadlineType, staffTbl
+
+@method_decorator(login_required, name='dispatch')
+class DeadlinesView(View):
+    def get(self, request):
+        return render(request, 'core/deadlines_priorities.html')
+
+@login_required
+def get_deadlines_data(request):
+    try:
+        # Get all deadline assignments
+        deadlines = DeadlineAssignment.objects.select_related(
+            'assigned_to', 'assigned_by', 'deadline_type', 'priority_level'
+        ).all()
+        
+        data = []
+        for deadline in deadlines:
+            data.append({
+                'id': deadline.id,
+                'title': deadline.title,  # Ensure this field exists in your model
+                'description': deadline.description,
+                'deadline_type': deadline.deadline_type.name,
+                'deadline_type_id': deadline.deadline_type.id,
+                'priority_level': deadline.priority_level.name,
+                'priority_level_id': deadline.priority_level.id,
+                'priority_color': deadline.priority_level.color,
+                'assigned_to': f"{deadline.assigned_to.first_name} {deadline.assigned_to.last_name}",
+                'assigned_to_id': deadline.assigned_to.id,
+                'assigned_by': f"{deadline.assigned_by.first_name} {deadline.assigned_by.last_name}",
+                'staff_type': deadline.staff_type,
+                'start_date': deadline.start_date.strftime('%Y-%m-%d %H:%M:%S') if deadline.start_date else None,
+                'end_date': deadline.end_date.strftime('%Y-%m-%d %H:%M:%S') if deadline.end_date else None,
+                'status': deadline.status,
+                'completion_date': deadline.completion_date.strftime('%Y-%m-%d %H:%M:%S') if deadline.completion_date else None,
+                'notes': deadline.notes,
+                'is_recurring': deadline.is_recurring,
+                'recurrence_pattern': deadline.recurrence_pattern,
+                'days_remaining': deadline.days_remaining,
+                'is_overdue': deadline.is_overdue
+            })
+
+            print(data)
+        return JsonResponse({'success': True, 'data': data})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading deadlines: {str(e)}'})
+@login_required
+def get_deadline_details(request):
+    try:
+        deadline_id = request.GET.get('deadline_id')
+        if not deadline_id:
+            return JsonResponse({'success': False, 'message': 'Deadline ID is required'})
+        
+        deadline = get_object_or_404(DeadlineAssignment, id=deadline_id)
+        
+        data = {
+            'id': deadline.id,
+            'title': deadline.title,
+            'description': deadline.description,
+            'deadline_type_id': deadline.deadline_type.id,
+            'priority_level_id': deadline.priority_level.id,
+            'assigned_to_id': deadline.assigned_to.id,
+            'staff_type': deadline.staff_type,
+            'start_date': deadline.start_date.strftime('%Y-%m-%dT%H:%M'),
+            'end_date': deadline.end_date.strftime('%Y-%m-%dT%H:%M'),
+            'status': deadline.status,
+            'completion_date': deadline.completion_date.strftime('%Y-%m-%dT%H:%M') if deadline.completion_date else None,
+            'notes': deadline.notes,
+            'is_recurring': deadline.is_recurring,
+            'recurrence_pattern': deadline.recurrence_pattern
+        }
+        
+        return JsonResponse({'success': True, 'data': data})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading deadline details: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def create_deadline(request):
+    try:
+        data = json.loads(request.body)
+        print(data)
+        
+        # Validate required fields
+        required_fields = ['title', 'deadline_type_id', 'priority_level_id', 'assigned_to_id', 'start_date', 'end_date']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return JsonResponse({'success': False, 'message': f'Missing required field: {field}'})
+        
+        # Get current user's staff record
+        current_user = request.user
+        try:
+            assigned_by = staffTbl.objects.get(user=current_user)
+        except staffTbl.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Current user does not have a staff record'})
+        
+        # Validate foreign keys
+        try:
+            deadline_type = DeadlineType.objects.get(id=data['deadline_type_id'])
+            priority_level = PriorityLevel.objects.get(id=data['priority_level_id'])
+            assigned_to = staffTbl.objects.get(id=data['assigned_to_id'])
+        except (DeadlineType.DoesNotExist, PriorityLevel.DoesNotExist, staffTbl.DoesNotExist) as e:
+            return JsonResponse({'success': False, 'message': 'Invalid reference data'})
+        
+        # Create new deadline
+        deadline = DeadlineAssignment(
+            title=data['title'],
+            description=data.get('description', ''),
+            deadline_type=deadline_type,
+            priority_level=priority_level,
+            assigned_to=assigned_to,
+            assigned_by=assigned_by,
+            staff_type=data.get('staff_type', 'Staff'),
+            start_date=timezone.make_aware(timezone.datetime.fromisoformat(data['start_date'].replace('Z', ''))),
+            end_date=timezone.make_aware(timezone.datetime.fromisoformat(data['end_date'].replace('Z', ''))),
+            notes=data.get('notes', ''),
+            is_recurring=data.get('is_recurring', False),
+            recurrence_pattern=data.get('recurrence_pattern', '')
+        )
+        deadline.save()
+        
+        return JsonResponse({'success': True, 'message': 'Deadline created successfully', 'deadline_id': deadline.id})
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error creating deadline: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def update_deadline(request, deadline_id):
+    try:
+        deadline = get_object_or_404(DeadlineAssignment, id=deadline_id)
+        data = json.loads(request.body)
+        print(data)
+        
+        # Update basic fields
+        if 'title' in data:
+            deadline.title = data['title']
+        if 'description' in data:
+            deadline.description = data['description']
+        if 'notes' in data:
+            deadline.notes = data['notes']
+        if 'staff_type' in data:
+            deadline.staff_type = data['staff_type']
+        if 'is_recurring' in data:
+            deadline.is_recurring = data['is_recurring']
+        if 'recurrence_pattern' in data:
+            deadline.recurrence_pattern = data['recurrence_pattern']
+        
+        # Update foreign keys
+        if 'deadline_type_id' in data and data['deadline_type_id']:
+            try:
+                deadline_type = DeadlineType.objects.get(id=data['deadline_type_id'])
+                deadline.deadline_type = deadline_type
+            except DeadlineType.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Deadline type not found'})
+        
+        if 'priority_level_id' in data and data['priority_level_id']:
+            try:
+                priority_level = PriorityLevel.objects.get(id=data['priority_level_id'])
+                deadline.priority_level = priority_level
+            except PriorityLevel.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Priority level not found'})
+        
+        if 'assigned_to_id' in data and data['assigned_to_id']:
+            try:
+                assigned_to = staffTbl.objects.get(id=data['assigned_to_id'])
+                deadline.assigned_to = assigned_to
+            except staffTbl.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Assigned staff not found'})
+        
+        # Update dates
+        if 'start_date' in data and data['start_date']:
+            deadline.start_date = timezone.make_aware(timezone.datetime.fromisoformat(data['start_date'].replace('Z', '')))
+        
+        if 'end_date' in data and data['end_date']:
+            deadline.end_date = timezone.make_aware(timezone.datetime.fromisoformat(data['end_date'].replace('Z', '')))
+        
+        # Update status
+        if 'status_select' in data:
+            deadline.status = data['status_select']
+            if data['status_select'] == 'Completed' and not deadline.completion_date:
+                deadline.completion_date = timezone.now()
+            elif data['status_select'] != 'Completed':
+                deadline.completion_date = None
+        
+        deadline.save()
+        
+        return JsonResponse({'success': True, 'message': 'Deadline updated successfully'})
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error updating deadline: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+@login_required
+def delete_deadline(request, deadline_id):
+    try:
+        deadline = get_object_or_404(DeadlineAssignment, id=deadline_id)
+        deadline.delete()  # Soft delete
+        return JsonResponse({'success': True, 'message': 'Deadline deleted successfully'})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error deleting deadline: {str(e)}'})
+
+@login_required
+def get_options_data(request):
+    try:
+        # Get priority levels
+        priorities = PriorityLevel.objects.all()
+        priority_options = [{'id': p.id, 'name': p.name, 'color': p.color} for p in priorities]
+        
+        # Get deadline types
+        types = DeadlineType.objects.all()
+        type_options = [{'id': t.id, 'name': t.name} for t in types]
+        
+        # Get staff options
+        staff_members = staffTbl.objects.filter(delete_field='no')
+        staff_options = [{'id': s.id, 'name': f"{s.first_name} {s.last_name} ({s.staffid})"} for s in staff_members]
+        
+        return JsonResponse({
+            'success': True,
+            'priorities': priority_options,
+            'types': type_options,
+            'staff': staff_options
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading options: {str(e)}'})
+    
+
+######################################################################################################################################
+
+# views.py - Add these farmer views
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.utils import timezone
+import json
+from .models import farmerTbl, societyTbl, staffTbl
+
+@method_decorator(login_required, name='dispatch')
+class FarmersView(View):
+    def get(self, request):
+        return render(request, 'core/farmer-list.html')
+    
+
+
+@login_required
+def get_farmers_data(request):
+    try:
+        # Get all farmers with related data
+        farmers = farmerTbl.objects.select_related(
+            'society_name', 'staffTbl_foreignkey'
+        ).all()
+        
+        data = []
+        for farmer in farmers:
+            data.append({
+                'id': farmer.id,
+                'first_name': farmer.first_name,
+                'last_name': farmer.last_name,
+                'full_name': f"{farmer.first_name} {farmer.last_name}",
+                'farmer_code': farmer.farmer_code,
+                'society_name': farmer.society_name.society if farmer.society_name else 'N/A',
+                'society_id': farmer.society_name.id if farmer.society_name else None,
+                'national_id_no': farmer.national_id_no,
+                'contact': farmer.contact,
+                'id_type': farmer.id_type,
+                'id_expiry_date': farmer.id_expiry_date,
+                'no_of_cocoa_farms': farmer.no_of_cocoa_farms,
+                'no_of_certified_crop': farmer.no_of_certified_crop,
+                'total_cocoa_bags_harvested_previous_year': farmer.total_cocoa_bags_harvested_previous_year,
+                'total_cocoa_bags_sold_group_previous_year': farmer.total_cocoa_bags_sold_group_previous_year,
+                'current_year_yeild_estimate': farmer.current_year_yeild_estimate,
+                'staff_name': f"{farmer.staffTbl_foreignkey.first_name} {farmer.staffTbl_foreignkey.last_name}" if farmer.staffTbl_foreignkey else 'N/A',
+                'staff_id': farmer.staffTbl_foreignkey.id if farmer.staffTbl_foreignkey else None,
+                'uuid': farmer.uuid,
+                'mapped_status': farmer.mapped_status,
+                'new_farmer_code': farmer.new_farmer_code,
+                'created_date': farmer.created_date.strftime('%Y-%m-%d %H:%M:%S') if farmer.created_date else None,
+                'updated_at': farmer.updated_at.strftime('%Y-%m-%d %H:%M:%S') if farmer.updated_at else None,
+                'status': 'Active' if farmer.delete_field == 'no' else 'Inactive'
+            })
+        
+        return JsonResponse({'success': True, 'data': data})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading farmers: {str(e)}'})
+
+@login_required
+def get_farmer_details(request):
+    try:
+        farmer_id = request.GET.get('farmer_id')
+        if not farmer_id:
+            return JsonResponse({'success': False, 'message': 'Farmer ID is required'})
+        
+        farmer = get_object_or_404(farmerTbl, id=farmer_id)
+        
+        data = {
+            'id': farmer.id,
+            'first_name': farmer.first_name,
+            'last_name': farmer.last_name,
+            'farmer_code': farmer.farmer_code,
+            'society_name_id': farmer.society_name.id if farmer.society_name else None,
+            'national_id_no': farmer.national_id_no,
+            'contact': farmer.contact,
+            'id_type': farmer.id_type,
+            'id_expiry_date': farmer.id_expiry_date,
+            'no_of_cocoa_farms': farmer.no_of_cocoa_farms,
+            'no_of_certified_crop': farmer.no_of_certified_crop,
+            'total_cocoa_bags_harvested_previous_year': farmer.total_cocoa_bags_harvested_previous_year,
+            'total_cocoa_bags_sold_group_previous_year': farmer.total_cocoa_bags_sold_group_previous_year,
+            'current_year_yeild_estimate': farmer.current_year_yeild_estimate,
+            'staffTbl_foreignkey_id': farmer.staffTbl_foreignkey.id if farmer.staffTbl_foreignkey else None,
+            'uuid': farmer.uuid,
+            'mapped_status': farmer.mapped_status,
+            'new_farmer_code': farmer.new_farmer_code,
+            'status': 'Active' if farmer.delete_field == 'no' else 'Inactive'
+        }
+        print(data)
+        
+        return JsonResponse({'success': True, 'data': data})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading farmer details: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def create_farmer(request):
+    try:
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        required_fields = ['first_name', 'last_name', 'contact']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return JsonResponse({'success': False, 'message': f'Missing required field: {field}'})
+        
+        # Validate society if provided
+        society = None
+        if data.get('society_name_id'):
+            try:
+                society = societyTbl.objects.get(id=data['society_name_id'])
+            except societyTbl.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Society not found'})
+        
+        # Validate staff if provided
+        staff = None
+        if data.get('staffTbl_foreignkey_id'):
+            try:
+                staff = staffTbl.objects.get(id=data['staffTbl_foreignkey_id'])
+            except staffTbl.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Staff member not found'})
+        
+        # Check if farmer code already exists
+        if data.get('farmer_code'):
+            if farmerTbl.objects.filter(farmer_code=data['farmer_code'], delete_field='no').exists():
+                return JsonResponse({'success': False, 'message': 'Farmer code already exists'})
+        
+        # Create new farmer
+        farmer = farmerTbl(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            farmer_code=data.get('farmer_code'),
+            society_name=society,
+            national_id_no=data.get('national_id_no'),
+            contact=data['contact'],
+            id_type=data.get('id_type'),
+            id_expiry_date=data.get('id_expiry_date'),
+            no_of_cocoa_farms=data.get('no_of_cocoa_farms'),
+            no_of_certified_crop=data.get('no_of_certified_crop'),
+            total_cocoa_bags_harvested_previous_year=data.get('total_cocoa_bags_harvested_previous_year'),
+            total_cocoa_bags_sold_group_previous_year=data.get('total_cocoa_bags_sold_group_previous_year'),
+            current_year_yeild_estimate=data.get('current_year_yeild_estimate'),
+            staffTbl_foreignkey=staff,
+            uuid=data.get('uuid'),
+            mapped_status=data.get('mapped_status', 'No'),
+            new_farmer_code=data.get('new_farmer_code')
+        )
+        farmer.save()
+        
+        return JsonResponse({'success': True, 'message': 'Farmer created successfully', 'farmer_id': farmer.id})
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error creating farmer: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["POST"])
+@login_required
+def update_farmer(request, farmer_id):
+    try:
+        farmer = get_object_or_404(farmerTbl, id=farmer_id)
+        data = json.loads(request.body)
+        
+        # Update basic fields
+        if 'first_name' in data:
+            farmer.first_name = data['first_name']
+        if 'last_name' in data:
+            farmer.last_name = data['last_name']
+        if 'contact' in data:
+            farmer.contact = data['contact']
+        if 'national_id_no' in data:
+            farmer.national_id_no = data['national_id_no']
+        if 'id_type' in data:
+            farmer.id_type = data['id_type']
+        if 'id_expiry_date' in data:
+            farmer.id_expiry_date = data['id_expiry_date']
+        if 'farmer_code' in data:
+            # Check if farmer code already exists (excluding current farmer)
+            if farmerTbl.objects.filter(farmer_code=data['farmer_code'], delete_field='no').exclude(id=farmer_id).exists():
+                return JsonResponse({'success': False, 'message': 'Farmer code already exists'})
+            farmer.farmer_code = data['farmer_code']
+        if 'uuid' in data:
+            farmer.uuid = data['uuid']
+        if 'mapped_status' in data:
+            farmer.mapped_status = data['mapped_status']
+        if 'new_farmer_code' in data:
+            farmer.new_farmer_code = data['new_farmer_code']
+        
+        # Update numeric fields
+        numeric_fields = [
+            'no_of_cocoa_farms', 'no_of_certified_crop', 
+            'total_cocoa_bags_harvested_previous_year',
+            'total_cocoa_bags_sold_group_previous_year',
+            'current_year_yeild_estimate'
+        ]
+        
+        for field in numeric_fields:
+            if field in data:
+                setattr(farmer, field, data[field])
+        
+        # Update foreign keys
+        if 'society_name_id' in data:
+            if data['society_name_id']:
+                try:
+                    society = societyTbl.objects.get(id=data['society_name_id'])
+                    farmer.society_name = society
+                except societyTbl.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': 'Society not found'})
+            else:
+                farmer.society_name = None
+        
+        if 'staffTbl_foreignkey_id' in data:
+            if data['staffTbl_foreignkey_id']:
+                try:
+                    staff = staffTbl.objects.get(id=data['staffTbl_foreignkey_id'])
+                    farmer.staffTbl_foreignkey = staff
+                except staffTbl.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': 'Staff member not found'})
+            else:
+                farmer.staffTbl_foreignkey = None
+        
+        # Update status
+        if 'status' in data:
+            farmer.delete_field = 'yes' if data['status'] == 'Inactive' else 'no'
+        
+        farmer.save()
+        
+        return JsonResponse({'success': True, 'message': 'Farmer updated successfully'})
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error updating farmer: {str(e)}'})
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+@login_required
+def delete_farmer(request, farmer_id):
+    try:
+        farmer = get_object_or_404(farmerTbl, id=farmer_id)
+        farmer.delete()  # Soft delete
+        return JsonResponse({'success': True, 'message': 'Farmer deleted successfully'})
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error deleting farmer: {str(e)}'})
+
+@login_required
+def get_farmer_options_data(request):
+    try:
+        # Get society options
+        societies = societyTbl.objects.filter(delete_field='no')
+        society_options = [{'id': s.id, 'name': s.society} for s in societies]
+        
+        # Get staff options
+        staff_members = staffTbl.objects.filter(delete_field='no')
+        staff_options = [{'id': s.id, 'name': f"{s.first_name} {s.last_name} ({s.staffid})"} for s in staff_members]
+        
+        return JsonResponse({
+            'success': True,
+            'societies': society_options,
+            'staff': staff_options
+        })
+    
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error loading options: {str(e)}'})
+    
+###############################################################################################################################
+
+# views.py
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+from .models import regionTbl, districtTbl, societyTbl
+
+def societies_list(request):
+    return render(request, 'core/societies_list.html')
+
+@csrf_exempt
+def get_societies_data(request):
+    try:
+        societies = societyTbl.objects.select_related('districtTbl_foreignkey').all()
+        
+        data = []
+        for society in societies:
+            data.append({
+                'id': society.id,
+                'society': society.society,
+                'society_code': society.society_code,
+                'society_pre_code': society.society_pre_code,
+                'new_society_pre_code': society.new_society_pre_code,
+                'district': society.districtTbl_foreignkey.district if society.districtTbl_foreignkey else 'N/A',
+                'region': society.districtTbl_foreignkey.regionTbl_foreignkey.region if society.districtTbl_foreignkey and society.districtTbl_foreignkey.regionTbl_foreignkey else 'N/A',
+                'created_date': society.created_date.strftime('%Y-%m-%d %H:%M:%S') if society.created_date else 'N/A',
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'data': data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error loading societies: {str(e)}'
+        })
+
+@csrf_exempt
+def get_society_options(request):
+    try:
+        regions = regionTbl.objects.all()
+        districts = districtTbl.objects.all()
+        
+        regions_data = [{'id': region.id, 'name': region.region} for region in regions]
+        districts_data = [{'id': district.id, 'name': district.district, 'region_id': district.regionTbl_foreignkey_id} for district in districts]
+        
+        return JsonResponse({
+            'success': True,
+            'regions': regions_data,
+            'districts': districts_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error loading options: {str(e)}'
+        })
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_society(request):
+    try:
+        data = json.loads(request.body)
+        
+        society = societyTbl.objects.create(
+            districtTbl_foreignkey_id=data.get('district_id'),
+            society=data.get('society'),
+            society_code=data.get('society_code'),
+            society_pre_code=data.get('society_pre_code'),
+            new_society_pre_code=data.get('new_society_pre_code')
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Society created successfully',
+            'id': society.id
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error creating society: {str(e)}'
+        })
+
+@csrf_exempt
+def get_society_details(request):
+    try:
+        society_id = request.GET.get('society_id')
+        society = get_object_or_404(societyTbl, id=society_id)
+        
+        data = {
+            'id': society.id,
+            'society': society.society,
+            'society_code': society.society_code,
+            'society_pre_code': society.society_pre_code,
+            'new_society_pre_code': society.new_society_pre_code,
+            'district_id': society.districtTbl_foreignkey_id,
+            'region_id': society.districtTbl_foreignkey.regionTbl_foreignkey_id if society.districtTbl_foreignkey else None
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error loading society details: {str(e)}'
+        })
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_society(request, society_id):
+    try:
+        data = json.loads(request.body)
+        society = get_object_or_404(societyTbl, id=society_id)
+        
+        society.districtTbl_foreignkey_id = data.get('district_id')
+        society.society = data.get('society')
+        society.society_code = data.get('society_code')
+        society.society_pre_code = data.get('society_pre_code')
+        society.new_society_pre_code = data.get('new_society_pre_code')
+        society.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Society updated successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating society: {str(e)}'
+        })
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def delete_society(request, society_id):
+    try:
+        society = get_object_or_404(societyTbl, id=society_id)
+        society.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Society deleted successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error deleting society: {str(e)}'
+        })
+    
+
+####################################################################################
+# queries/views.py
+import json
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.core.paginator import Paginator
+from django.utils import timezone
+from .models import Query, QueryResponse, FlaggedIssue, Escalation, QueryCategory, QueryPriority, QueryStatus
+
+@login_required
+def send_query(request):
+    """Send Query to Enumerator page"""
+    return render(request, 'core/send_query.html')
+
+@login_required
+def review_responses(request):
+    """Review Enumerator Responses page"""
+    return render(request, 'core/review_responses.html')
+
+@login_required
+def flag_issues(request):
+    """Flag Issues for Review page"""
+    return render(request, 'core/flag_issues.html')
+
+@login_required
+def escalate_cases(request):
+    """Escalate Cases to Supervisors page"""
+    return render(request, 'core/escalate_cases.html')
+
+# API Views
+@login_required
+@require_http_methods(["GET"])
+def query_list_api(request):
+    """Get list of queries with filtering and pagination"""
+    try:
+        # Get query parameters
+        status_filter = request.GET.get('status', '')
+        priority_filter = request.GET.get('priority', '')
+        category_filter = request.GET.get('category', '')
+        assigned_to_filter = request.GET.get('assigned_to', '')
+        page = int(request.GET.get('page', 1))
+        per_page = int(request.GET.get('per_page', 10))
+        
+        # Build filter conditions
+        filters = Q()
+        if status_filter:
+            filters &= Q(status__name=status_filter)
+        if priority_filter:
+            filters &= Q(priority__name=priority_filter)
+        if category_filter:
+            filters &= Q(category__name=category_filter)
+        if assigned_to_filter:
+            filters &= Q(assigned_to__id=assigned_to_filter)
+        
+        # Get queries
+        queries = Query.objects.filter(filters).select_related(
+            'category', 'priority', 'status', 'assigned_to', 'created_by'
+        ).order_by('-created_date')
+        
+        # Paginate
+        paginator = Paginator(queries, per_page)
+        page_obj = paginator.get_page(page)
+        
+        # Prepare response data
+        queries_data = []
+        for query in page_obj:
+            queries_data.append({
+                'id': query.id,
+                'query_id': query.query_id,
+                'title': query.title,
+                'description': query.description,
+                'category': query.category.name,
+                'priority': query.priority.name,
+                'priority_color': query.priority.color,
+                'status': query.status.name,
+                'status_color': query.status.color,
+                'assigned_to': f"{query.assigned_to.first_name} {query.assigned_to.last_name}",
+                'assigned_to_id': query.assigned_to.id,
+                'created_by': f"{query.created_by.first_name} {query.created_by.last_name}",
+                'created_date': query.created_date.strftime('%Y-%m-%d %H:%M'),
+                'due_date': query.due_date.strftime('%Y-%m-%d %H:%M') if query.due_date else None,
+                'is_overdue': query.is_overdue,
+                'requires_follow_up': query.requires_follow_up,
+                'is_escalated': query.is_escalated,
+                'response_count': query.responses.count(),
+                'flag_count': query.flags.count(),
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'data': queries_data,
+            'pagination': {
+                'total': paginator.count,
+                'pages': paginator.num_pages,
+                'current': page,
+                'per_page': per_page,
+                'has_next': page_obj.has_next(),
+                'has_prev': page_obj.has_previous(),
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching queries: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def create_query_api(request):
+    """Create a new query"""
+    try:
+        data = json.loads(request.body)
+        
+        # Get current user (staff member)
+        current_user = staffTbl.objects.get(user=request.user)
+        
+        # Create query
+        query = Query.objects.create(
+            title=data['title'],
+            description=data['description'],
+            category_id=data['category_id'],
+            priority_id=data['priority_id'],
+            status=QueryStatus.objects.get(name='Open'),
+            assigned_to_id=data['assigned_to_id'],
+            created_by=current_user,
+            due_date=data.get('due_date'),
+            requires_follow_up=data.get('requires_follow_up', False),
+            household_id=data.get('household_id'),
+            farmer_id=data.get('farmer_id'),
+            child_id=data.get('child_id'),
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Query created successfully',
+            'query_id': query.query_id
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error creating query: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def query_detail_api(request, query_id):
+    """Get detailed information about a specific query"""
+    try:
+        query = get_object_or_404(Query, id=query_id)
+        
+        # Get responses
+        responses = []
+        for response in query.responses.select_related('responded_by').all():
+            responses.append({
+                'id': response.id,
+                'response_text': response.response_text,
+                'responded_by': f"{response.responded_by.first_name} {response.responded_by.last_name}",
+                'responded_date': response.created_date.strftime('%Y-%m-%d %H:%M'),
+                'attachment': response.attachment.url if response.attachment else None,
+            })
+        
+        # Get flags
+        flags = []
+        for flag in query.flags.all():
+            flags.append({
+                'id': flag.id,
+                'flag_id': flag.flag_id,
+                'flag_type': flag.get_flag_type_display(),
+                'description': flag.description,
+                'severity': flag.severity,
+                'flagged_by': f"{flag.flagged_by.first_name} {flag.flagged_by.last_name}",
+                'flagged_date': flag.created_date.strftime('%Y-%m-%d %H:%M'),
+                'reviewed': flag.reviewed,
+                'reviewed_by': f"{flag.reviewed_by.first_name} {flag.reviewed_by.last_name}" if flag.reviewed_by else None,
+                'review_notes': flag.review_notes,
+                'review_date': flag.review_date.strftime('%Y-%m-%d %H:%M') if flag.review_date else None,
+            })
+        
+        # Get escalations
+        escalations = []
+        for escalation in query.escalations.select_related('escalated_to').all():
+            escalations.append({
+                'id': escalation.id,
+                'escalation_id': escalation.escalation_id,
+                'escalation_type': escalation.get_escalation_type_display(),
+                'reason': escalation.reason,
+                'escalated_to': f"{escalation.escalated_to.first_name} {escalation.escalated_to.last_name}",
+                'priority': escalation.priority.name,
+                'due_date': escalation.due_date.strftime('%Y-%m-%d %H:%M'),
+                'resolved': escalation.resolved,
+                'resolution_notes': escalation.resolution_notes,
+                'resolved_date': escalation.resolved_date.strftime('%Y-%m-%d %H:%M') if escalation.resolved_date else None,
+                'is_overdue': escalation.is_overdue,
+            })
+        
+        query_data = {
+            'id': query.id,
+            'query_id': query.query_id,
+            'title': query.title,
+            'description': query.description,
+            'category': query.category.name,
+            'priority': query.priority.name,
+            'priority_color': query.priority.color,
+            'status': query.status.name,
+            'status_color': query.status.color,
+            'assigned_to': f"{query.assigned_to.first_name} {query.assigned_to.last_name}",
+            'assigned_to_id': query.assigned_to.id,
+            'created_by': f"{query.created_by.first_name} {query.created_by.last_name}",
+            'created_date': query.created_date.strftime('%Y-%m-%d %H:%M'),
+            'due_date': query.due_date.strftime('%Y-%m-%d %H:%M') if query.due_date else None,
+            'is_overdue': query.is_overdue,
+            'requires_follow_up': query.requires_follow_up,
+            'is_escalated': query.is_escalated,
+            'household': str(query.household) if query.household else None,
+            'farmer': str(query.farmer) if query.farmer else None,
+            'child': str(query.child) if query.child else None,
+            'responses': responses,
+            'flags': flags,
+            'escalations': escalations,
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': query_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching query details: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def respond_to_query_api(request, query_id):
+    """Add response to a query"""
+    try:
+        data = json.loads(request.body)
+        query = get_object_or_404(Query, id=query_id)
+        current_user = staffTbl.objects.get(user=request.user)
+        
+        # Create response
+        response = QueryResponse.objects.create(
+            query=query,
+            responded_by=current_user,
+            response_text=data['response_text'],
+        )
+        
+        # Update query status if needed
+        if data.get('mark_as_resolved', False):
+            resolved_status = QueryStatus.objects.get(name='Resolved')
+            query.status = resolved_status
+            query.resolved_date = timezone.now()
+            query.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Response added successfully',
+            'response_id': response.id
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error adding response: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def flag_query_api(request, query_id):
+    """Flag a query for review"""
+    try:
+        data = json.loads(request.body)
+        query = get_object_or_404(Query, id=query_id)
+        current_user = staffTbl.objects.get(user=request.user)
+        
+        # Create flag
+        flag = FlaggedIssue.objects.create(
+            query=query,
+            flag_type=data['flag_type'],
+            description=data['description'],
+            severity=data['severity'],
+            flagged_by=current_user,
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Query flagged successfully',
+            'flag_id': flag.flag_id
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error flagging query: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def escalate_query_api(request, query_id):
+    """Escalate a query to supervisors"""
+    try:
+        data = json.loads(request.body)
+        query = get_object_or_404(Query, id=query_id)
+        current_user = staffTbl.objects.get(user=request.user)
+        
+        # Create escalation
+        escalation = Escalation.objects.create(
+            query=query,
+            escalation_type=data['escalation_type'],
+            reason=data['reason'],
+            escalated_by=current_user,
+            escalated_to_id=data['escalated_to_id'],
+            priority_id=data['priority_id'],
+            due_date=data['due_date'],
+        )
+        
+        # Mark query as escalated
+        query.is_escalated = True
+        query.escalated_to_id = data['escalated_to_id']
+        query.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Query escalated successfully',
+            'escalation_id': escalation.escalation_id
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error escalating query: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_enumerators_api(request):
+    """Get list of enumerators for dropdowns"""
+    try:
+        enumerators = staffTbl.objects.filter(
+            Q(designation__name__icontains='NSP') | Q(designation__name__icontains='field'),
+            delete_field='no'
+        ).values('id', 'first_name', 'last_name', 'staffid')
+        
+        return JsonResponse({
+            'success': True,
+            'data': list(enumerators)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching enumerators: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_supervisors_api(request):
+    """Get list of supervisors for dropdowns"""
+    try:
+        supervisors = staffTbl.objects.filter(
+            Q(designation__name__icontains='Supervisor') | Q(designation__name__icontains='manager'),
+            delete_field='no'
+        ).values('id', 'first_name', 'last_name', 'staffid')
+        
+        return JsonResponse({
+            'success': True,
+            'data': list(supervisors)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching supervisors: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_categories_api(request):
+    """Get list of query categories"""
+    try:
+        categories = QueryCategory.objects.filter(delete_field='no').values('id', 'name', 'description')
+        return JsonResponse(list(categories), safe=False)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching categories: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_households_api(request):
+    """Get list of households for dropdowns"""
+    try:
+        search = request.GET.get('search', '')
+        households = houseHoldTbl.objects.filter(delete_field='no')
+        
+        if search:
+            households = households.filter(
+                Q(id__icontains=search) |
+                Q(farmer__first_name__icontains=search) |
+                Q(farmer__last_name__icontains=search)
+            )
+        
+        households_data = []
+        for household in households[:50]:  # Limit to 50 results
+            households_data.append({
+                'id': household.id,
+                'display_name': f"{household.farmer.first_name} {household.farmer.last_name} - {household.id}",
+                'farmer_name': f"{household.farmer.first_name} {household.farmer.last_name}",
+                'farmer_id': household.farmer.id,
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'data': households_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching households: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_farmers_api(request):
+    """Get list of farmers for dropdowns"""
+    try:
+        search = request.GET.get('search', '')
+        farmers = farmerTbl.objects.filter(delete_field='no')
+        
+        if search:
+            farmers = farmers.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(farmer_code__icontains=search)
+            )
+        
+        farmers_data = []
+        for farmer in farmers[:50]:  # Limit to 50 results
+            farmers_data.append({
+                'id': farmer.id,
+                'display_name': f"{farmer.first_name} {farmer.last_name} ({farmer.farmer_code})",
+                'first_name': farmer.first_name,
+                'last_name': farmer.last_name,
+                'farmer_code': farmer.farmer_code,
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'data': farmers_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching farmers: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_children_api(request):
+    """Get list of children for dropdowns"""
+    try:
+        search = request.GET.get('search', '')
+        children = ChildInHouseholdTbl.objects.filter(delete_field='no')
+        
+        if search:
+            children = children.filter(
+                Q(child_first_name__icontains=search) |
+                Q(child_surname__icontains=search) |
+                Q(houseHold__farmer__first_name__icontains=search) |
+                Q(houseHold__farmer__last_name__icontains=search)
+            )
+        
+        children_data = []
+        for child in children[:50]:  # Limit to 50 results
+            children_data.append({
+                'id': child.id,
+                'display_name': f"{child.child_first_name} {child.child_surname} - {child.houseHold.farmer.first_name} {child.houseHold.farmer.last_name}",
+                'first_name': child.child_first_name,
+                'last_name': child.child_surname,
+                'household_id': child.houseHold.id,
+                'farmer_name': f"{child.houseHold.farmer.first_name} {child.houseHold.farmer.last_name}",
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'data': children_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching children: {str(e)}'
+        }, status=500)
+    
+
+
+########################################################################################################################################
+
+@login_required
+def review_responses(request):
+    """Send Query to Enumerator page"""
+    return render(request, 'core/review_responses.html')
+
+
+
+
+# queries/views.py - Add these new endpoints
+
+@login_required
+@require_http_methods(["GET"])
+def response_list_api(request):
+    """Get list of responses with filtering"""
+    try:
+        # Get filter parameters
+        status_filter = request.GET.get('status', '')
+        priority_filter = request.GET.get('priority', '')
+        enumerator_filter = request.GET.get('enumerator', '')
+        date_range = request.GET.get('date_range', '')
+        search = request.GET.get('search', '')
+        from_date = request.GET.get('from_date', '')
+        to_date = request.GET.get('to_date', '')
+        
+        # Build filter conditions
+        filters = Q(query__isnull=False)
+        
+        if status_filter:
+            filters &= Q(query__status__name=status_filter)
+        if priority_filter:
+            filters &= Q(query__priority__name=priority_filter)
+        if enumerator_filter:
+            filters &= Q(responded_by__id=enumerator_filter)
+        if search:
+            filters &= (
+                Q(query__title__icontains=search) |
+                Q(response_text__icontains=search) |
+                Q(responded_by__first_name__icontains=search) |
+                Q(responded_by__last_name__icontains=search)
+            )
+        
+        # Date range filtering
+        if date_range:
+            now = timezone.now()
+            if date_range == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                filters &= Q(created_date__gte=start_date)
+            elif date_range == 'week':
+                start_date = now - timedelta(days=now.weekday())
+                start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                filters &= Q(created_date__gte=start_date)
+            elif date_range == 'month':
+                start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                filters &= Q(created_date__gte=start_date)
+            elif date_range == 'custom' and from_date and to_date:
+                start_date = datetime.strptime(from_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                end_date = datetime.strptime(to_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+                filters &= Q(created_date__range=(start_date, end_date))
+        
+        # Get responses with related data
+        responses = QueryResponse.objects.filter(filters).select_related(
+            'query', 'query__category', 'query__priority', 'query__status', 'responded_by'
+        ).order_by('-created_date')
+        
+        # Prepare response data
+        responses_data = []
+        for response in responses:
+            responses_data.append({
+                'id': response.id,
+                'query_id': response.query.query_id,
+                'query_title': response.query.title,
+                'enumerator_name': f"{response.responded_by.first_name} {response.responded_by.last_name}",
+                'enumerator_id': response.responded_by.id,
+                'response_date': response.created_date.strftime('%Y-%m-%d %H:%M'),
+                'response_text': response.response_text,
+                'response_preview': response.response_text[:200] + '...' if len(response.response_text) > 200 else response.response_text,
+                'status': response.query.status.name,
+                'status_color': response.query.status.color,
+                'priority': response.query.priority.name,
+                'priority_color': response.query.priority.color,
+                'due_date': response.query.due_date.strftime('%Y-%m-%d %H:%M') if response.query.due_date else None,
+                # 'is_overdue': response.query.is_overdue,
+                'attachment': response.attachment.url if response.attachment else None,
+            })
+        
+
+        print(responses_data)
+        # Calculate statistics
+        total_responses = responses.count()
+        resolved_count = responses.filter(query__status__name='Resolved').count()
+        pending_count = responses.filter(query__status__name__in=['Open', 'In Progress']).count()
+        # overdue_count = responses.filter(query__is_overdue=True).count()
+        
+        return JsonResponse({
+            'success': True,
+            'data': responses_data,
+            'statistics': {
+                'total_responses': total_responses,
+                'resolved_count': resolved_count,
+                'pending_count': pending_count,
+                # 'overdue_count': overdue_count,
+            }
+        })
+        
+    except Exception as e:
+        print(e)
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching responses: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def response_detail_api(request, response_id):
+    """Get detailed information about a specific response"""
+    try:
+        response = get_object_or_404(QueryResponse, id=response_id)
+        query = response.query
+        
+        # Get previous responses for this query
+        previous_responses = QueryResponse.objects.filter(
+            query=query,
+            created_date__lt=response.created_date
+        ).select_related('responded_by').order_by('-created_date')
+        
+        previous_responses_data = []
+        for prev_response in previous_responses:
+            previous_responses_data.append({
+                'responded_by': f"{prev_response.responded_by.first_name} {prev_response.responded_by.last_name}",
+                'responded_date': prev_response.created_date.strftime('%Y-%m-%d %H:%M'),
+                'response_text': prev_response.response_text,
+            })
+        
+        response_data = {
+            'id': response.id,
+            'query_id': query.query_id,
+            'query_title': query.title,
+            'query_description': query.description,
+            'enumerator_name': f"{response.responded_by.first_name} {response.responded_by.last_name}",
+            'response_date': response.created_date.strftime('%Y-%m-%d %H:%M'),
+            'response_text': response.response_text,
+            'status': query.status.name,
+            'status_color': query.status.color,
+            'priority': query.priority.name,
+            'priority_color': query.priority.color,
+            'due_date': query.due_date.strftime('%Y-%m-%d %H:%M') if query.due_date else None,
+            'is_overdue': query.is_overdue,
+            'attachment': response.attachment.url if response.attachment else None,
+            'previous_responses': previous_responses_data,
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'data': response_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error fetching response details: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def mark_query_resolved_api(request, query_id):
+    """Mark a query as resolved"""
+    try:
+        query = get_object_or_404(Query, id=query_id)
+        resolved_status = QueryStatus.objects.get(name='Resolved')
+        
+        query.status = resolved_status
+        query.resolved_date = timezone.now()
+        query.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Query marked as resolved successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error marking query as resolved: {str(e)}'
+        }, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def request_clarification_api(request, query_id):
+    """Request clarification for a query"""
+    try:
+        data = json.loads(request.body)
+        query = get_object_or_404(Query, id=query_id)
+        current_user = staffTbl.objects.get(user=request.user)
+        
+        # Create a new query for clarification
+        clarification_query = Query.objects.create(
+            title=f"Clarification Request: {query.title}",
+            description=data['clarification_text'],
+            category=QueryCategory.objects.get(name='Clarification Needed'),
+            priority_id=data['priority_id'],
+            status=QueryStatus.objects.get(name='Open'),
+            assigned_to=query.assigned_to,
+            created_by=current_user,
+            requires_follow_up=True,
+            household=query.household,
+            farmer=query.farmer,
+            child=query.child,
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Clarification request sent successfully',
+            'query_id': clarification_query.query_id
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error sending clarification request: {str(e)}'
+        }, status=500)

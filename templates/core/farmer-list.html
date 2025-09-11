@@ -1,150 +1,66 @@
-
 {% extends 'base/web_base.html' %}
+{% load static %}
 
 {% block content %}
-<br>
 <div class="page-content">
     <div class="page-container">
-         <div class="content container-fluid">
-        <!-- Page Header -->
-         <br>
-         
-        <div class="page-header" style="display: flex;justify-content: space-between;">
-            <div class="col">
-                <h3 class="page-title">All Farmers</h3>
-                <div class="text-end">
-                    <ol class="breadcrumb m-0 py-0">
-                        <li class="breadcrumb-item"><a href="javascript: void(0);">HRM</a></li>
-                        <li class="breadcrumb-item active">Child Labor Monitoring</li>
-                    </ol>
-                </div>
-            </div>
-            <div class="col-auto">
-                <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addFarmerModal">
-                    <i class="ti ti-plus me-1"></i> Add Farmer
-                </button>
-                <button class="btn btn-outline-success" id="exportBtn">
-                    <i class="ti ti-download me-1"></i> Export
-                </button>
-            </div>
-        </div>
-        <!-- /Page Header -->
-
-        <!-- Farmer Table -->
+        <br>
         <div class="row">
-            <div class="col-sm-12">
+            <div class="col-12">
                 <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="mb-3">
+                            <div>
+                                <h4 style="font-weight: bolder;">FARMERS MANAGEMENT</h4>
+                                <p class="mb-0">Manage farmers and their details</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-gradient-primary btn-sm" id="addFarmerBtn">
+                            <i class="fas fa-plus"></i> NEW FARMER
+                        </button>
+                    </div>
                     <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-primary filter-btn active" data-filter="all">
+                                        All Farmers
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="Active">
+                                        Active
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="Inactive">
+                                        Inactive
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="No">
+                                        Not Mapped
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="Yes">
+                                        Mapped
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="table-responsive">
-                            <table id="farmersTable" class="table table-striped table-hover">
+                            <table id="farmersTable" class="table table-striped table-bordered" style="width:100%">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Community</th>
-                                        <th>Farm Size</th>
-                                        <th>Crop Type</th>
-                                        <th>Risk Level</th>
-                                        <th>Status</th>
-                                        <th class="text-end">Actions</th>
+                                        <th>FARMER CODE</th>
+                                        <th>FULL NAME</th>
+                                        <th>CONTACT</th>
+                                        <th>SOCIETY</th>
+                                        <th>NATIONAL ID</th>
+                                        <th>COCOA FARMS</th>
+                                        <!-- <th>STAFF</th> -->
+                                        <th>MAPPED STATUS</th>
+                                        <th>CREATED DATE</th>
+                                        <th>STATUS</th>
+                                        <th>ACTIONS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>F001</td>
-                                        <td>John Doe</td>
-                                        <td>North Community</td>
-                                        <td>5.2 acres</td>
-                                        <td>Cocoa</td>
-                                        <td><span class="badge bg-success">Low</span></td>
-                                        <td><span class="badge bg-success">Active</span></td>
-                                        <td class="text-end">
-                                            <div class="dropdown dropdown-action">
-                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-eye me-2"></i>View</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-pencil me-2"></i>Edit</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>F002</td>
-                                        <td>Jane Smith</td>
-                                        <td>South Community</td>
-                                        <td>3.8 acres</td>
-                                        <td>Coffee</td>
-                                        <td><span class="badge bg-warning">Medium</span></td>
-                                        <td><span class="badge bg-success">Active</span></td>
-                                        <td class="text-end">
-                                            <div class="dropdown dropdown-action">
-                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-eye me-2"></i>View</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-pencil me-2"></i>Edit</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>F003</td>
-                                        <td>Robert Johnson</td>
-                                        <td>East Community</td>
-                                        <td>7.5 acres</td>
-                                        <td>Palm Oil</td>
-                                        <td><span class="badge bg-danger">High</span></td>
-                                        <td><span class="badge bg-success">Inactive</span></td>
-                                        <td class="text-end">
-                                            <div class="dropdown dropdown-action">
-                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-eye me-2"></i>View</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-pencil me-2"></i>Edit</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>F004</td>
-                                        <td>Sarah Williams</td>
-                                        <td>West Community</td>
-                                        <td>4.1 acres</td>
-                                        <td>Cocoa</td>
-                                        <td><span class="badge bg-success">Low</span></td>
-                                        <td><span class="badge bg-success">Active</span></td>
-                                        <td class="text-end">
-                                            <div class="dropdown dropdown-action">
-                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-eye me-2"></i>View</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-pencil me-2"></i>Edit</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>F005</td>
-                                        <td>Michael Brown</td>
-                                        <td>Central Community</td>
-                                        <td>6.3 acres</td>
-                                        <td>Rubber</td>
-                                        <td><span class="badge bg-warning">Medium</span></td>
-                                        <td><span class="badge bg-success">Active</span></td>
-                                        <td class="text-end">
-                                            <div class="dropdown dropdown-action">
-                                                <a href="#" class="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ti ti-dots-vertical"></i></a>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-eye me-2"></i>View</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-pencil me-2"></i>Edit</a>
-                                                    <a class="dropdown-item" href="#"><i class="ti ti-trash me-2"></i>Delete</a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    <!-- Data will be loaded via AJAX -->
                                 </tbody>
                             </table>
                         </div>
@@ -152,307 +68,697 @@
                 </div>
             </div>
         </div>
-        <!-- /Farmer Table -->
-    </div>
 
-    <!-- Add Farmer Modal -->
-    <div class="modal fade" id="addFarmerModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New Farmer</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label>Full Name</label>
-                                    <input type="text" class="form-control">
+        <!-- Add/Edit Modal -->
+        <div class="modal fade" id="farmerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title" id="modalTitle">New Farmer</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="farmerForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" id="farmerId" name="farmerId">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Personal Information</h6>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="first_name" class="form-label">First Name*</label>
+                                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                                <div class="invalid-feedback">Please enter first name</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="last_name" class="form-label">Last Name*</label>
+                                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                                <div class="invalid-feedback">Please enter last name</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="farmer_code" class="form-label">Farmer Code</label>
+                                                <input type="text" class="form-control" id="farmer_code" name="farmer_code">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="contact" class="form-label">Contact*</label>
+                                                <input type="text" class="form-control" id="contact" name="contact" required>
+                                                <div class="invalid-feedback">Please enter contact number</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="national_id_no" class="form-label">National ID</label>
+                                                <input type="text" class="form-control" id="national_id_no" name="national_id_no">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_type" class="form-label">ID Type</label>
+                                                <input type="text" class="form-control" id="id_type" name="id_type">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="id_expiry_date" class="form-label">ID Expiry Date</label>
+                                                <input type="date" class="form-control" id="id_expiry_date" name="id_expiry_date">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="uuid" class="form-label">UUID</label>
+                                                <input type="text" class="form-control" id="uuid" name="uuid">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Farm Information</h6>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="society_name_id" class="form-label">Society</label>
+                                                <select class="form-select select2-single" id="society_name_id" name="society_name_id">
+                                                    <option value="" selected disabled>Select Society</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="staffTbl_foreignkey_id" class="form-label">Assigned Staff</label>
+                                                <select class="form-select select2-single" id="staffTbl_foreignkey_id" name="staffTbl_foreignkey_id">
+                                                    <option value="" selected disabled>Select Staff</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="no_of_cocoa_farms" class="form-label">Cocoa Farms</label>
+                                                <input type="number" class="form-control" id="no_of_cocoa_farms" name="no_of_cocoa_farms" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="no_of_certified_crop" class="form-label">Certified Crops</label>
+                                                <input type="number" class="form-control" id="no_of_certified_crop" name="no_of_certified_crop" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="current_year_yeild_estimate" class="form-label">Yield Estimate</label>
+                                                <input type="number" class="form-control" id="current_year_yeild_estimate" name="current_year_yeild_estimate" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="total_cocoa_bags_harvested_previous_year" class="form-label">Last Year Harvest (bags)</label>
+                                                <input type="number" class="form-control" id="total_cocoa_bags_harvested_previous_year" name="total_cocoa_bags_harvested_previous_year" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="total_cocoa_bags_sold_group_previous_year" class="form-label">Last Year Sales (bags)</label>
+                                                <input type="number" class="form-control" id="total_cocoa_bags_sold_group_previous_year" name="total_cocoa_bags_sold_group_previous_year" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="new_farmer_code" class="form-label">New Farmer Code</label>
+                                                <input type="text" class="form-control" id="new_farmer_code" name="new_farmer_code">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="mapped_status" class="form-label">Mapped Status</label>
+                                                <select class="form-select" id="mapped_status" name="mapped_status">
+                                                    <option value="No">Not Mapped</option>
+                                                    <option value="Yes">Mapped</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label>Community</label>
-                                    <select class="form-select">
-                                        <option>Select Community</option>
-                                        <option>North Community</option>
-                                        <option>South Community</option>
-                                        <option>East Community</option>
-                                        <option>West Community</option>
-                                        <option>Central Community</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label>Farm Size (acres)</label>
-                                    <input type="number" class="form-control" step="0.1">
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label>Primary Crop</label>
-                                    <select class="form-select">
-                                        <option>Select Crop</option>
-                                        <option>Cocoa</option>
-                                        <option>Coffee</option>
-                                        <option>Palm Oil</option>
-                                        <option>Rubber</option>
-                                        <option>Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label>Risk Level</label>
-                                    <select class="form-select">
-                                        <option>Select Risk Level</option>
-                                        <option>Low</option>
-                                        <option>Medium</option>
-                                        <option>High</option>
-                                    </select>
+                            
+                            <div class="row mb-3" id="statusField" style="display: none;">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="status" class="form-label">Status*</label>
+                                        <select class="form-select" id="status" name="status" required>
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="saveBtn">Create Farmer</button>
+                        </div>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary">Add Farmer</button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- /Add Farmer Modal -->
+</div>
 
-
-
-<!-- First load jQuery, then DataTables and its extensions -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
-    // Initialize DataTable with comprehensive features
-    var table = $('#farmersTable').DataTable({
-        dom: '<"row"<"col-md-3"l><"col-md-5"B><"col-md-4"f>>' +
-             '<"row"<"col-md-12"tr>>' +
-             '<"row"<"col-md-6"i><"col-md-6"p>>',
-        buttons: [
-            {
-                extend: 'collection',
-                text: '<i class="ti ti-settings me-1"></i> Settings',
-                className: 'btn btn-sm btn-outline-success dropdown-toggle',
-                buttons: [
-                    {
-                        extend: 'colvis',
-                        text: 'Column Visibility',
-                        className: 'dropdown-item'
-                    },
-                    {
-                        extend: 'pageLength',
-                        text: 'Page Length',
-                        className: 'dropdown-item'
-                    }
-                ]
-            },
-            {
-                extend: 'collection',
-                text: '<i class="ti ti-download me-1"></i> Export',
-                className: 'btn btn-sm btn-outline-success dropdown-toggle',
-                buttons: [
-                    {
-                        extend: 'copy',
-                        text: 'Copy to clipboard',
-                        className: 'dropdown-item',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'csv',
-                        text: 'Export as CSV',
-                        className: 'dropdown-item',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'excel',
-                        text: 'Export as Excel',
-                        className: 'dropdown-item',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'pdf',
-                        text: 'Export as PDF',
-                        className: 'dropdown-item',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'print',
-                        text: 'Print',
-                        className: 'dropdown-item',
-                        exportOptions: {
-                            columns: ':visible'
-                        },
-                        customize: function (win) {
-                            $(win.document.body).find('h1').text('Farmers Report');
-                        }
-                    }
-                ]
-            },
-            {
-                text: '<i class="ti ti-refresh me-1"></i> Refresh',
-                className: 'btn btn-sm btn-outline-success',
-                action: function (e, dt, node, config) {
-                    dt.ajax.reload();
+    // Initialize DataTable
+    var farmersTable = $('#farmersTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "{% url 'get_farmers_data' %}",
+            type: "GET",
+            dataSrc: function(json) {
+                if (json.success) {
+                    return json.data;
+                } else {
+                    console.error('Error loading farmers:', json.message);
+                    showErrorAlert(json.message || 'Failed to load farmers data');
+                    return [];
                 }
+            },
+            error: function(xhr, error, thrown) {
+                console.error('AJAX error:', error, thrown);
+                showErrorAlert('Failed to load farmers data. Please check console for details.');
+            }
+        },
+        columns: [
+            { data: 'id' },
+            { 
+                data: 'farmer_code',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { 
+                data: 'full_name',
+                render: function(data) {
+                    return data || 'Unknown Farmer';
+                }
+            },
+            { 
+                data: 'contact',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { 
+                data: 'society_name',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { 
+                data: 'national_id_no',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { 
+                data: 'no_of_cocoa_farms',
+                render: function(data) {
+                    return data !== null && data !== undefined ? data : 'N/A';
+                }
+            },
+            // { 
+            //     data: 'staff_name',
+            //     render: function(data) {
+            //         return data || 'N/A';
+            //     }
+            // },
+            { 
+                data: 'mapped_status',
+                render: function(data) {
+                    var badgeClass = data === 'Yes' ? 'bg-success' : 'bg-warning';
+                    var text = data === 'Yes' ? 'Mapped' : 'Not Mapped';
+                    return `<span class="badge ${badgeClass}">${text}</span>`;
+                }
+            },
+            { 
+                data: 'created_date',
+                render: function(data) {
+                    return data ? new Date(data).toLocaleString() : 'N/A';
+                }
+            },
+            { 
+                data: 'status',
+                render: function(data) {
+                    var badgeClass = data === 'Active' ? 'bg-success' : 'bg-secondary';
+                    return `<span class="badge ${badgeClass}">${data}</span>`;
+                }
+            },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm edit-btn" data-id="${data}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-btn" data-id="${data}">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                    `;
+                },
+                orderable: false
             }
         ],
-        language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search farmers...",
-            lengthMenu: "Show _MENU_ entries",
-            paginate: {
-                previous: "<i class='ti ti-chevron-left'>",
-                next: "<i class='ti ti-chevron-right'>"
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: "copy",
+                text: '<i class="fas fa-copy"></i> Copy',
+                className: "btn btn-sm btn-outline-secondary",
             },
-            info: "Showing _START_ to _END_ of _TOTAL_ farmers",
-            infoEmpty: "Showing 0 to 0 of 0 farmers",
-            infoFiltered: "(filtered from _MAX_ total farmers)"
-        },
-        pageLength: 10,
-        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-        responsive: true,
-        ordering: true,
-        order: [[1, 'asc']],
-        columnDefs: [
-            { 
-                orderable: false, 
-                targets: -1, // Actions column
-                searchable: false
-            }
-        ]
+            {
+                extend: "csv",
+                text: '<i class="fas fa-file-csv"></i> CSV',
+                className: "btn btn-sm btn-outline-success",
+            },
+            {
+                extend: "excel",
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: "btn btn-sm btn-outline-primary",
+            },
+            {
+                extend: "pdf",
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: "btn btn-sm btn-outline-danger",
+            },
+        ],
+        language: {
+            emptyTable: "No farmers found. Click 'New Farmer' to add one.",
+            zeroRecords: "No matching farmers found.",
+            processing: '<i class="fa fa-spinner fa-spin"></i> Loading farmers...'
+        }
     });
 
-    // Style DataTable buttons
-    $('.dt-buttons .btn').removeClass('btn-success');
-    
-    // Export button click handler
-    $('#exportBtn').on('click', function() {
-        $('.dt-button-collection').show();
-    });
-    
-    // Custom search for risk level badges
-    $.fn.dataTable.ext.search.push(
-        function(settings, data, dataIndex) {
-            var riskLevel = $('#riskLevelFilter').val();
-            if (!riskLevel || riskLevel === 'all') {
-                return true;
-            }
-            
-            var rowRisk = data[5].toLowerCase(); // Risk level is in column index 5
-            return rowRisk.indexOf(riskLevel.toLowerCase()) !== -1;
+    // Filter functionality
+    $('.filter-btn').click(function() {
+        $('.filter-btn').removeClass('active');
+        $(this).addClass('active');
+        
+        var filter = $(this).data('filter');
+        if (filter === 'all') {
+            farmersTable.search('').draw();
+        } else {
+            farmersTable.search(filter).draw();
         }
-    );
-    
-    // Add risk level filter
-    // $('<div class="mb-3"><label>Filter by Risk Level: </label>' +
-    //   '<select id="riskLevelFilter" class="form-select form-select-sm d-inline-block w-auto ms-2">' +
-    //   '<option value="all">All</option>' +
-    //   '<option value="low">Low</option>' +
-    //   '<option value="medium">Medium</option>' +
-    //   '<option value="high">High</option>' +
-    //   '</select></div>').insertBefore('#farmersTable_wrapper');
-    
-    // // Apply filter on change
-    // $('#riskLevelFilter').on('change', function() {
-    //     table.draw();
-    // });
-    
-    // // Status filter
-    // $('<div class="mb-3 ms-2"><label>Filter by Status: </label>' +
-    //   '<select id="statusFilter" class="form-select form-select-sm d-inline-block w-auto ms-2">' +
-    //   '<option value="all">All</option>' +
-    //   '<option value="active">Active</option>' +
-    //   '<option value="inactive">Inactive</option>' +
-    //   '</select></div>').insertBefore('#farmersTable_wrapper');
-    
-    $.fn.dataTable.ext.search.push(
-        function(settings, data, dataIndex) {
-            var status = $('#statusFilter').val();
-            if (!status || status === 'all') {
-                return true;
-            }
-            
-            var rowStatus = data[6].toLowerCase(); // Status is in column index 6
-            return rowStatus.indexOf(status.toLowerCase()) !== -1;
-        }
-    );
-    
-    $('#statusFilter').on('change', function() {
-        table.draw();
     });
-    
-    // Add clear filters button
-    $('<button class="btn btn-sm btn-outline-success ms-2" id="clearFilters">Clear Filters</button>')
-        .insertAfter('#statusFilter')
-        .on('click', function() {
-            $('#riskLevelFilter, #statusFilter').val('all');
-            table.search('').columns().search('').draw();
+
+    // Load options data
+    function loadOptionsData() {
+        $.ajax({
+            url: "{% url 'get_farmer_options' %}",
+            type: "GET",
+            success: function(response) {
+                if (response.success) {
+                    // Load society options
+                    $('#society_name_id').empty().append('<option value="" selected disabled>Select Society</option>');
+                    $.each(response.societies, function(index, item) {
+                        $('#society_name_id').append($('<option>', {
+                            value: item.id,
+                            text: item.name
+                        }));
+                    });
+                    
+                    // Load staff options
+                    $('#staffTbl_foreignkey_id').empty().append('<option value="" selected disabled>Select Staff</option>');
+                    $.each(response.staff, function(index, item) {
+                        $('#staffTbl_foreignkey_id').append($('<option>', {
+                            value: item.id,
+                            text: item.name
+                        }));
+                    });
+                    
+                    // Initialize select2
+                    $('.select2-single').select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        dropdownParent: $('#farmerModal')
+                    });
+                } else {
+                    showErrorAlert(response.message || 'Failed to load options');
+                }
+            },
+            error: function() {
+                showErrorAlert('Failed to load options data');
+            }
         });
-    
-    // Row selection highlighting
-    $('#farmersTable tbody').on('click', 'tr', function() {
-        $(this).toggleClass('selected');
+    }
+
+    // ----- CREATE -----
+    $('#addFarmerBtn').click(function() {
+        $('#farmerForm')[0].reset();
+        $('#modalTitle').text('New Farmer');
+        $('#farmerId').val('');
+        $('#statusField').hide();
+        loadOptionsData();
+        $('#farmerModal').modal('show');
+    });
+
+    $('#farmerForm').submit(function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!this.checkValidity()) {
+            e.stopPropagation();
+            this.classList.add('was-validated');
+            return;
+        }
+        
+        var formData = {
+            'first_name': $('#first_name').val(),
+            'last_name': $('#last_name').val(),
+            'farmer_code': $('#farmer_code').val(),
+            'society_name_id': $('#society_name_id').val(),
+            'national_id_no': $('#national_id_no').val(),
+            'contact': $('#contact').val(),
+            'id_type': $('#id_type').val(),
+            'id_expiry_date': $('#id_expiry_date').val(),
+            'no_of_cocoa_farms': $('#no_of_cocoa_farms').val(),
+            'no_of_certified_crop': $('#no_of_certified_crop').val(),
+            'total_cocoa_bags_harvested_previous_year': $('#total_cocoa_bags_harvested_previous_year').val(),
+            'total_cocoa_bags_sold_group_previous_year': $('#total_cocoa_bags_sold_group_previous_year').val(),
+            'current_year_yeild_estimate': $('#current_year_yeild_estimate').val(),
+            'staffTbl_foreignkey_id': $('#staffTbl_foreignkey_id').val(),
+            'uuid': $('#uuid').val(),
+            'mapped_status': $('#mapped_status').val(),
+            'new_farmer_code': $('#new_farmer_code').val()
+        };
+        
+        if ($('#farmerId').val()) {
+            // Update existing farmer
+            var farmerId = $('#farmerId').val();
+            formData.status = $('#status').val();
+            updateFarmer(farmerId, formData);
+        } else {
+            // Create new farmer
+            createFarmer(formData);
+        }
+    });
+
+    function createFarmer(formData) {
+        $.ajax({
+            url: "{% url 'create_farmer' %}",
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Farmer created successfully');
+                    $('#farmerModal').modal('hide');
+                    $('#farmerForm').removeClass('was-validated');
+                    farmersTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to create farmer');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'create farmer');
+            },
+            complete: function() {
+                $('#saveBtn').prop('disabled', false).html('Create Farmer');
+            }
+        });
+    }
+
+    // ----- UPDATE -----
+    $(document).on('click', '.edit-btn', function() {
+        var farmerId = $(this).data('id');
+        getFarmerDetails(farmerId);
+    });
+
+    function getFarmerDetails(farmerId) {
+        $.ajax({
+            url: "{% url 'get_farmer_details' %}",
+            type: "GET",
+            data: { farmer_id: farmerId },
+            beforeSend: function() {
+                showLoadingAlert('Loading farmer details...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    var farmer = response.data;
+                    $('#farmerForm')[0].reset();
+                    $('#modalTitle').text('Edit Farmer');
+                    $('#farmerId').val(farmerId);
+                    $('#statusField').show();
+                    $('#status').val(farmer.status);
+                    
+                    // Set form values
+                    $('#first_name').val(farmer.first_name);
+                    $('#last_name').val(farmer.last_name);
+                    $('#farmer_code').val(farmer.farmer_code);
+                    $('#national_id_no').val(farmer.national_id_no);
+                    $('#contact').val(farmer.contact);
+                    $('#id_type').val(farmer.id_type);
+                    $('#id_expiry_date').val(farmer.id_expiry_date);
+                    $('#no_of_cocoa_farms').val(farmer.no_of_cocoa_farms);
+                    $('#no_of_certified_crop').val(farmer.no_of_certified_crop);
+                    $('#total_cocoa_bags_harvested_previous_year').val(farmer.total_cocoa_bags_harvested_previous_year);
+                    $('#total_cocoa_bags_sold_group_previous_year').val(farmer.total_cocoa_bags_sold_group_previous_year);
+                    $('#current_year_yeild_estimate').val(farmer.current_year_yeild_estimate);
+                    $('#uuid').val(farmer.uuid);
+                    $('#mapped_status').val(farmer.mapped_status);
+                    $('#new_farmer_code').val(farmer.new_farmer_code);
+                    
+                    loadOptionsData();
+                    
+                    // Set values after select2 is initialized
+                    setTimeout(function() {
+                        $('#society_name_id').val(farmer.society_name_id).trigger('change');
+                        $('#staffTbl_foreignkey_id').val(farmer.staffTbl_foreignkey_id).trigger('change');
+                        $('#farmerModal').modal('show');
+                    }, 500);
+                } else {
+                    showErrorAlert(response.message || 'Failed to load farmer details');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load farmer details');
+            }
+        });
+    }
+
+    function updateFarmer(farmerId, formData) {
+        $.ajax({
+            url: "{% url 'update_farmer' 0 %}".replace('0', farmerId),
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Farmer updated successfully');
+                    $('#farmerModal').modal('hide');
+                    $('#farmerForm').removeClass('was-validated');
+                    farmersTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to update farmer');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'update farmer');
+            },
+            complete: function() {
+                $('#saveBtn').prop('disabled', false).html('Update Farmer');
+            }
+        });
+    }
+
+    // ----- DELETE -----
+    $(document).on('click', '.delete-btn', function() {
+        var farmerId = $(this).data('id');
+        
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This farmer will be deleted. This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteFarmer(farmerId);
+            }
+        });
+    });
+
+    function deleteFarmer(farmerId) {
+        $.ajax({
+            url: "{% url 'delete_farmer' 0 %}".replace('0', farmerId),
+            type: "DELETE",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Deleting farmer...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert('Farmer deleted successfully');
+                    farmersTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to delete farmer');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'delete farmer');
+            }
+        });
+    }
+
+    // ==================== HELPER FUNCTIONS ====================
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showSuccessAlert(message) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function showErrorAlert(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message
+        });
+    }
+
+    function showLoadingAlert(message) {
+        Swal.fire({
+            title: 'Please wait...',
+            text: message,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    function handleAjaxError(xhr, action) {
+        let errorMsg = `An error occurred while trying to ${action}`;
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.message) {
+                errorMsg = xhr.responseJSON.message;
+            } else if (xhr.responseJSON.error) {
+                errorMsg = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.detail) {
+                errorMsg = xhr.responseJSON.detail;
+            }
+        } else if (xhr.status === 0) {
+            errorMsg = 'Network error. Please check your connection.';
+        } else if (xhr.statusText) {
+            errorMsg = xhr.statusText;
+        }
+        
+        showErrorAlert(errorMsg);
+    }
+
+    // Add error handling for the table
+    farmersTable.on('error.dt', function(e, settings, techNote, message) {
+        console.error('DataTables error:', message);
+        showErrorAlert('Error loading farmers data. Please check console for details.');
     });
 });
 </script>
 
 <style>
-    /* Custom styling for DataTables */
-    .dataTables_wrapper .dataTables_filter {
-        float: right;
-        text-align: right;
-    }
-    
-    .dataTables_wrapper .dataTables_length {
-        float: left;
-    }
-    
-    .dataTables_wrapper .dataTables_info {
-        float: left;
-    }
-    
-    .dataTables_wrapper .dataTables_paginate {
-        float: right;
-    }
-    
-    .table-responsive {
-        overflow-x: auto;
-    }
-    
-    #farmersTable tr.selected {
-        background-color: rgba(13, 253, 121, 0.1) !important;
-    }
-    
-    .dt-button-collection {
-        display: none;
-        position: absolute;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 5px;
-        z-index: 1000;
-    }
+.btn-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    border: none;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.btn-gradient-primary:hover {
+    background: linear-gradient(45deg, #2e59d9, #1e3a8a);
+    transform: translateY(-1px);
+}
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.filter-btn.active {
+    background-color: #4e73df;
+    color: white;
+    border-color: #4e73df;
+}
 </style>
-    </div>
-</div>
-
-{% endblock content %}
+{% endblock %}

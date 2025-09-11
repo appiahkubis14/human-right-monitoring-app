@@ -1,78 +1,90 @@
 from django.urls import path
-from .views import (
-    adult_household_member_view,
-    adult_in_household_view,
-    ChildEducationDetailsView,
-    ChildRemediationView,
-    child_in_household_view,
-    children_in_household_view,
-    ConsentLocationView,
-    cover_view,
-    EndOfCollectionView,
-    farmer_child_view,
-    farmer_identification_view,
-    HouseholdSensitizationView,
-    owner_identification_view,
-    workers_in_farm_view,
-)
+
+
+from . import views
 
 urlpatterns = [
-    # Cover endpoints:
-    path('cover/', cover_view, name='cover-list'),  # GET: List all covers; POST: Create a new cover.
-    path('cover/<int:cover_id>/', cover_view, name='cover-detail'),  # GET: Retrieve, PUT: Update, DELETE: Delete a specific cover.
 
-    # Farmer Child endpoints:
-    path('child/', farmer_child_view, name='child-list'),  # GET: List all children; POST: Create a new child.
-    path('child/<int:child_id>/', farmer_child_view, name='child-detail'),  # GET: Retrieve, PUT: Update, DELETE: Delete a specific child.
-    
-    path('consent-location/', ConsentLocationView.as_view(), name='consent-location-list'),
-    path('consent-location/<int:consent_id>/', ConsentLocationView.as_view(), name='consent-location-detail'),
-    
-     # List all farmer identification records or create a new one
-    path('farmer-identification/', farmer_identification_view, name='farmer-identification-list'),
-    # Retrieve, update, or delete a specific farmer identification record
-    path('farmer-identification/<int:pk>/', farmer_identification_view, name='farmer-identification-detail'),
-    
-     # List all owner identification records or create a new one
-    path('owner-identification/', owner_identification_view, name='owner-identification-list'),
-    # Retrieve, update, or delete a specific owner identification record by its pk
-    path('owner-identification/<int:pk>/', owner_identification_view, name='owner-identification-detail'),
-    
-    # List all worker records or create a new one
-    path('workers-in-farm/', workers_in_farm_view, name='workers-in-farm-list'),
-    # Retrieve, update, or delete a specific worker record by its pk
-    path('workers-in-farm/<int:pk>/', workers_in_farm_view, name='workers-in-farm-detail'),
-    
-     # Endpoints for AdultInHouseholdTbl
-    path('adult-in-household/', adult_in_household_view, name='adult-in-household-list'),
-    path('adult-in-household/<int:id>/', adult_in_household_view, name='adult-in-household-detail'),
+    path('staff-management/', views.StaffManagementView.as_view(), name='staff_management'),
+    path('staff-data/', views.get_staff_data, name='get_staff_data'),
+    path('details/', views.get_staff_details, name='get_staff_details'),
+    path('staff-create/', views.create_staff, name='create_staff'),
+    path('staff-update/<int:staff_id>/', views.update_staff, name='update_staff'),
+    path('staff-delete/<int:staff_id>/', views.delete_staff, name='delete_staff'),
+    path('designation-options/', views.get_designation_options, name='get_designation_options'),
 
-    # Endpoints for AdultHouseholdMember
-    path('adult-household-member/', adult_household_member_view, name='adult-household-member-list'),
-    path('adult-household-member/<int:id>/', adult_household_member_view, name='adult-household-member-detail'),
-    
-     # Endpoints for ChildrenInHouseholdTbl (overall children record)
-    path('children-in-household/', children_in_household_view, name='children-in-household-list'),
-    path('children-in-household/<int:id>/', children_in_household_view, name='children-in-household-detail'),
-    
-    # Endpoints for ChildInHouseholdTbl (individual child record)
-    path('child-in-household/', child_in_household_view, name='child-in-household-list'),
-    path('child-in-household/<int:id>/', child_in_household_view, name='child-in-household-detail'),
-    
-    # URL for listing all records or creating a new record
-    path('child-education-details/', ChildEducationDetailsView.as_view(), name='child_education_details_list'),
-    # URL for retrieving, updating, or deleting a specific record
-    path('child-education-details/<int:id>/', ChildEducationDetailsView.as_view(), name='child_education_details_detail'),
-    
-     # Child Remediation endpoints
-    path('child-remediation/', ChildRemediationView.as_view(), name='child_remediation_list'),
-    path('child-remediation/<int:remediation_id>/', ChildRemediationView.as_view(), name='child_remediation_detail'),
+    ##################################################################################################
+    path('assignments-overview/', views.AssignmentsOverviewView.as_view(), name='assignments_overview'),
+    path('assignments-data/', views.get_assignments_data, name='get_assignments_data'),
+    path('assignment-details/', views.get_assignment_details, name='get_assignment_details'),
+    path('assignment-create/', views.create_assignment, name='create_assignment'),
+    path('assignment-update/<int:assignment_id>/', views.update_assignment, name='update_assignment'),
+    path('assignment-delete/<int:assignment_id>/', views.delete_assignment, name='delete_assignment'),
+    path('staff-options/', views.get_staff_options, name='get_staff_options'),
+    path('district-options/', views.get_district_options, name='get_district_options'),
 
-    # Household Sensitization endpoints
-    path('household-sensitization/', HouseholdSensitizationView.as_view(), name='household_sensitization_list'),
-    path('household-sensitization/<int:sensitization_id>/', HouseholdSensitizationView.as_view(), name='household_sensitization_detail'),
+    ####################################################################################################
 
-    # End of Collection endpoints
-    path('end-of-collection/', EndOfCollectionView.as_view(), name='end_of_collection_list'),
-    path('end-of-collection/<int:id>/', EndOfCollectionView.as_view(), name='end_of_collection_detail'),
+    path('priorities-deadlines-assignments/', views.DeadlinesView.as_view(), name='deadlines_priorities'),
+    path('priorities-deadlines-data/', views.get_deadlines_data, name='get_deadlines_data'),
+    path('priorities-deadlines-details/', views.get_deadline_details, name='get_deadline_details'),
+    path('priorities-deadlines-create/', views.create_deadline, name='create_deadline'),
+    path('priorities-deadlines-update/<int:deadline_id>/', views.update_deadline, name='update_deadline'),
+    path('priorities-deadlines-delete/<int:deadline_id>/', views.delete_deadline, name='delete_deadline'),
+    path('options/', views.get_options_data, name='get_deadline_options'),
+
+
+
+    #######################################################################################################
+
+    path('farmers-management/', views.FarmersView.as_view(), name='farmers_management'),
+    path('farmers-data/', views.get_farmers_data, name='get_farmers_data'),
+    path('farmers-details/', views.get_farmer_details, name='get_farmer_details'),
+    path('farmers-create/', views.create_farmer, name='create_farmer'),
+    path('farmers-update/<int:farmer_id>/', views.update_farmer, name='update_farmer'),
+    path('farmers-delete/<int:farmer_id>/', views.delete_farmer, name='delete_farmer'),
+    path('farmer-options/', views.get_farmer_options_data, name='get_farmer_options'),
+
+
+    #########################################################################################################
+
+    path('societies/', views.societies_list, name='societies_list'),
+    path('societies/data/', views.get_societies_data, name='get_societies_data'),
+    path('societies/options/', views.get_society_options, name='get_society_options'),
+    path('societies/create/', views.create_society, name='create_society'),
+    path('societies/details/', views.get_society_details, name='get_society_details'),
+    path('societies/update/<int:society_id>/', views.update_society, name='update_society'),
+    path('societies/delete/<int:society_id>/', views.delete_society, name='delete_society'),
+
+
+    ##########################################################################################################
+
+    path('send-query/', views.send_query, name='send_query'),
+    path('review-responses/', views.review_responses, name='review_responses'),
+    path('flag-issues/', views.flag_issues, name='flag_issues'),
+    path('escalate-cases/', views.escalate_cases, name='escalate_cases'),
+    
+    # API endpoints
+    path('api/queries/', views.query_list_api, name='query_list_api'),
+    path('api/queries/create/', views.create_query_api, name='create_query_api'),
+    path('api/queries/<int:query_id>/', views.query_detail_api, name='query_detail_api'),
+    path('api/queries/<int:query_id>/respond/', views.respond_to_query_api, name='respond_to_query_api'),
+    path('api/queries/<int:query_id>/flag/', views.flag_query_api, name='flag_query_api'),
+    path('api/queries/<int:query_id>/escalate/', views.escalate_query_api, name='escalate_query_api'),
+    path('api/staff/enumerators/', views.get_enumerators_api, name='get_enumerators_api'),
+    path('api/staff/supervisors/', views.get_supervisors_api, name='get_supervisors_api'),
+    path('api/categories/', views.get_categories_api, name='get_categories_api'),
+    path('api/households/', views.get_households_api, name='get_households_api'),
+    path('api/farmers/', views.get_farmers_api, name='get_farmers_api'),
+    path('api/children/', views.get_children_api, name='get_children_api'),
+
+
+    #############################################################################################################
+    path('review_responses/', views.review_responses, name='create_response_api'),
+    path('api/responses/', views.response_list_api, name='response_list_api'),
+    path('api/responses/<int:response_id>/', views.response_detail_api, name='response_detail_api'),
+    path('api/queries/<int:query_id>/mark-resolved/', views.mark_query_resolved_api, name='mark_query_resolved_api'),
+    path('api/queries/<int:query_id>/request-clarification/', views.request_clarification_api, name='request_clarification_api'),
+
+
 ]

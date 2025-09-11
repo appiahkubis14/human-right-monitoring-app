@@ -1,230 +1,360 @@
 <!-- Sidenav Menu Start -->
-        <div class="sidenav-menu">
+<div class="sidenav-menu">
 
-            <style>
-                
-            </style>
+    <style>
+        .side-nav-item .sub-menu {
+            padding-left: 15px;
+        }
+        .side-nav-link .menu-icon {
+            min-width: 24px;
+        }
+    </style>
 
-            <!-- Brand Logo -->
-            <a href="/" class="logo">
-                <span class="logo-light">
-                    <span class="logo-lg"><img src="/static/assets/images/CJ_Commodities_Logo.png" alt="logo" style="width: 100px; height: 50px;"><span></span></span>
-                    <span class="logo-sm"><img src="/static/assets/images/CJ_Commodities_Logo.png" style="width: 40px; height: 20px;" alt="small logo"></span>
-                </span>
+    <!-- Brand Logo -->
+    <a href="/" class="logo">
+        <span class="logo-light">
+            <span class="logo-lg"><img src="/static/assets/images/CJ_Commodities_Logo.png" alt="logo" style="width: 100px; height: 50px;"><span></span></span>
+            <span class="logo-sm"><img src="/static/assets/images/CJ_Commodities_Logo.png" style="width: 40px; height: 20px;" alt="small logo"></span>
+        </span>
 
-                <span class="logo-dark">
-                    <span class="logo-lg"><img src="/static/assets/images/CJ_Commodities_Logo.png" alt="dark logo" style="width: 100px; height: 50px;"><span></span></span>
-                    <span class="logo-sm"><img src="/static/assets/images/CJ_Commodities_Logo.png" style="width: 40px; height: 20px;" alt="small logo"></span>
-                </span>
-            </a>
+        <span class="logo-dark">
+            <span class="logo-lg"><img src="/static/assets/images/CJ_Commodities_Logo.png" alt="dark logo" style="width: 100px; height: 50px;"><span></span></span>
+            <span class="logo-sm"><img src="/static/assets/images/CJ_Commodities_Logo.png" style="width: 40px; height: 20px;" alt="small logo"></span>
+        </span>
+    </a>
 
-            <!-- Sidebar Hover Menu Toggle Button -->
-            <button class="button-sm-hover">
-                <i class="ti ti-circle align-middle"></i>
-            </button>
+    <!-- Sidebar Hover Menu Toggle Button -->
+    <button class="button-sm-hover">
+        <i class="ti ti-circle align-middle"></i>
+    </button>
 
-            <!-- Full Sidebar Menu Close Button -->
-            <button class="button-close-fullsidebar">
-                <i class="ti ti-x align-middle"></i>
-            </button>
+    <!-- Full Sidebar Menu Close Button -->
+    <button class="button-close-fullsidebar">
+        <i class="ti ti-x align-middle"></i>
+    </button>
 
-            <div data-simplebar>
+    <div data-simplebar>
+        <!--- Sidenav Menu -->
+        <ul class="side-nav">
+            <li class="side-nav-title">Navigation</li>
 
-                <!--- Sidenav Menu -->
-                <ul class="side-nav">
-                    <li class="side-nav-title">Navigation</li>
+            <li class="side-nav-item">
+                <a href="/" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-view-dashboard"></i></span>
+                    <span class="menu-text"> Dashboard </span>
+                    <span class="badge bg-success rounded-pill">5</span>
+                </a>
+            </li>
+            
+            <li class="side-nav-title">Task Management Hub</li>
 
-                    <li class="side-nav-item">
-                        <a href="/" class="side-nav-link">
-                            <span class="menu-icon"><i class="mdi mdi-view-dashboard"></i></span>
-                            <span class="menu-text"> Dashboard </span>
-                            <span class="badge bg-success rounded-pill">5</span>
-                        </a>
-                    </li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarAssignments" aria-expanded="false" aria-controls="sidebarAssignments" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-clipboard-list-outline"></i></span>
+                    <span class="menu-text"> Assignments Overview</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarAssignments">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/portal/assignments-overview/" class="side-nav-link">
+                                <span class="menu-text">View All Assignments</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/portal/staff-management/" class="side-nav-link">
+                                <span class="menu-text">Assign/Unassign Enumerators</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/portal/priorities-deadlines-assignments/" class="side-nav-link">
+                                <span class="menu-text">Set Deadlines & Priorities</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
-                    <!-- <li class="side-nav-item">
-                        <a href="apps-calendar.html" class="side-nav-link">
-                            <span class="menu-icon"><i class="mdi mdi-calendar-month"></i></span>
-                            <span class="menu-text"> Calendar </span>
-                        </a>
-                    </li> -->
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarProgress" aria-expanded="false" aria-controls="sidebarProgress" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-chart-line"></i></span>
+                    <span class="menu-text"> Progress Monitoring </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarProgress">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/progress/work-in-progress/" class="side-nav-link">
+                                <span class="menu-text">View Work in Progress</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/progress/completed-tasks/" class="side-nav-link">
+                                <span class="menu-text">Track Completed Tasks</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/progress/pending-followups/" class="side-nav-link">
+                                <span class="menu-text">Check Pending Follow-ups</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/progress/performance/" class="side-nav-link">
+                                <span class="menu-text">Enumerator Performance</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
-                    <li class="side-nav-title">Extra Pages</li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarQueries" aria-expanded="false" aria-controls="sidebarQueries" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-message-question-outline"></i></span>
+                    <span class="menu-text"> Queries & Feedback </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarQueries">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/portal/send-query/" class="side-nav-link">
+                                <span class="menu-text">Send Query to Enumerator</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/portal/review-responses/" class="side-nav-link">
+                                <span class="menu-text">Review Enumerator Responses</span>
+                            </a>
+                        </li>
+                        <!-- <li class="side-nav-item">
+                            <a href="/queries/flag-issues/" class="side-nav-link">
+                                <span class="menu-text">Flag Issues for Review</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/queries/escalate-cases/" class="side-nav-link">
+                                <span class="menu-text">Escalate Cases to Supervisors</span>
+                            </a>
+                        </li> -->
+                    </ul>
+                </div>
+            </li>
 
-                    <li class="side-nav-item">
-                        <a data-bs-toggle="collapse" href="/#sidebarPagesAuth" aria-expanded="false" aria-controls="sidebarPagesAuth" class="side-nav-link">
-                            <span class="menu-icon"><i class="mdi mdi-lock-outline"></i></span>
-                            <span class="menu-text"> General </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebarPagesAuth">
-                            <ul class="sub-menu">
-                                <li class="side-nav-item">
-                                    <a href="/all-farmers/" class="side-nav-link">
-                                        <span class="menu-text">All Farmers</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/farmer-children/" class="side-nav-link">
-                                        <span class="menu-text">Farmer Children</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/risk-assessment/" class="side-nav-link">
-                                        <span class="menu-text">Risk Assessment</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/communities/" class="side-nav-link">
-                                        <span class="menu-text">All Communities</span>
-                                    </a>
-                                </li>
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarQuality" aria-expanded="false" aria-controls="sidebarQuality" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-check-circle-outline"></i></span>
+                    <span class="menu-text"> Quality Control </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarQuality">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/quality/validate-data/" class="side-nav-link">
+                                <span class="menu-text">Validate Submitted Data</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/quality/approve-surveys/" class="side-nav-link">
+                                <span class="menu-text">Household Surveys</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/quality/audit-checks/" class="side-nav-link">
+                                <span class="menu-text">Random Audit Checks</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/quality/spot-checks/" class="side-nav-link">
+                                <span class="menu-text">Spot Check High-Risk Cases</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
-                            </ul>
-                        </div>
-                    </li>
+            <li class="side-nav-title">Household Management Overview</li>
 
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarPagesAuth" aria-expanded="false" aria-controls="sidebarPagesAuth" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-lock-outline"></i></span>
+                    <span class="menu-text"> Survey Data Management </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarPagesAuth">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/portal/societies/" class="side-nav-link">
+                                <span class="menu-text">Communities</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/portal/societies/" class="side-nav-link">
+                                <span class="menu-text">Community Protective Index</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/portal/farmers-management/" class="side-nav-link">
+                                <span class="menu-text">Farmers</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/farmer-children/" class="side-nav-link">
+                                <span class="menu-text">Farmer Children</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/risk-assessment/" class="side-nav-link">
+                                <span class="menu-text">Risk Assessment</span>
+                            </a>
+                        </li>
+                        
+                    </ul>
+                </div>
+            </li>
 
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarPages" aria-expanded="false" aria-controls="sidebarPages" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-file-document-outline"></i></span>
+                    <span class="menu-text"> Household Survey </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarPages">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/available-contracts/" class="side-nav-link">
+                                <span class="menu-text">Adult Members</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/my-contracts/" class="side-nav-link">
+                                <span class="menu-text">Child Members</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/price-trends/" class="side-nav-link">
+                                <span class="menu-text">Light Tasks</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/product-listings/" class="side-nav-link">
+                                <span class="menu-text">Heavy Tasks</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
-                   
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarPagesError" aria-expanded="false" aria-controls="sidebarPagesError" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-alert-circle-outline"></i></span>
+                    <span class="menu-text"> Remediation </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarPagesError">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/payment-history/" class="side-nav-link">
+                                <span class="menu-text">Child Remediation</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/invoices/" class="side-nav-link">
+                                <span class="menu-text">Household Sensitization</span>
+                            </a>
+                        </li>
+                         <li class="side-nav-item">
+                            <a href="/invoices/" class="side-nav-link">
+                                <span class="menu-text">Intervention Plans</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
-                    
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarExtendedUI" aria-expanded="false" aria-controls="sidebarExtendedUI" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-chart-bar"></i></span>
+                    <span class="menu-text"> Reports & Analytics </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarExtendedUI">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/reports/progress/" class="side-nav-link">
+                                <span class="menu-text">Daily/Weekly Progress Reports</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/reports/coverage/" class="side-nav-link">
+                                <span class="menu-text">Coverage Statistics</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/reports/remediation/" class="side-nav-link">
+                                <span class="menu-text">Remediation Status Overview</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/reports/export/" class="side-nav-link">
+                                <span class="menu-text">Export Data (PDF, Excel, CSV)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarWidgets" aria-expanded="false" aria-controls="sidebarWidgets" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-cog-outline"></i></span>
+                    <span class="menu-text"> Settings </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarWidgets">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/accounts/profile-settings/" class="side-nav-link">
+                                <span class="menu-text">Profile Settings</span>
+                            </a>
+                        </li>
+                        
+                        <li class="side-nav-item">
+                            <a href="/accounts/notification/" class="side-nav-link">
+                                <span class="menu-text">Notifications</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
-                    
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarTables" aria-expanded="false" aria-controls="sidebarTables" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-shield-account"></i></span>
+                    <span class="menu-text"> Admin </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarTables">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/admin/user-management/" class="side-nav-link">
+                                <span class="menu-text">User Management</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/admin/regions-communities/" class="side-nav-link">
+                                <span class="menu-text">Update Regions/Communities</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/admin/questionnaire-templates/" class="side-nav-link">
+                                <span class="menu-text">Configure Questionnaire Templates</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
-                    <li class="side-nav-item">
-                        <a data-bs-toggle="collapse" href="/#sidebarPages" aria-expanded="false" aria-controls="sidebarPages" class="side-nav-link">
-                            <span class="menu-icon"><i class="mdi mdi-file-document-outline"></i></span>
-                            <span class="menu-text"> Household Survey </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebarPages">
-                            <ul class="sub-menu">
-                                <li class="side-nav-item">
-                                    <a href="/available-contracts/" class="side-nav-link">
-                                        <span class="menu-text">Adult Members</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/my-contracts/" class="side-nav-link">
-                                        <span class="menu-text">Child Members</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/price-trends/" class="side-nav-link">
-                                        <span class="menu-text">Light Tasks</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/product-listings/" class="side-nav-link">
-                                        <span class="menu-text">Heavy Tasks</span>
-                                    </a>
-                                </li>
-                                
-                            </ul>
-                        </div>
-                    </li>
+        </ul>
 
-                    <li class="side-nav-item">
-                        <a data-bs-toggle="collapse" href="/#sidebarPagesError" aria-expanded="false" aria-controls="sidebarPagesError" class="side-nav-link">
-                            <span class="menu-icon"><i class="mdi mdi-alert-circle-outline"></i></span>
-                            <span class="menu-text"> Remediation </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebarPagesError">
-                            <ul class="sub-menu">
-                                <li class="side-nav-item">
-                                    <a href="/payment-history/" class="side-nav-link">
-                                        <span class="menu-text">Child Remediation</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/invoices/" class="side-nav-link">
-                                        <span class="menu-text">Household Sensitization</span>
-                                    </a>
-                                </li>
-                                 <li class="side-nav-item">
-                                    <a href="/invoices/" class="side-nav-link">
-                                        <span class="menu-text">Intervention Plans</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="side-nav-item">
-                        <a data-bs-toggle="collapse" href="/#sidebarExtendedUI" aria-expanded="false" aria-controls="sidebarExtendedUI" class="side-nav-link">
-                            <span class="menu-icon"><i class="mdi mdi-briefcase-outline"></i></span>
-                            <span class="menu-text"> Report & Insights </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebarExtendedUI">
-                            <ul class="sub-menu">
-                                <li class="side-nav-item">
-                                    <a href="/farmer-network/" class="side-nav-link">
-                                        <span class="menu-text">Data Export</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/knowledge-base/" class="side-nav-link">
-                                        <span class="menu-text">Compliance Reports</span>
-                                    </a>
-                                </li>
-                                <li class="side-nav-item">
-                                    <a href="/discussion-forum/" class="side-nav-link">
-                                        <span class="menu-text">Survey Completion</span>
-                                    </a>
-                                </li>
-                               
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="side-nav-item">
-                        <a data-bs-toggle="collapse" href="/#sidebarWidgets" aria-expanded="false" aria-controls="sidebarWidgets" class="side-nav-link">
-                            <span class="menu-icon"><i class="mdi mdi-puzzle-outline"></i></span>
-                            <span class="menu-text"> Settings </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebarWidgets">
-                            <ul class="sub-menu">
-                                <li class="side-nav-item">
-                                    <a href="/accounts/profile-settings/" class="side-nav-link">
-                                        <span class="menu-text">Profile Settings</span>
-                                    </a>
-                                </li>
-                                
-                                <li class="side-nav-item">
-                                    <a href="/accounts/notification/" class="side-nav-link">
-                                        <span class="menu-text">Notifications</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-
-                    <li class="side-nav-item">
-                        <a data-bs-toggle="collapse" href="/#sidebarTables" aria-expanded="false" aria-controls="sidebarTables" class="side-nav-link">
-                            <span class="menu-icon"><i class="mdi mdi-table"></i></span>
-                            <span class="menu-text"> Admin </span>
-                            <span class="menu-arrow"></span>
-                        </a>
-                        <div class="collapse" id="sidebarTables">
-                            <ul class="sub-menu">
-                                <li class="side-nav-item">
-                                    <a href="/admin/" class="side-nav-link">
-                                        <span class="menu-text">User Management</span>
-                                    </a>
-                                </li>
-                               
-                            </ul>
-                        </div>
-                    </li>
-
-                </ul>
-
-                <div class="clearfix"></div>
-            </div>
-        </div>
-        <!-- Sidenav Menu End -->
+        <div class="clearfix"></div>
+    </div>
+</div>
+<!-- Sidenav Menu End -->

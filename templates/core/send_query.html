@@ -1,0 +1,1048 @@
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <br>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="mb-3">
+                            <div>
+                                <h4 style="font-weight: bolder;">SEND QUERY TO ENUMERATOR</h4>
+                                <p class="mb-0">Create and send queries to field enumerators</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-gradient-primary btn-sm" id="newQueryBtn">
+                            <i class="fas fa-plus"></i> NEW QUERY
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="Open">Open</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="priorityFilter">
+                                    <option value="">All Priorities</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="categoryFilter">
+                                    <option value="">All Categories</option>
+                                    <!-- Categories will be loaded via AJAX -->
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="enumeratorFilter">
+                                    <option value="">All Enumerators</option>
+                                    <!-- Enumerators will be loaded via AJAX -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table id="queriesTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>QUERY ID</th>
+                                        <th>TITLE</th>
+                                        <th>CATEGORY</th>
+                                        <th>PRIORITY</th>
+                                        <th>STATUS</th>
+                                        <th>Enumerator</th>
+                                        <th>CREATED DATE</th>
+                                        <th>DUE DATE</th>
+                                        <th>RESPONSES</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Modal -->
+        <div class="modal fade" id="queryModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title" id="modalTitle">New Query</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="queryForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" id="queryId" name="queryId">
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="title" class="form-label">Query Title*</label>
+                                        <input type="text" class="form-control" id="title" name="title" required>
+                                        <div class="invalid-feedback">Please enter query title</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="category" class="form-label">Category*</label>
+                                        <select class="form-select" id="category" name="category" required>
+                                            <option value="" selected disabled>Select Category</option>
+                                            <!-- Categories will be loaded via AJAX -->
+                                        </select>
+                                        <div class="invalid-feedback">Please select category</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="priority" class="form-label">Priority*</label>
+                                        <select class="form-select" id="priority" name="priority" required>
+                                            <option value="" selected disabled>Select Priority</option>
+                                            <option value="1">High</option>
+                                            <option value="2">Medium</option>
+                                            <option value="3">Low</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select priority</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="assigned_to" class="form-label">Assign To*</label>
+                                        <select class="form-select" id="assigned_to" name="assigned_to" required>
+                                            <option value="" selected disabled>Select Enumerator</option>
+                                            <!-- Enumerators will be loaded via AJAX -->
+                                        </select>
+                                        <div class="invalid-feedback">Please select enumerator</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="due_date" class="form-label">Due Date</label>
+                                        <input type="datetime-local" class="form-control" id="due_date" name="due_date">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="related_to" class="form-label">Related To</label>
+                                        <select class="form-select" id="related_to" name="related_to">
+                                            <option value="" selected>None</option>
+                                            <option value="household">Household</option>
+                                            <option value="farmer">Farmer</option>
+                                            <option value="child">Child</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3" id="householdField" style="display: none;">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="household" class="form-label">Select Household</label>
+                                        <select class="form-select" id="household" name="household">
+                                            <option value="" selected disabled>Select Household</option>
+                                            <!-- Households will be loaded via AJAX -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="description" class="form-label">Description*</label>
+                                        <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                                        <div class="invalid-feedback">Please enter query description</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="requires_follow_up" name="requires_follow_up">
+                                        <label class="form-check-label" for="requires_follow_up">
+                                            Requires Follow-up
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="saveBtn">Send Query</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Query Modal -->
+        <div class="modal fade" id="viewQueryModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title">Query Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="queryDetails">
+                            <!-- Query details will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include similar JavaScript as the staff management page -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    var queriesTable = $('#queriesTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "{% url 'query_list_api' %}",
+            type: "GET",
+            data: function(d) {
+                d.status = $('#statusFilter').val();
+                d.priority = $('#priorityFilter').val();
+                d.category = $('#categoryFilter').val();
+                d.assigned_to = $('#enumeratorFilter').val();
+            },
+            dataSrc: "data"
+        },
+        columns: [
+            { data: 'query_id' },
+            { data: 'title' },
+            { data: 'category' },
+            { 
+                data: 'priority',
+                render: function(data, type, row) {
+                    return `<span class="badge" style="background-color: ${row.priority_color}">${data}</span>`;
+                }
+            },
+            { 
+                data: 'status',
+                render: function(data, type, row) {
+                    return `<span class="badge" style="background-color: ${row.status_color}">${data}</span>`;
+                }
+            },
+            { data: 'assigned_to' },
+            { data: 'created_date' },
+            { 
+                data: 'due_date',
+                render: function(data, type, row) {
+                    if (!data) return 'N/A';
+                    const dueDate = new Date(data);
+                    const now = new Date();
+                    const isOverdue = row.is_overdue;
+                    
+                    return `<span class="${isOverdue ? 'text-danger fw-bold' : ''}">${data}</span>`;
+                }
+            },
+            { 
+                data: 'response_count',
+                render: function(data) {
+                    return `<span class="badge bg-info">${data}</span>`;
+                }
+            },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm view-btn" data-id="${data}" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-info btn-sm respond-btn" data-id="${data}" title="Add Response">
+                                <i class="fas fa-reply"></i>
+                            </button>
+                            <button class="btn btn-warning btn-sm flag-btn" data-id="${data}" title="Flag Issue">
+                                <i class="fas fa-flag"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm escalate-btn" data-id="${data}" title="Escalate Case">
+                                <i class="fas fa-level-up-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                },
+                orderable: false
+            }
+        ],
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: "copy",
+                text: '<i class="fas fa-copy"></i> Copy',
+                className: "btn btn-sm btn-outline-secondary",
+            },
+            {
+                extend: "csv",
+                text: '<i class="fas fa-file-csv"></i> CSV',
+                className: "btn btn-sm btn-outline-success",
+            },
+            {
+                extend: "excel",
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: "btn btn-sm btn-outline-primary",
+            },
+            {
+                extend: "pdf",
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: "btn btn-sm btn-outline-danger",
+            },
+            {
+                text: '<i class="fas fa-sync-alt"></i> Refresh',
+                className: "btn btn-sm btn-outline-info",
+                action: function(e, dt, node, config) {
+                    dt.ajax.reload();
+                }
+            }
+        ],
+        language: {
+            emptyTable: "No queries found. Click 'New Query' to create one.",
+            zeroRecords: "No matching queries found."
+        }
+    });
+
+    // Load filter options
+    function loadFilterOptions() {
+        // Load categories
+        $.ajax({
+            url: "{% url 'get_categories_api' %}",
+            type: "GET",
+            success: function(data) {
+                $('#categoryFilter').empty().append('<option value="">All Categories</option>');
+                $.each(data, function(index, item) {
+                    $('#categoryFilter').append($('<option>', {
+                        value: item.name,
+                        text: item.name
+                    }));
+                });
+            }
+        });
+
+        // Load enumerators
+        loadEnumerators('#enumeratorFilter', true);
+    }
+
+    // Load enumerators for dropdown
+    function loadEnumerators(selector, includeAllOption = false) {
+        $.ajax({
+            url: "{% url 'get_enumerators_api' %}",
+            type: "GET",
+            success: function(data) {
+                $(selector).empty();
+                if (includeAllOption) {
+                    $(selector).append('<option value="">All Enumerators</option>');
+                } else {
+                    $(selector).append('<option value="" selected disabled>Select Enumerator</option>');
+                }
+                
+                $.each(data.data, function(index, item) {
+                    $(selector).append($('<option>', {
+                        value: item.id,
+                        text: `${item.first_name} ${item.last_name} (${item.staffid})`
+                    }));
+                });
+                
+                if (selector === '#assigned_to') {
+                    $(selector).select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        dropdownParent: $('#queryModal')
+                    });
+                }
+            },
+            error: function() {
+                showErrorAlert('Failed to load enumerators');
+            }
+        });
+    }
+
+    // Load categories for dropdown
+    function loadCategories() {
+        $.ajax({
+            url: "{% url 'get_categories_api' %}",
+            type: "GET",
+            success: function(data) {
+                $('#category').empty().append('<option value="" selected disabled>Select Category</option>');
+                $.each(data, function(index, item) {
+                    $('#category').append($('<option>', {
+                        value: item.id,
+                        text: item.name
+                    }));
+                });
+            },
+            error: function() {
+                showErrorAlert('Failed to load categories');
+            }
+        });
+    }
+
+    // Load households for dropdown
+    function loadHouseholds(searchTerm = '') {
+        $.ajax({
+            url: "{% url 'get_households_api' %}",
+            type: "GET",
+            data: { search: searchTerm },
+            success: function(data) {
+                $('#household').empty().append('<option value="" selected disabled>Select Household</option>');
+                $.each(data.data, function(index, item) {
+                    $('#household').append($('<option>', {
+                        value: item.id,
+                        text: item.display_name
+                    }));
+                });
+                
+                $('#household').select2({
+                    theme: 'bootstrap-5',
+                    width: '100%',
+                    dropdownParent: $('#queryModal')
+                });
+            },
+            error: function() {
+                showErrorAlert('Failed to load households');
+            }
+        });
+    }
+
+    // Filter change event
+    $('#statusFilter, #priorityFilter, #categoryFilter, #enumeratorFilter').change(function() {
+        queriesTable.ajax.reload();
+    });
+
+    // Related to change event
+    $('#related_to').change(function() {
+        const value = $(this).val();
+        if (value === 'household') {
+            $('#householdField').show();
+            loadHouseholds();
+        } else {
+            $('#householdField').hide();
+        }
+    });
+
+    // ----- CREATE NEW QUERY -----
+    $('#newQueryBtn').click(function() {
+        $('#queryForm')[0].reset();
+        $('#modalTitle').text('New Query');
+        $('#queryId').val('');
+        $('#householdField').hide();
+        
+        loadCategories();
+        loadEnumerators('#assigned_to', false);
+        
+        $('#queryModal').modal('show');
+    });
+
+    $('#queryForm').submit(function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!this.checkValidity()) {
+            e.stopPropagation();
+            this.classList.add('was-validated');
+            return;
+        }
+        
+        const formData = {
+            'title': $('#title').val(),
+            'description': $('#description').val(),
+            'category_id': $('#category').val(),
+            'priority_id': $('#priority').val(),
+            'assigned_to_id': $('#assigned_to').val(),
+            'due_date': $('#due_date').val() ? new Date($('#due_date').val()).toISOString() : null,
+            'requires_follow_up': $('#requires_follow_up').is(':checked'),
+            'household_id': $('#household').val() || null
+        };
+        
+        createQuery(formData);
+    });
+
+    function createQuery(formData) {
+        $.ajax({
+            url: "{% url 'create_query_api' %}",
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Query sent successfully');
+                    $('#queryModal').modal('hide');
+                    $('#queryForm').removeClass('was-validated');
+                    queriesTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to send query');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'send query');
+            },
+            complete: function() {
+                $('#saveBtn').prop('disabled', false).html('Send Query');
+            }
+        });
+    }
+
+    // ----- VIEW QUERY DETAILS -----
+    $(document).on('click', '.view-btn', function() {
+        const queryId = $(this).data('id');
+        getQueryDetails(queryId);
+    });
+
+    function getQueryDetails(queryId) {
+        $.ajax({
+            url: "{% url 'query_detail_api' 0 %}".replace('0', queryId),
+            type: "GET",
+            beforeSend: function() {
+                showLoadingAlert('Loading query details...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    displayQueryDetails(response.data);
+                    $('#viewQueryModal').modal('show');
+                } else {
+                    showErrorAlert(response.message || 'Failed to load query details');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load query details');
+            }
+        });
+    }
+
+    function displayQueryDetails(query) {
+        const detailsHtml = `
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h4>${query.title}</h4>
+                    <p class="text-muted">${query.query_id}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge me-2" style="background-color: ${query.priority_color}">${query.priority}</span>
+                    <span class="badge" style="background-color: ${query.status_color}">${query.status}</span>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Assigned To:</strong> ${query.assigned_to}
+                </div>
+                <div class="col-md-6">
+                    <strong>Created By:</strong> ${query.created_by}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Created Date:</strong> ${query.created_date}
+                </div>
+                <div class="col-md-6">
+                    <strong>Due Date:</strong> ${query.due_date || 'N/A'}
+                    ${query.is_overdue ? '<span class="badge bg-danger ms-2">Overdue</span>' : ''}
+                </div>
+            </div>
+            
+            ${query.household ? `<div class="row mb-3"><div class="col-12"><strong>Related Household:</strong> ${query.household}</div></div>` : ''}
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <strong>Description:</strong>
+                    <div class="border p-3 mt-2 rounded">${query.description}</div>
+                </div>
+            </div>
+            
+            <h5 class="mb-3">Responses (${query.responses.length})</h5>
+            ${query.responses.length > 0 ? 
+                query.responses.map(response => `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <strong>${response.responded_by}</strong>
+                                <small class="text-muted">${response.responded_date}</small>
+                            </div>
+                            <p class="mb-1 mt-2">${response.response_text}</p>
+                            ${response.attachment ? `<a href="${response.attachment}" target="_blank" class="btn btn-sm btn-outline-primary mt-2"><i class="fas fa-paperclip"></i> Attachment</a>` : ''}
+                        </div>
+                    </div>
+                `).join('') : 
+                '<p class="text-muted">No responses yet.</p>'
+            }
+            
+            <h5 class="mb-3 mt-4">Flags (${query.flags.length})</h5>
+            ${query.flags.length > 0 ? 
+                query.flags.map(flag => `
+                    <div class="card mb-2 border-${flag.severity === 'critical' ? 'danger' : flag.severity === 'high' ? 'warning' : 'info'}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <strong>${flag.flag_type} - ${flag.severity}</strong>
+                                <small class="text-muted">${flag.flagged_date}</small>
+                            </div>
+                            <p class="mb-1 mt-2">${flag.description}</p>
+                            <small>Flagged by: ${flag.flagged_by}</small>
+                            ${flag.reviewed ? `
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    <strong>Reviewed:</strong> ${flag.review_notes}<br>
+                                    <small>By: ${flag.reviewed_by} on ${flag.review_date}</small>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('') : 
+                '<p class="text-muted">No flags yet.</p>'
+            }
+            
+            <h5 class="mb-3 mt-4">Escalations (${query.escalations.length})</h5>
+            ${query.escalations.length > 0 ? 
+                query.escalations.map(escalation => `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <strong>${escalation.escalation_type}</strong>
+                                <span class="badge bg-${escalation.resolved ? 'success' : escalation.is_overdue ? 'danger' : 'warning'}">
+                                    ${escalation.resolved ? 'Resolved' : escalation.is_overdue ? 'Overdue' : 'Pending'}
+                                </span>
+                            </div>
+                            <p class="mb-1 mt-2">${escalation.reason}</p>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <small>Escalated to: ${escalation.escalated_to}</small><br>
+                                    <small>Due: ${escalation.due_date}</small>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <small>Priority: <span class="badge bg-secondary">${escalation.priority}</span></small>
+                                </div>
+                            </div>
+                            ${escalation.resolution_notes ? `
+                                <div class="mt-2 p-2 bg-light rounded">
+                                    <strong>Resolution:</strong> ${escalation.resolution_notes}<br>
+                                    <small>Resolved on: ${escalation.resolved_date}</small>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('') : 
+                '<p class="text-muted">No escalations yet.</p>'
+            }
+        `;
+        
+        $('#queryDetails').html(detailsHtml);
+    }
+
+    // ----- ADD RESPONSE -----
+    $(document).on('click', '.respond-btn', function() {
+        const queryId = $(this).data('id');
+        
+        Swal.fire({
+            title: 'Add Response',
+            html: `
+                <textarea id="responseText" class="form-control" rows="5" placeholder="Enter your response..." required></textarea>
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="markAsResolved">
+                    <label class="form-check-label" for="markAsResolved">
+                        Mark as resolved
+                    </label>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Submit Response',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                const responseText = $('#responseText').val();
+                if (!responseText) {
+                    Swal.showValidationMessage('Please enter a response');
+                    return false;
+                }
+                return {
+                    response_text: responseText,
+                    mark_as_resolved: $('#markAsResolved').is(':checked')
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                addResponseToQuery(queryId, result.value);
+            }
+        });
+    });
+
+    function addResponseToQuery(queryId, responseData) {
+        $.ajax({
+            url: "{% url 'respond_to_query_api' 0 %}".replace('0', queryId),
+            type: "POST",
+            data: JSON.stringify(responseData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Submitting response...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert('Response submitted successfully');
+                    queriesTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to submit response');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'submit response');
+            }
+        });
+    }
+
+    // ----- FLAG ISSUE -----
+    $(document).on('click', '.flag-btn', function() {
+        const queryId = $(this).data('id');
+        
+        Swal.fire({
+            title: 'Flag Issue',
+            html: `
+                <div class="mb-3">
+                    <label class="form-label">Flag Type</label>
+                    <select id="flagType" class="form-select" required>
+                        <option value="" selected disabled>Select Flag Type</option>
+                        <option value="data_quality">Data Quality Issue</option>
+                        <option value="child_labour">Child Labour Concern</option>
+                        <option value="safety">Safety Concern</option>
+                        <option value="ethical">Ethical Concern</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Severity</label>
+                    <select id="flagSeverity" class="form-select" required>
+                        <option value="" selected disabled>Select Severity</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea id="flagDescription" class="form-control" rows="4" placeholder="Describe the issue..." required></textarea>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Flag Issue',
+            cancelButtonText: 'Cancel',
+            preConfirm: () => {
+                const flagType = $('#flagType').val();
+                const flagSeverity = $('#flagSeverity').val();
+                const flagDescription = $('#flagDescription').val();
+                
+                if (!flagType || !flagSeverity || !flagDescription) {
+                    Swal.showValidationMessage('Please fill in all fields');
+                    return false;
+                }
+                
+                return {
+                    flag_type: flagType,
+                    severity: flagSeverity,
+                    description: flagDescription
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                flagQuery(queryId, result.value);
+            }
+        });
+    });
+
+    function flagQuery(queryId, flagData) {
+        $.ajax({
+            url: "{% url 'flag_query_api' 0 %}".replace('0', queryId),
+            type: "POST",
+            data: JSON.stringify(flagData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Flagging issue...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert('Issue flagged successfully');
+                    queriesTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to flag issue');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'flag issue');
+            }
+        });
+    }
+
+    // ----- ESCALATE CASE -----
+    $(document).on('click', '.escalate-btn', function() {
+        const queryId = $(this).data('id');
+        
+        // Load supervisors for escalation
+        $.ajax({
+            url: "{% url 'get_supervisors_api' %}",
+            type: "GET",
+            beforeSend: function() {
+                showLoadingAlert('Loading supervisors...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showEscalationDialog(queryId, response.data);
+                } else {
+                    showErrorAlert(response.message || 'Failed to load supervisors');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load supervisors');
+            }
+        });
+    });
+
+    function showEscalationDialog(queryId, supervisors) {
+        const supervisorsOptions = supervisors.map(supervisor => 
+            `<option value="${supervisor.id}">${supervisor.first_name} ${supervisor.last_name} (${supervisor.staffid})</option>`
+        ).join('');
+        
+        Swal.fire({
+            title: 'Escalate Case',
+            html: `
+                <div class="mb-3">
+                    <label class="form-label">Escalation Type</label>
+                    <select id="escalationType" class="form-select" required>
+                        <option value="" selected disabled>Select Escalation Type</option>
+                        <option value="technical">Technical Issue</option>
+                        <option value="managerial">Managerial Decision</option>
+                        <option value="safety">Safety Concern</option>
+                        <option value="ethical">Ethical Issue</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Escalate To</label>
+                    <select id="escalatedTo" class="form-select" required>
+                        <option value="" selected disabled>Select Supervisor</option>
+                        ${supervisorsOptions}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Priority</label>
+                    <select id="escalationPriority" class="form-select" required>
+                        <option value="" selected disabled>Select Priority</option>
+                        <option value="1">High</option>
+                        <option value="2">Medium</option>
+                        <option value="3">Low</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Due Date</label>
+                    <input type="datetime-local" id="escalationDueDate" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reason for Escalation</label>
+                    <textarea id="escalationReason" class="form-control" rows="4" placeholder="Explain why this case needs escalation..." required></textarea>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Escalate Case',
+            cancelButtonText: 'Cancel',
+            width: '600px',
+            preConfirm: () => {
+                const escalationType = $('#escalationType').val();
+                const escalatedTo = $('#escalatedTo').val();
+                const escalationPriority = $('#escalationPriority').val();
+                const escalationDueDate = $('#escalationDueDate').val();
+                const escalationReason = $('#escalationReason').val();
+                
+                if (!escalationType || !escalatedTo || !escalationPriority || !escalationDueDate || !escalationReason) {
+                    Swal.showValidationMessage('Please fill in all fields');
+                    return false;
+                }
+                
+                return {
+                    escalation_type: escalationType,
+                    escalated_to_id: escalatedTo,
+                    priority_id: escalationPriority,
+                    due_date: new Date(escalationDueDate).toISOString(),
+                    reason: escalationReason
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                escalateQuery(queryId, result.value);
+            }
+        });
+    }
+
+    function escalateQuery(queryId, escalationData) {
+        $.ajax({
+            url: "{% url 'escalate_query_api' 0 %}".replace('0', queryId),
+            type: "POST",
+            data: JSON.stringify(escalationData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Escalating case...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert('Case escalated successfully');
+                    queriesTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to escalate case');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'escalate case');
+            }
+        });
+    }
+
+    // ==================== HELPER FUNCTIONS ====================
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showSuccessAlert(message) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function showErrorAlert(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message
+        });
+    }
+
+    function showLoadingAlert(message) {
+        Swal.fire({
+            title: 'Please wait...',
+            text: message,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    function handleAjaxError(xhr, action) {
+        let errorMsg = `An error occurred while trying to ${action}`;
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.message) {
+                errorMsg = xhr.responseJSON.message;
+            } else if (xhr.responseJSON.error) {
+                errorMsg = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.detail) {
+                errorMsg = xhr.responseJSON.detail;
+            }
+        } else if (xhr.status === 0) {
+            errorMsg = 'Network error. Please check your connection.';
+        } else if (xhr.statusText) {
+            errorMsg = xhr.statusText;
+        }
+        
+        showErrorAlert(errorMsg);
+    }
+
+    // Initialize page
+    loadFilterOptions();
+});
+</script>
+
+<style>
+.btn-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    border: none;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.btn-gradient-primary:hover {
+    background: linear-gradient(45deg, #2e59d9, #1e3a8a);
+    transform: translateY(-1px);
+}
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.35em 0.65em;
+}
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+</style>
+
+{% endblock %}

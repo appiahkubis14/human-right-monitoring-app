@@ -45,6 +45,15 @@
                     </div>
                     <div class="col-md-3">
                         <div class="mb-3">
+                            <label class="form-label">Communities</label>
+                            <select class="form-select" id="communityFilter">
+                                <option value="">All Communities</option>
+                            </select>
+                                
+                        </div>
+                    </div>
+                    <!-- <div class="col-md-3">
+                        <div class="mb-3">
                             <label class="form-label">Risk Level</label>
                             <select class="form-select" id="riskFilter">
                                 <option value="">All Levels</option>
@@ -54,7 +63,7 @@
                                 <option value="Critical">Critical Risk</option>
                             </select>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label class="form-label">Time Period</label>
@@ -63,9 +72,135 @@
                                 <option value="30" selected>Last 30 Days</option>
                                 <option value="90">Last 90 Days</option>
                                 <option value="365">Last Year</option>
+                                <option value="custom">Custom Range</option>
                             </select>
                         </div>
+                        
+                        <!-- Custom Date Range Picker (initially hidden) -->
+                        <div class="mb-3 custom-date-range" style="display: none;">
+                            <label class="form-label">Custom Date Range</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control" id="startDate" placeholder="Start Date">
+                                <span class="input-group-text">to</span>
+                                <input type="date" class="form-control" id="endDate" placeholder="End Date">
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-primary btn-sm" id="applyCustomRange">Apply</button>
+                                <button class="btn btn-outline-secondary btn-sm ms-2" id="cancelCustomRange">Cancel</button>
+                            </div>
+                        </div>
                     </div>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const timeFilter = document.getElementById('timeFilter');
+                        const customDateRange = document.querySelector('.custom-date-range');
+                        const startDate = document.getElementById('startDate');
+                        const endDate = document.getElementById('endDate');
+                        const applyBtn = document.getElementById('applyCustomRange');
+                        const cancelBtn = document.getElementById('cancelCustomRange');
+
+                        // Set default dates (today and 30 days ago)
+                        const today = new Date();
+                        const thirtyDaysAgo = new Date();
+                        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+                        // Format dates for input fields (YYYY-MM-DD)
+                        function formatDate(date) {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            return `${year}-${month}-${day}`;
+                        }
+
+                        // Set default values
+                        startDate.value = formatDate(thirtyDaysAgo);
+                        endDate.value = formatDate(today);
+
+                        // Show/hide custom date range based on selection
+                        timeFilter.addEventListener('change', function() {
+                            if (this.value === 'custom') {
+                                customDateRange.style.display = 'block';
+                            } else {
+                                customDateRange.style.display = 'none';
+                                // Trigger filter change for predefined ranges
+                                triggerFilterChange(this.value);
+                            }
+                        });
+
+                        // Apply custom date range
+                        applyBtn.addEventListener('click', function() {
+                            if (!startDate.value || !endDate.value) {
+                                alert('Please select both start and end dates');
+                                return;
+                            }
+
+                            if (new Date(startDate.value) > new Date(endDate.value)) {
+                                alert('Start date cannot be after end date');
+                                return;
+                            }
+
+                            // Format the custom range value for easy parsing
+                            const customValue = `custom_${startDate.value}_${endDate.value}`;
+                            triggerFilterChange(customValue);
+                        });
+
+                        // Cancel custom date range
+                        cancelBtn.addEventListener('click', function() {
+                            customDateRange.style.display = 'none';
+                            timeFilter.value = '30'; // Reset to default
+                            triggerFilterChange('30');
+                        });
+
+                        // Function to trigger filter change (you can modify this based on your needs)
+                        function triggerFilterChange(value) {
+                            console.log('Filter changed to:', value);
+                            
+                            // Dispatch a custom event that other parts of your code can listen for
+                            const event = new CustomEvent('timeFilterChanged', {
+                                detail: { 
+                                    filterValue: value,
+                                    startDate: value.startsWith('custom_') ? startDate.value : null,
+                                    endDate: value.startsWith('custom_') ? endDate.value : null
+                                }
+                            });
+                            document.dispatchEvent(event);
+                            
+                            // Or call your existing filter function
+                            // updateChartData(value);
+                        }
+
+                        // Add keyboard support
+                        startDate.addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') applyBtn.click();
+                        });
+
+                        endDate.addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') applyBtn.click();
+                        });
+                    });
+                    </script>
+
+                    <style>
+                    .custom-date-range {
+                        border-left: 3px solid #0d6efd;
+                        padding-left: 15px;
+                        margin-top: 10px;
+                        background-color: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 6px;
+                    }
+
+                    .input-group-text {
+                        background-color: #e9ecef;
+                        border: 1px solid #ced4da;
+                    }
+
+                    #applyCustomRange, #cancelCustomRange {
+                        font-size: 0.875rem;
+                        padding: 0.25rem 0.75rem;
+                    }
+                    </style>
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label class="form-label">&nbsp;</label>

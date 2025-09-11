@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'import_export',
+
     'core',
     'accounts',
     'portal',
@@ -203,7 +205,7 @@ USE_TZ = True
 
 
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 # Add these settings:
 LOGIN_URL = '/login/'

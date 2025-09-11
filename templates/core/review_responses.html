@@ -1,0 +1,827 @@
+<!-- queries/review_responses.html -->
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <br>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="mb-3">
+                            <div>
+                                <h4 style="font-weight: bolder;">REVIEW ENUMERATOR RESPONSES</h4>
+                                <p class="mb-0">Manage and review responses from field enumerators</p>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-gradient-info btn-sm" id="refreshBtn">
+                                <i class="fas fa-sync-alt"></i> REFRESH
+                            </button>
+                            <button class="btn btn-gradient-primary btn-sm" id="exportBtn">
+                                <i class="fas fa-download"></i> EXPORT
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="Open">Open</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Priority</label>
+                                <select class="form-select" id="priorityFilter">
+                                    <option value="">All Priorities</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Enumerator</label>
+                                <select class="form-select" id="enumeratorFilter">
+                                    <option value="">All Enumerators</option>
+                                    <!-- Enumerators will be loaded via AJAX -->
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date Range</label>
+                                <select class="form-select" id="dateRangeFilter">
+                                    <option value="">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Custom Date Range (hidden by default) -->
+                        <div class="row mb-3" id="customDateRange" style="display: none;">
+                            <div class="col-md-3">
+                                <label class="form-label">From Date</label>
+                                <input type="date" class="form-control" id="fromDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">To Date</label>
+                                <input type="date" class="form-control" id="toDate">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button class="btn btn-primary form-control" id="applyDateRange">Apply</button>
+                            </div>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search queries, responses, or enumerators...">
+                                    <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex justify-content-end">
+                                    <div class="btn-group">
+                                        <button class="btn btn-outline-primary" id="viewModeList">
+                                            <i class="fas fa-list"></i> List
+                                        </button>
+                                        <button class="btn btn-primary" id="viewModeCard">
+                                            <i class="fas fa-grip-horizontal"></i> Cards
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistics Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title">TOTAL RESPONSES</h6>
+                                                <h3 id="totalResponses">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-comments fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title">RESOLVED</h6>
+                                                <h3 id="resolvedCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-check-circle fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title">PENDING REVIEW</h6>
+                                                <h3 id="pendingCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-clock fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-danger text-white">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title">OVERDUE</h6>
+                                                <h3 id="overdueCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- List View -->
+                        <div id="listView">
+                            <div class="table-responsive">
+                                <table id="responsesTable" class="table table-striped table-bordered" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>QUERY ID</th>
+                                            <th>QUERY TITLE</th>
+                                            <th>ENUMERATOR</th>
+                                            <th>RESPONSE DATE</th>
+                                            <th>STATUS</th>
+                                            <th>PRIORITY</th>
+                                            <th>RESPONSE PREVIEW</th>
+                                            <th>ACTIONS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Data will be loaded via AJAX -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Card View -->
+                        <div id="cardView" style="display: none;">
+                            <div class="row" id="responsesCards">
+                                <!-- Cards will be loaded via AJAX -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Response Detail Modal -->
+        <div class="modal fade" id="responseDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title">Response Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="responseDetails">
+                            <!-- Response details will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" id="markAsResolvedBtn">
+                            <i class="fas fa-check"></i> Mark as Resolved
+                        </button>
+                        <button type="button" class="btn btn-warning" id="requestClarificationBtn">
+                            <i class="fas fa-question"></i> Request Clarification
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Request Clarification Modal -->
+        <div class="modal fade" id="clarificationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-warning">
+                        <h5 class="modal-title">Request Clarification</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="clarificationForm">
+                        <div class="modal-body">
+                            <input type="hidden" id="clarificationQueryId">
+                            <div class="mb-3">
+                                <label class="form-label">Clarification Request*</label>
+                                <textarea class="form-control" id="clarificationText" rows="4" placeholder="What additional information do you need from the enumerator?" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Priority</label>
+                                <select class="form-select" id="clarificationPriority">
+                                    <option value="1">High</option>
+                                    <option value="2" selected>Medium</option>
+                                    <option value="3">Low</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Send Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    // Initialize variables
+    let currentQueryId = null;
+    let currentViewMode = 'list';
+    let currentFilters = {};
+
+    // Initialize DataTable
+    const responsesTable = $('#responsesTable').DataTable({
+        paging: true,
+        searching: false,
+        ordering: true,
+        info: true,
+        responsive: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "{% url 'response_list_api' %}",
+            type: "GET",
+            data: function(d) {
+                return {
+                    ...currentFilters,
+                    page: d.start / d.length + 1,
+                    per_page: d.length
+                };
+            },
+            dataSrc: function(json) {
+                updateStatistics(json.statistics);
+                return json.data;
+            }
+        },
+        columns: [
+            { data: 'query_id' },
+            { data: 'query_title' },
+            { data: 'enumerator_name' },
+            { data: 'response_date' },
+            { 
+                data: 'status',
+                render: function(data, type, row) {
+                    return `<span class="badge" style="background-color: ${row.status_color}">${data}</span>`;
+                }
+            },
+            { 
+                data: 'priority',
+                render: function(data, type, row) {
+                    return `<span class="badge" style="background-color: ${row.priority_color}">${data}</span>`;
+                }
+            },
+            { 
+                data: 'response_preview',
+                render: function(data) {
+                    return data.length > 100 ? data.substring(0, 100) + '...' : data;
+                }
+            },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm view-response-btn" data-id="${data}" title="View Response">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-success btn-sm resolve-btn" data-id="${row.query_id}" title="Mark Resolved">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-warning btn-sm clarify-btn" data-id="${row.query_id}" title="Request Clarification">
+                                <i class="fas fa-question"></i>
+                            </button>
+                        </div>
+                    `;
+                },
+                orderable: false
+            }
+        ],
+        language: {
+            emptyTable: "No responses found. Try adjusting your filters.",
+            zeroRecords: "No matching responses found."
+        }
+    });
+
+    // Load enumerators for filter
+    function loadEnumerators() {
+        $.ajax({
+            url: "{% url 'get_enumerators_api' %}",
+            type: "GET",
+            success: function(data) {
+                $('#enumeratorFilter').empty().append('<option value="">All Enumerators</option>');
+                $.each(data.data, function(index, item) {
+                    $('#enumeratorFilter').append($('<option>', {
+                        value: item.id,
+                        text: `${item.first_name} ${item.last_name} (${item.staffid})`
+                    }));
+                });
+            }
+        });
+    }
+
+    // Update statistics
+    function updateStatistics(stats) {
+        $('#totalResponses').text(stats.total_responses);
+        $('#resolvedCount').text(stats.resolved_count);
+        $('#pendingCount').text(stats.pending_count);
+        $('#overdueCount').text(stats.overdue_count);
+    }
+
+    // Filter change events
+    $('#statusFilter, #priorityFilter, #enumeratorFilter, #dateRangeFilter').change(function() {
+        applyFilters();
+    });
+
+    $('#dateRangeFilter').change(function() {
+        if ($(this).val() === 'custom') {
+            $('#customDateRange').show();
+        } else {
+            $('#customDateRange').hide();
+            applyFilters();
+        }
+    });
+
+    $('#applyDateRange').click(function() {
+        applyFilters();
+    });
+
+    $('#searchBtn').click(function() {
+        applyFilters();
+    });
+
+    $('#searchInput').keypress(function(e) {
+        if (e.which === 13) {
+            applyFilters();
+        }
+    });
+
+    function applyFilters() {
+        currentFilters = {
+            status: $('#statusFilter').val(),
+            priority: $('#priorityFilter').val(),
+            enumerator: $('#enumeratorFilter').val(),
+            date_range: $('#dateRangeFilter').val(),
+            search: $('#searchInput').val()
+        };
+
+        if ($('#dateRangeFilter').val() === 'custom') {
+            currentFilters.from_date = $('#fromDate').val();
+            currentFilters.to_date = $('#toDate').val();
+        }
+
+        responsesTable.ajax.reload();
+        if (currentViewMode === 'card') {
+            loadCardView();
+        }
+    }
+
+    // View mode toggle
+    $('#viewModeList').click(function() {
+        currentViewMode = 'list';
+        $('#listView').show();
+        $('#cardView').hide();
+        $('#viewModeList').removeClass('btn-outline-primary').addClass('btn-primary');
+        $('#viewModeCard').removeClass('btn-primary').addClass('btn-outline-primary');
+    });
+
+    $('#viewModeCard').click(function() {
+        currentViewMode = 'card';
+        $('#listView').hide();
+        $('#cardView').show();
+        $('#viewModeCard').removeClass('btn-outline-primary').addClass('btn-primary');
+        $('#viewModeList').removeClass('btn-primary').addClass('btn-outline-primary');
+        loadCardView();
+    });
+
+    // Load card view
+    function loadCardView() {
+        $.ajax({
+            url: "{% url 'response_list_api' %}",
+            type: "GET",
+            data: {
+                ...currentFilters,
+                view: 'cards'
+            },
+            success: function(response) {
+                const cardsHtml = response.data.map(item => `
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span class="badge" style="background-color: ${item.priority_color}">${item.priority}</span>
+                                <span class="badge" style="background-color: ${item.status_color}">${item.status}</span>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title">${item.query_title}</h6>
+                                <p class="card-text text-muted small">${item.query_id}</p>
+                                <p class="card-text">${item.response_preview.length > 150 ? item.response_preview.substring(0, 150) + '...' : item.response_preview}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">By: ${item.enumerator_name}</small>
+                                    <small class="text-muted">${item.response_date}</small>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="btn-group w-100">
+                                    <button class="btn btn-primary btn-sm view-response-btn" data-id="${item.id}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <button class="btn btn-success btn-sm resolve-btn" data-id="${item.query_id}">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-warning btn-sm clarify-btn" data-id="${item.query_id}">
+                                        <i class="fas fa-question"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                $('#responsesCards').html(cardsHtml);
+            }
+        });
+    }
+
+    // View response details
+    $(document).on('click', '.view-response-btn', function() {
+        const responseId = $(this).data('id');
+        viewResponseDetails(responseId);
+    });
+
+    function viewResponseDetails(responseId) {
+        $.ajax({
+            url: "{% url 'response_detail_api' 0 %}".replace('0', responseId),
+            type: "GET",
+            beforeSend: function() {
+                showLoadingAlert('Loading response details...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    displayResponseDetails(response.data);
+                    $('#responseDetailModal').modal('show');
+                } else {
+                    showErrorAlert(response.message || 'Failed to load response details');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load response details');
+            }
+        });
+    }
+
+    function displayResponseDetails(data) {
+        currentQueryId = data.query_id;
+        
+        const detailsHtml = `
+            <div class="mb-4">
+                <h5>${data.query_title}</h5>
+                <p class="text-muted">${data.query_id}</p>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Enumerator:</strong> ${data.enumerator_name}
+                </div>
+                <div class="col-md-6">
+                    <strong>Response Date:</strong> ${data.response_date}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Status:</strong> <span class="badge" style="background-color: ${data.status_color}">${data.status}</span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Priority:</strong> <span class="badge" style="background-color: ${data.priority_color}">${data.priority}</span>
+                </div>
+            </div>
+            
+            ${data.due_date ? `
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <strong>Due Date:</strong> ${data.due_date}
+                        ${data.is_overdue ? '<span class="badge bg-danger ms-2">Overdue</span>' : ''}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div class="mb-4">
+                <strong>Query Description:</strong>
+                <div class="border p-3 mt-2 rounded bg-light">${data.query_description}</div>
+            </div>
+            
+            <div class="mb-4">
+                <strong>Enumerator's Response:</strong>
+                <div class="border p-3 mt-2 rounded">${data.response_text}</div>
+            </div>
+            
+            ${data.attachment ? `
+                <div class="mb-3">
+                    <strong>Attachment:</strong>
+                    <a href="${data.attachment}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                        <i class="fas fa-paperclip"></i> View Attachment
+                    </a>
+                </div>
+            ` : ''}
+            
+            ${data.previous_responses.length > 0 ? `
+                <h6 class="mt-4">Response History</h6>
+                ${data.previous_responses.map(response => `
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <strong>${response.responded_by}</strong>
+                                <small class="text-muted">${response.responded_date}</small>
+                            </div>
+                            <p class="mb-0 mt-2">${response.response_text}</p>
+                        </div>
+                    </div>
+                `).join('')}
+            ` : ''}
+        `;
+        
+        $('#responseDetails').html(detailsHtml);
+    }
+
+    // Mark as resolved
+    $(document).on('click', '.resolve-btn, #markAsResolvedBtn', function() {
+        const queryId = $(this).data('id') || currentQueryId;
+        if (queryId) {
+            markAsResolved(queryId);
+        }
+    });
+
+    function markAsResolved(queryId) {
+        Swal.fire({
+            title: 'Mark as Resolved?',
+            text: "Are you sure you want to mark this query as resolved?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, mark as resolved',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "{% url 'mark_query_resolved_api' 0 %}".replace('0', queryId),
+                    type: "POST",
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    beforeSend: function() {
+                        showLoadingAlert('Marking as resolved...');
+                    },
+                    success: function(response) {
+                        Swal.close();
+                        if (response.success) {
+                            showSuccessAlert('Query marked as resolved successfully');
+                            $('#responseDetailModal').modal('hide');
+                            responsesTable.ajax.reload();
+                            if (currentViewMode === 'card') {
+                                loadCardView();
+                            }
+                        } else {
+                            showErrorAlert(response.message || 'Failed to mark as resolved');
+                        }
+                    },
+                    error: function(xhr) {
+                        handleAjaxError(xhr, 'mark as resolved');
+                    }
+                });
+            }
+        });
+    }
+
+    // Request clarification
+    $(document).on('click', '.clarify-btn, #requestClarificationBtn', function() {
+        const queryId = $(this).data('id') || currentQueryId;
+        if (queryId) {
+            $('#clarificationQueryId').val(queryId);
+            $('#clarificationModal').modal('show');
+        }
+    });
+
+    $('#clarificationForm').submit(function(e) {
+        e.preventDefault();
+        
+        const queryId = $('#clarificationQueryId').val();
+        const clarificationData = {
+            clarification_text: $('#clarificationText').val(),
+            priority_id: $('#clarificationPriority').val()
+        };
+        
+        requestClarification(queryId, clarificationData);
+    });
+
+    function requestClarification(queryId, data) {
+        $.ajax({
+            url: "{% url 'request_clarification_api' 0 %}".replace('0', queryId),
+            type: "POST",
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#clarificationForm button[type="submit"]').prop('disabled', true).html('Sending...');
+            },
+            success: function(response) {
+                $('#clarificationForm button[type="submit"]').prop('disabled', false).html('Send Request');
+                if (response.success) {
+                    showSuccessAlert('Clarification request sent successfully');
+                    $('#clarificationModal').modal('hide');
+                    $('#clarificationForm')[0].reset();
+                    responsesTable.ajax.reload();
+                    if (currentViewMode === 'card') {
+                        loadCardView();
+                    }
+                } else {
+                    showErrorAlert(response.message || 'Failed to send clarification request');
+                }
+            },
+            error: function(xhr) {
+                $('#clarificationForm button[type="submit"]').prop('disabled', false).html('Send Request');
+                handleAjaxError(xhr, 'send clarification request');
+            }
+        });
+    }
+
+    // Refresh button
+    $('#refreshBtn').click(function() {
+        responsesTable.ajax.reload();
+        if (currentViewMode === 'card') {
+            loadCardView();
+        }
+        showSuccessAlert('Data refreshed successfully');
+    });
+
+    // Export button
+    $('#exportBtn').click(function() {
+        // Implement export functionality
+        responsesTable.button('.buttons-csv').trigger();
+    });
+
+    // Initialize page
+    loadEnumerators();
+    responsesTable.ajax.reload();
+
+    // Set default dates for custom range
+    const today = new Date();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
+    
+    $('#fromDate').val(oneWeekAgo.toISOString().split('T')[0]);
+    $('#toDate').val(today.toISOString().split('T')[0]);
+});
+
+// ==================== HELPER FUNCTIONS ====================
+// ==================== HELPER FUNCTIONS ====================
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showSuccessAlert(message) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: message,
+        timer: 1500,
+        showConfirmButton: false
+    });
+}
+
+function showErrorAlert(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message
+    });
+}
+
+function showLoadingAlert(message) {
+    Swal.fire({
+        title: 'Please wait...',
+        text: message,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}
+
+function handleAjaxError(xhr, action) {
+    let errorMsg = `An error occurred while trying to ${action}`;
+    
+    if (xhr.responseJSON) {
+        if (xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+        } else if (xhr.responseJSON.error) {
+            errorMsg = xhr.responseJSON.error;
+        } else if (xhr.responseJSON.detail) {
+            errorMsg = xhr.responseJSON.detail;
+        }
+    } else if (xhr.status === 0) {
+        errorMsg = 'Network error. Please check your connection.';
+    } else if (xhr.statusText) {
+        errorMsg = xhr.statusText;
+    }
+    
+    showErrorAlert(errorMsg);
+}
+</script>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.35em 0.65em;
+}
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+.btn-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    border: none;
+}
+.btn-gradient-info {
+    background: linear-gradient(45deg, #36b9cc, #2c9faf);
+    color: white;
+    border: none;
+}
+.stat-card {
+    border-radius: 10px;
+    border: none;
+}
+</style>
+{% endblock %}

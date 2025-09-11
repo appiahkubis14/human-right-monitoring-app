@@ -1,0 +1,549 @@
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <br>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="mb-3">
+                            <div>
+                                <h4 style="font-weight: bolder;">STAFF MANAGEMENT</h4>
+                                <p class="mb-0">Manage staff members and their details</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-gradient-primary btn-sm" id="addStaffBtn">
+                            <i class="fas fa-plus"></i> NEW STAFF
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="staffTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>STAFF ID</th>
+                                        <th>FIRST NAME</th>
+                                        <th>LAST NAME</th>
+                                        <th>GENDER</th>
+                                        <th>CONTACT</th>
+                                        <th>EMAIL</th>
+                                        <th>DESIGNATION</th>
+                                        <th>DISTRICT</th>
+                                        <th>STATUS</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Modal -->
+        <div class="modal fade" id="staffModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title" id="modalTitle">New Staff Member</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="staffForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" id="staffId" name="staffId">
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="first_name" class="form-label">First Name*</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                        <div class="invalid-feedback">Please enter first name</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="last_name" class="form-label">Last Name*</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                        <div class="invalid-feedback">Please enter last name</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="gender" class="form-label">Gender*</label>
+                                        <select class="form-select" id="gender" name="gender" required>
+                                            <option value="" selected disabled>Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select gender</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="contact" class="form-label">Contact*</label>
+                                        <input type="text" class="form-control" id="contact" name="contact" required>
+                                        <div class="invalid-feedback">Please enter contact number</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="email_address" class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="email_address" name="email_address">
+                                        <div class="invalid-feedback">Please enter a valid email address</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="designation" class="form-label">Designation*</label>
+                                        <select class="form-select select2-single" id="designation" name="designation" required>
+                                            <option value="" selected disabled>Select Designation</option>
+                                            <!-- Options will be loaded via AJAX -->
+                                        </select>
+                                        <div class="invalid-feedback">Please select designation</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="district" class="form-label">District</label>
+                                        <input type="text" class="form-control" id="district" name="district">
+                                    </div>
+                                </div>
+                                <div class="col-md-6" id="statusField" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="status" class="form-label">Status*</label>
+                                        <select class="form-select" id="status" name="status" required>
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="saveBtn">Create Staff</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    var staffTable = $('#staffTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "{% url 'get_staff_data' %}",
+            type: "GET",
+            dataSrc: "data"
+        },
+        columns: [
+            { data: 'id' },
+            { data: 'staffid' },
+            { data: 'first_name' },
+            { data: 'last_name' },
+            { data: 'gender' },
+            { data: 'contact' },
+            { 
+                data: 'email_address',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { data: 'designation' },
+            { 
+                data: 'district',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { 
+                data: 'status',
+                render: function(data) {
+                    var badgeClass = data === 'Active' ? 'bg-success' : 'bg-secondary';
+                    return '<span class="badge ' + badgeClass + '">' + data + '</span>';
+                }
+            },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm edit-btn" data-id="${data}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-btn" data-id="${data}">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                    `;
+                },
+                orderable: false
+            }
+        ],
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: "copy",
+                text: '<i class="fas fa-copy"></i> Copy',
+                className: "btn btn-sm btn-outline-secondary",
+            },
+            {
+                extend: "csv",
+                text: '<i class="fas fa-file-csv"></i> CSV',
+                className: "btn btn-sm btn-outline-success",
+            },
+            {
+                extend: "excel",
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: "btn btn-sm btn-outline-primary",
+            },
+            {
+                extend: "pdf",
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: "btn btn-sm btn-outline-danger",
+            },
+        ],
+        language: {
+            emptyTable: "No staff members found. Click 'New Staff' to add one.",
+            zeroRecords: "No matching staff members found."
+        }
+    });
+
+    // Load designation options
+    function loadDesignationOptions() {
+        $.ajax({
+            url: "{% url 'get_designation_options' %}",
+            type: "GET",
+            success: function(data) {
+                $('#designation').empty().append('<option value="" selected disabled>Select Designation</option>');
+                $.each(data, function(index, item) {
+                    $('#designation').append($('<option>', {
+                        value: item.id,
+                        text: item.name
+                    }));
+                });
+                $('#designation').select2({
+                    theme: 'bootstrap-5',
+                    width: '100%',
+                    dropdownParent: $('#staffModal')
+                });
+            },
+            error: function() {
+                showErrorAlert('Failed to load designation options');
+            }
+        });
+    }
+
+    // ----- CREATE -----
+    $('#addStaffBtn').click(function() {
+        $('#staffForm')[0].reset();
+        $('#modalTitle').text('New Staff Member');
+        $('#staffId').val('');
+        $('#statusField').hide();
+        loadDesignationOptions();
+        $('#staffModal').modal('show');
+    });
+
+    $('#staffForm').submit(function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!this.checkValidity()) {
+            e.stopPropagation();
+            this.classList.add('was-validated');
+            return;
+        }
+        
+        var formData = {
+            'first_name': $('#first_name').val(),
+            'last_name': $('#last_name').val(),
+            'gender': $('#gender').val(),
+            'contact': $('#contact').val(),
+            'email_address': $('#email_address').val(),
+            'designation': $('#designation').val(),
+            'district': $('#district').val()
+        };
+        
+        if ($('#staffId').val()) {
+            // Update existing staff
+            var staffId = $('#staffId').val();
+            formData.status = $('#status').val();
+            updateStaff(staffId, formData);
+        } else {
+            // Create new staff
+            createStaff(formData);
+        }
+    });
+
+    function createStaff(formData) {
+        $.ajax({
+            url: "{% url 'create_staff' %}",
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Staff member created successfully');
+                    $('#staffModal').modal('hide');
+                    $('#staffForm').removeClass('was-validated');
+                    staffTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to create staff member');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'create staff member');
+            },
+            complete: function() {
+                $('#saveBtn').prop('disabled', false).html('Create Staff');
+            }
+        });
+    }
+
+    // ----- UPDATE -----
+    $(document).on('click', '.edit-btn', function() {
+        var staffId = $(this).data('id');
+        getStaffDetails(staffId);
+    });
+
+    function getStaffDetails(staffId) {
+        $.ajax({
+            url: "{% url 'get_staff_details' %}",
+            type: "GET",
+            data: { staff_id: staffId },
+            beforeSend: function() {
+                showLoadingAlert('Loading staff details...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    var staff = response.data;
+                    $('#staffForm')[0].reset();
+                    $('#modalTitle').text('Edit Staff Member');
+                    $('#staffId').val(staffId);
+                    $('#statusField').show();
+                    $('#status').val(staff.status);
+                    
+                    // Set form values
+                    $('#first_name').val(staff.first_name);
+                    $('#last_name').val(staff.last_name);
+                    $('#gender').val(staff.gender);
+                    $('#contact').val(staff.contact);
+                    $('#email_address').val(staff.email_address);
+                    $('#district').val(staff.district);
+                    
+                    loadDesignationOptions();
+                    
+                    // Set designation after select2 is initialized
+                    setTimeout(function() {
+                        $('#designation').val(staff.designation_id).trigger('change');
+                        $('#staffModal').modal('show');
+                    }, 500);
+                } else {
+                    showErrorAlert(response.message || 'Failed to load staff details');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load staff details');
+            }
+        });
+    }
+
+    function updateStaff(staffId, formData) {
+        $.ajax({
+            url: "{% url 'update_staff' 0 %}".replace('0', staffId),
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Staff member updated successfully');
+                    $('#staffModal').modal('hide');
+                    $('#staffForm').removeClass('was-validated');
+                    staffTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to update staff member');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'update staff member');
+            },
+            complete: function() {
+                $('#saveBtn').prop('disabled', false).html('Update Staff');
+            }
+        });
+    }
+
+    // ----- DELETE -----
+    $(document).on('click', '.delete-btn', function() {
+        var staffId = $(this).data('id');
+        
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This staff member will be deleted. This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteStaff(staffId);
+            }
+        });
+    });
+
+    function deleteStaff(staffId) {
+        $.ajax({
+            url: "{% url 'delete_staff' 0 %}".replace('0', staffId),
+            type: "DELETE",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Deleting staff member...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert('Staff member deleted successfully');
+                    staffTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to delete staff member');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'delete staff member');
+            }
+        });
+    }
+
+    // ==================== HELPER FUNCTIONS ====================
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showSuccessAlert(message) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function showErrorAlert(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message
+        });
+    }
+
+    function showLoadingAlert(message) {
+        Swal.fire({
+            title: 'Please wait...',
+            text: message,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    function handleAjaxError(xhr, action) {
+        let errorMsg = `An error occurred while trying to ${action}`;
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.message) {
+                errorMsg = xhr.responseJSON.message;
+            } else if (xhr.responseJSON.error) {
+                errorMsg = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.detail) {
+                errorMsg = xhr.responseJSON.detail;
+            }
+        } else if (xhr.status === 0) {
+            errorMsg = 'Network error. Please check your connection.';
+        } else if (xhr.statusText) {
+            errorMsg = xhr.statusText;
+        }
+        
+        showErrorAlert(errorMsg);
+    }
+});
+</script>
+
+<style>
+.btn-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    border: none;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.btn-gradient-primary:hover {
+    background: linear-gradient(45deg, #2e59d9, #1e3a8a);
+    transform: translateY(-1px);
+}
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+</style>
+{% endblock %}
