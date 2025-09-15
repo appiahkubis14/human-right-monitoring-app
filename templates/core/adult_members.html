@@ -1,0 +1,963 @@
+<!-- household/adult_members.html -->
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <br>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="mb-3">
+                            <div>
+                                <h4 style="font-weight: bolder;">ADULT HOUSEHOLD MEMBERS</h4>
+                                <p class="mb-0">Manage and monitor adult members in farmer households</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-gradient-primary btn-sm" id="newMemberBtn">
+                            <i class="fas fa-plus"></i> NEW ADULT MEMBER
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filters -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Gender</label>
+                                <select class="form-select" id="genderFilter">
+                                    <option value="">All Genders</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Relationship</label>
+                                <select class="form-select" id="relationshipFilter">
+                                    <option value="">All Relationships</option>
+                                    {% for value, display in RELATIONSHIP_CHOICES %}
+                                        <option value="{{ value }}">{{ display }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Farmer</label>
+                                <select class="form-select" id="farmerFilter">
+                                    <option value="">All Farmers</option>
+                                    <!-- Farmers will be loaded via AJAX -->
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Household</label>
+                                <select class="form-select" id="householdFilter">
+                                    <option value="">All Households</option>
+                                    <!-- Households will be loaded via AJAX -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Statistics Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary-subtle border-primary-subtle text-dark">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title text-muted small text-uppercase fw-bold">TOTAL MEMBERS</h6>
+                                                <h3 class="fw-bold text-primary" id="totalMembers">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-users fa-2x text-primary opacity-75"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success-subtle border-success-subtle text-dark">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title text-muted small text-uppercase fw-bold">MALE MEMBERS</h6>
+                                                <h3 class="fw-bold text-success" id="maleCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-male fa-2x text-success opacity-75"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info-subtle border-info-subtle text-dark">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title text-muted small text-uppercase fw-bold">FEMALE MEMBERS</h6>
+                                                <h3 class="fw-bold text-info" id="femaleCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-female fa-2x text-info opacity-75"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning-subtle border-warning-subtle text-dark">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h6 class="card-title text-muted small text-uppercase fw-bold">BIRTH CERTIFICATES</h6>
+                                                <h3 class="fw-bold text-warning" id="birthCertCount">0</h3>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-id-card fa-2x text-warning opacity-75"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Members Table -->
+                        <div class="table-responsive">
+                            <table id="membersTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>MEMBER ID</th>
+                                        <th>FULL NAME</th>
+                                        <th>AGE</th>
+                                        <th>GENDER</th>
+                                        <th>RELATIONSHIP</th>
+                                        <th>MAIN WORK</th>
+                                        <th>BIRTH CERT.</th>
+                                        <th>HOUSEHOLD</th>
+                                        <th>FARMER</th>
+                                        <th>COMMUNITY</th>
+                                        <th>REGISTERED</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Details Modal -->
+        <div class="modal fade" id="memberDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title">Adult Member Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="memberDetails">
+                            <!-- Member details will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Member Modal -->
+        <div class="modal fade" id="newMemberModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title">New Adult Member</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="memberForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" id="memberId" name="memberId">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Household*</label>
+                                        <select class="form-select" id="household" name="household_id" required>
+                                            <option value="" selected disabled>Select Household</option>
+                                            <!-- Households will be loaded via AJAX -->
+                                        </select>
+                                        <div class="invalid-feedback">Please select household</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Full Name*</label>
+                                        <input type="text" class="form-control" id="fullName" name="full_name" required>
+                                        <div class="invalid-feedback">Please enter full name</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Relationship*</label>
+                                        <select class="form-select" id="relationship" name="relationship" required>
+                                            <option value="" selected disabled>Select Relationship</option>
+                                            {% for value, display in RELATIONSHIP_CHOICES %}
+                                                <option value="{{ value }}">{{ display }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">Please select relationship</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Gender*</label>
+                                        <select class="form-select" id="gender" name="gender" required>
+                                            <option value="" selected disabled>Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                        <div class="invalid-feedback">Please select gender</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Year of Birth*</label>
+                                        <input type="number" class="form-control" id="yearBirth" name="year_birth" 
+                                               min="{{ current_year|add:'-100' }}" max="{{ current_year|add:'-18' }}" required>
+                                        <div class="invalid-feedback">Please enter valid year of birth</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Nationality*</label>
+                                        <select class="form-select" id="nationality" name="nationality" required>
+                                            <option value="" selected disabled>Select Nationality</option>
+                                            {% for value, display in NATIONALITY_CHOICES %}
+                                                <option value="{{ value }}">{{ display }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">Please select nationality</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Birth Certificate</label>
+                                        <select class="form-select" id="birthCertificate" name="birth_certificate">
+                                            <option value="no">No</option>
+                                            <option value="yes">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Main Work/Occupation</label>
+                                        <select class="form-select" id="mainWork" name="main_work">
+                                            <option value="" selected disabled>Select Main Work</option>
+                                            {% for value, display in MAIN_WORK_CHOICES %}
+                                                <option value="{{ value }}">{{ display }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Country of Origin (if non-Ghanaian)</label>
+                                        <select class="form-select" id="countryOrigin" name="country_origin">
+                                            <option value="" selected disabled>Select Country</option>
+                                            {% for value, display in COUNTRY_ORIGIN_CHOICES %}
+                                                <option value="{{ value }}">{{ display }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3" id="relationshipOtherContainer" style="display: none;">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label class="form-label">Specify Relationship</label>
+                                        <input type="text" class="form-control" id="relationshipOther" name="relationship_other">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3" id="mainWorkOtherContainer" style="display: none;">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label class="form-label">Specify Main Work</label>
+                                        <input type="text" class="form-control" id="mainWorkOther" name="main_work_other">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3" id="countryOriginOtherContainer" style="display: none;">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label class="form-label">Specify Country of Origin</label>
+                                        <input type="text" class="form-control" id="countryOriginOther" name="country_origin_other">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="saveMemberBtn">Save Member</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    const currentYear = new Date().getFullYear();
+    
+    // Initialize DataTable
+    const membersTable = $('#membersTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "{% url 'adult_members_list_api' %}",
+            type: "GET",
+            data: function(d) {
+                return {
+                     household: $('#householdFilter').val(),
+                    farmer: $('#farmerFilter').val(),
+                    gender: $('#genderFilter').val(),
+                    relationship: $('#relationshipFilter').val()
+                };
+            },
+            dataSrc: function(json) {
+                updateStatistics(json.statistics);
+                return json.data;
+            }
+        },
+        columns: [
+            { data: 'member_id' },
+            { data: 'full_name' },
+            { data: 'age' },
+            { data: 'gender' },
+            { data: 'relationship_display' },
+            { data: 'main_work_display' },
+            { 
+                data: 'birth_certificate',
+                render: function(data) {
+                    return data === 'yes' ? 
+                        '<i class="fas fa-check text-success"></i>' : 
+                        '<i class="fas fa-times text-danger"></i>';
+                }
+            },
+            { data: 'household_name' },
+            { data: 'farmer_name' },
+            { data: 'community' },
+            { data: 'created_at' },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm view-member-btn" data-id="${data}" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-info btn-sm edit-member-btn" data-id="${data}" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-member-btn" data-id="${data}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                },
+                orderable: false
+            }
+        ],
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: "copy",
+                text: '<i class="fas fa-copy"></i> Copy',
+                className: "btn btn-sm btn-outline-secondary",
+            },
+            {
+                extend: "csv",
+                text: '<i class="fas fa-file-csv"></i> CSV',
+                className: "btn btn-sm btn-outline-success",
+            },
+            {
+                extend: "excel",
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: "btn btn-sm btn-outline-primary",
+            },
+            {
+                extend: "pdf",
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: "btn btn-sm btn-outline-danger",
+            },
+            {
+                text: '<i class="fas fa-chart-bar"></i> Report',
+                className: "btn btn-sm btn-outline-info",
+                action: function() {
+                    generateMembersReport();
+                }
+            }
+        ],
+        language: {
+            emptyTable: "No adult members found.",
+            zeroRecords: "No matching members found."
+        }
+    });
+
+    // Load filter options
+    function loadFilterOptions() {
+        // Load households
+        $.ajax({
+            url: "{% url 'get_households_api' %}",
+            type: "GET",
+            success: function(data) {
+                $('#householdFilter, #household').empty().append('<option value="" selected disabled>Select Household</option>');
+                $.each(data, function(index, item) {
+                    $('#householdFilter, #household').append($('<option>', {
+                        value: item.id,
+                        text: item.name
+                    }));
+                });
+            }
+        });
+
+        // Load farmers
+        $.ajax({
+            url: "{% url 'get_farmers_api' %}",
+            type: "GET",
+            success: function(data) {
+                $('#farmerFilter').empty().append('<option value="" selected>All Farmers</option>');
+                $.each(data, function(index, item) {
+                    $('#farmerFilter').append($('<option>', {
+                        value: item.id,
+                        text: `${item.first_name} ${item.last_name} (${item.farmer_code})`
+                    }));
+                });
+            }
+        });
+    }
+
+    // Update statistics
+    function updateStatistics(stats) {
+        $('#totalMembers').text(stats.total_members);
+        $('#maleCount').text(stats.male_count);
+        $('#femaleCount').text(stats.female_count);
+        // This would need actual birth cert count - you might need to adjust this
+        $('#birthCertCount').text(stats.male_count + stats.female_count);
+    }
+
+    // Filter change events
+    $('#genderFilter, #relationshipFilter, #farmerFilter, #householdFilter').change(function() {
+        membersTable.ajax.reload();
+    });
+
+    // Show/hide other fields based on selection
+    $('#relationship').change(function() {
+        $('#relationshipOtherContainer').toggle($(this).val() === 'Other');
+    });
+
+    $('#mainWork').change(function() {
+        $('#mainWorkOtherContainer').toggle($(this).val() === 'Other');
+    });
+
+    $('#countryOrigin').change(function() {
+        $('#countryOriginOtherContainer').toggle($(this).val() === 'Other');
+    });
+
+    // ----- CREATE NEW MEMBER -----
+    $('#newMemberBtn').click(function() {
+        $('#memberForm')[0].reset();
+        $('#modalTitle').text('New Adult Member');
+        $('#memberId').val('');
+        loadFilterOptions();
+        $('#newMemberModal').modal('show');
+        
+        // Hide all "other" containers initially
+        $('#relationshipOtherContainer, #mainWorkOtherContainer, #countryOriginOtherContainer').hide();
+    });
+
+    $('#memberForm').submit(function(e) {
+        e.preventDefault();
+        
+        if (!this.checkValidity()) {
+            e.stopPropagation();
+            this.classList.add('was-validated');
+            return;
+        }
+        
+        const formData = {
+            household_id: $('#household').val(),
+            full_name: $('#fullName').val(),
+            relationship: $('#relationship').val(),
+            relationship_other: $('#relationshipOther').val(),
+            gender: $('#gender').val(),
+            year_birth: $('#yearBirth').val(),
+            nationality: $('#nationality').val(),
+            birth_certificate: $('#birthCertificate').val(),
+            main_work: $('#mainWork').val(),
+            main_work_other: $('#mainWorkOther').val(),
+            country_origin: $('#countryOrigin').val(),
+            country_origin_other: $('#countryOriginOther').val()
+        };
+        
+        const memberId = $('#memberId').val();
+        if (memberId) {
+            updateMemberRecord(memberId, formData);
+        } else {
+            createMemberRecord(formData);
+        }
+    });
+
+    function createMemberRecord(formData) {
+        $.ajax({
+            url: "{% url 'create_adult_member_api' %}",
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveMemberBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Adult member created successfully');
+                    $('#newMemberModal').modal('hide');
+                    $('#memberForm').removeClass('was-validated');
+                    membersTable.ajax.reload();
+                } else {
+                    showErrorAlert(response.message || 'Failed to create adult member');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'create adult member');
+            },
+            complete: function() {
+                $('#saveMemberBtn').prop('disabled', false).html('Save Member');
+            }
+        });
+    }
+
+    // ----- VIEW MEMBER DETAILS -----
+    $(document).on('click', '.view-member-btn', function() {
+        const memberId = $(this).data('id');
+        viewMemberDetails(memberId);
+    });
+
+    function viewMemberDetails(memberId) {
+        $.ajax({
+            url: "{% url 'adult_member_detail_api' 0 %}".replace('0', memberId),
+            type: "GET",
+            beforeSend: function() {
+                showLoadingAlert('Loading member details...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    displayMemberDetails(response.data);
+                    $('#memberDetailModal').modal('show');
+                } else {
+                    showErrorAlert(response.message || 'Failed to load member details');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load member details');
+            }
+        });
+    }
+
+    function displayMemberDetails(data) {
+        const detailsHtml = `
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h4>${data.full_name}</h4>
+                    <p class="text-muted">${data.age} years old • ${data.gender} • ${data.relationship_display}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge ${data.birth_certificate === 'yes' ? 'bg-success' : 'bg-warning'} fs-6">
+                        ${data.birth_certificate === 'yes' ? 'Has Birth Certificate' : 'No Birth Certificate'}
+                    </span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Personal Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Full Name:</strong></div>
+                                <div class="col-6">${data.full_name}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Age:</strong></div>
+                                <div class="col-6">${data.age} years</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Gender:</strong></div>
+                                <div class="col-6">${data.gender}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Relationship:</strong></div>
+                                <div class="col-6">${data.relationship_display}</div>
+                            </div>
+                            ${data.relationship_other ? `
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Relationship Details:</strong></div>
+                                <div class="col-6">${data.relationship_other}</div>
+                            </div>
+                            ` : ''}
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Nationality:</strong></div>
+                                <div class="col-6">${data.nationality}</div>
+                            </div>
+                            ${data.country_origin ? `
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Country of Origin:</strong></div>
+                                <div class="col-6">${data.country_origin}</div>
+                            </div>
+                            ` : ''}
+                            ${data.country_origin_other ? `
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Country Details:</strong></div>
+                                <div class="col-6">${data.country_origin_other}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Work Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Main Work:</strong></div>
+                                <div class="col-6">${data.main_work_display}</div>
+                            </div>
+                            ${data.main_work_other ? `
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Work Details:</strong></div>
+                                <div class="col-6">${data.main_work_other}</div>
+                            </div>
+                            ` : ''}
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Birth Certificate:</strong></div>
+                                <div class="col-6">${data.birth_certificate === 'yes' ? 'Yes' : 'No'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Household Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-6"><strong></strong></div>
+                                <div class="col-6">${data.household.name}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Farmer:</strong></div>
+                                <div class="col-6">${data.farmer.name}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Farmer Code:</strong></div>
+                                <div class="col-6">${data.farmer.code}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>Community:</strong></div>
+                                <div class="col-6">${data.community}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>District:</strong></div>
+                                <div class="col-6">${data.district}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Registration Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Registered:</strong> ${data.created_at}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Last Updated:</strong> ${data.updated_at}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#memberDetails').html(detailsHtml);
+    }
+
+    // ----- EDIT MEMBER -----
+    $(document).on('click', '.edit-member-btn', function() {
+        const memberId = $(this).data('id');
+        editMember(memberId);
+    });
+
+    function editMember(memberId) {
+        $.ajax({
+            url: "{% url 'adult_member_detail_api' 0 %}".replace('0', memberId),
+            type: "GET",
+            beforeSend: function() {
+                showLoadingAlert('Loading member details...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    populateEditForm(response.data);
+                    $('#newMemberModal').modal('show');
+                } else {
+                    showErrorAlert(response.message || 'Failed to load member details');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load member details');
+            }
+        });
+    }
+
+    function populateEditForm(data) {
+        $('#memberId').val(data.id);
+        $('#modalTitle').text('Edit Adult Member');
+        $('#fullName').val(data.full_name);
+        $('#relationship').val(data.relationship);
+        $('#gender').val(data.gender);
+        $('#yearBirth').val(data.year_of_birth);
+        $('#nationality').val(data.nationality);
+        $('#birthCertificate').val(data.birth_certificate);
+        $('#mainWork').val(data.main_work);
+        $('#countryOrigin').val(data.country_origin);
+        
+        // Set "other" fields and show containers if needed
+        if (data.relationship_other) {
+            $('#relationshipOther').val(data.relationship_other);
+            $('#relationshipOtherContainer').show();
+        }
+        
+        if (data.main_work_other) {
+            $('#mainWorkOther').val(data.main_work_other);
+            $('#mainWorkOtherContainer').show();
+        }
+        
+        if (data.country_origin_other) {
+            $('#countryOriginOther').val(data.country_origin_other);
+            $('#countryOriginOtherContainer').show();
+        }
+        
+        // Load households and select the current one
+        $.ajax({
+            url: "{% url 'get_households_api' %}",
+            type: "GET",
+            success: function(households) {
+                $('#household').empty().append('<option value="" selected disabled>Select Household</option>');
+                $.each(households, function(index, item) {
+                    $('#household').append($('<option>', {
+                        value: item.id,
+                        text: item.name,
+                        selected: item.id === data.household.id
+                    }));
+                });
+            }
+        });
+    }
+
+    function updateMemberRecord(memberId, formData) {
+        $.ajax({
+            url: "{% url 'update_adult_member_api' 0 %}".replace('0', memberId),
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveMemberBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Adult member updated successfully');
+                    $('#newMemberModal').modal('hide');
+                    $('#memberForm').removeClass('was-validated');
+                    membersTable.ajax.reload();
+                } else {
+                    showErrorAlert(response.message || 'Failed to update adult member');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'update adult member');
+            },
+            complete: function() {
+                $('#saveMemberBtn').prop('disabled', false).html('Update Member');
+            }
+        });
+    }
+
+    // ----- DELETE MEMBER -----
+    $(document).on('click', '.delete-member-btn', function() {
+        const memberId = $(this).data('id');
+        
+        Swal.fire({
+            title: 'Delete Adult Member?',
+            text: "Are you sure you want to delete this adult member record? This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteMemberRecord(memberId);
+            }
+        });
+    });
+
+    function deleteMemberRecord(memberId) {
+        $.ajax({
+            url: "{% url 'delete_adult_member_api' 0 %}".replace('0', memberId),
+            type: "DELETE",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Deleting member record...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert('Adult member deleted successfully');
+                    membersTable.ajax.reload();
+                } else {
+                    showErrorAlert(response.message || 'Failed to delete member record');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'delete member record');
+            }
+        });
+    }
+
+    // Generate Report
+    function generateMembersReport() {
+        showSuccessAlert('Report generation will be implemented in the next phase');
+    }
+
+    // Initialize page
+    loadFilterOptions();
+    membersTable.ajax.reload();
+});
+// Helper functions for AJAX requests
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showSuccessAlert(message) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: message,
+        timer: 3000,
+        showConfirmButton: false
+    });
+}
+
+function showErrorAlert(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message,
+        timer: 5000
+    });
+}
+
+function showLoadingAlert(message) {
+    Swal.fire({
+        title: 'Please wait...',
+        text: message,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}
+
+</script>
+
+<style>
+.btn-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    border: none;
+}
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-1px);
+}
+.badge {
+    font-size: 0.75em;
+    padding: 0.35em 0.65em;
+}
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}

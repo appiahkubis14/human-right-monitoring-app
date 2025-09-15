@@ -1,4 +1,5 @@
 {% extends 'base/web_base.html' %}
+{% load humanize %}
 
 {% block content %}
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -29,185 +30,74 @@
         <!-- Filter Section -->
         <div class="card mb-3">
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="mb-3">
-                            <label class="form-label">Region</label>
-                            <select class="form-select" id="regionFilter">
-                                <option value="">All Regions</option>
-                                <option value="Western">Western Region</option>
-                                <option value="Ashanti">Ashanti Region</option>
-                                <option value="Eastern">Eastern Region</option>
-                                <option value="Central">Central Region</option>
-                                <option value="Volta">Volta Region</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="mb-3">
-                            <label class="form-label">Communities</label>
-                            <select class="form-select" id="communityFilter">
-                                <option value="">All Communities</option>
-                            </select>
-                                
-                        </div>
-                    </div>
-                    <!-- <div class="col-md-3">
-                        <div class="mb-3">
-                            <label class="form-label">Risk Level</label>
-                            <select class="form-select" id="riskFilter">
-                                <option value="">All Levels</option>
-                                <option value="Low">Low Risk</option>
-                                <option value="Medium">Medium Risk</option>
-                                <option value="High">High Risk</option>
-                                <option value="Critical">Critical Risk</option>
-                            </select>
-                        </div>
-                    </div> -->
-                    <div class="col-md-3">
-                        <div class="mb-3">
-                            <label class="form-label">Time Period</label>
-                            <select class="form-select" id="timeFilter">
-                                <option value="7">Last 7 Days</option>
-                                <option value="30" selected>Last 30 Days</option>
-                                <option value="90">Last 90 Days</option>
-                                <option value="365">Last Year</option>
-                                <option value="custom">Custom Range</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Custom Date Range Picker (initially hidden) -->
-                        <div class="mb-3 custom-date-range" style="display: none;">
-                            <label class="form-label">Custom Date Range</label>
-                            <div class="input-group">
-                                <input type="date" class="form-control" id="startDate" placeholder="Start Date">
-                                <span class="input-group-text">to</span>
-                                <input type="date" class="form-control" id="endDate" placeholder="End Date">
-                            </div>
-                            <div class="mt-2">
-                                <button class="btn btn-primary btn-sm" id="applyCustomRange">Apply</button>
-                                <button class="btn btn-outline-secondary btn-sm ms-2" id="cancelCustomRange">Cancel</button>
+                <form id="dashboardFilters" method="GET">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="mb-3">
+                                <label class="form-label">Region</label>
+                                <select class="form-select" id="regionFilter" name="regionFilter">
+                                    <option value="">All Regions</option>
+                                    {% for region in regions %}
+                                    <option value="{{ region.region }}" {% if selected_region == region.region %}selected{% endif %}>{{ region.region }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
-                    </div>
-
-                    <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const timeFilter = document.getElementById('timeFilter');
-                        const customDateRange = document.querySelector('.custom-date-range');
-                        const startDate = document.getElementById('startDate');
-                        const endDate = document.getElementById('endDate');
-                        const applyBtn = document.getElementById('applyCustomRange');
-                        const cancelBtn = document.getElementById('cancelCustomRange');
-
-                        // Set default dates (today and 30 days ago)
-                        const today = new Date();
-                        const thirtyDaysAgo = new Date();
-                        thirtyDaysAgo.setDate(today.getDate() - 30);
-
-                        // Format dates for input fields (YYYY-MM-DD)
-                        function formatDate(date) {
-                            const year = date.getFullYear();
-                            const month = String(date.getMonth() + 1).padStart(2, '0');
-                            const day = String(date.getDate()).padStart(2, '0');
-                            return `${year}-${month}-${day}`;
-                        }
-
-                        // Set default values
-                        startDate.value = formatDate(thirtyDaysAgo);
-                        endDate.value = formatDate(today);
-
-                        // Show/hide custom date range based on selection
-                        timeFilter.addEventListener('change', function() {
-                            if (this.value === 'custom') {
-                                customDateRange.style.display = 'block';
-                            } else {
-                                customDateRange.style.display = 'none';
-                                // Trigger filter change for predefined ranges
-                                triggerFilterChange(this.value);
-                            }
-                        });
-
-                        // Apply custom date range
-                        applyBtn.addEventListener('click', function() {
-                            if (!startDate.value || !endDate.value) {
-                                alert('Please select both start and end dates');
-                                return;
-                            }
-
-                            if (new Date(startDate.value) > new Date(endDate.value)) {
-                                alert('Start date cannot be after end date');
-                                return;
-                            }
-
-                            // Format the custom range value for easy parsing
-                            const customValue = `custom_${startDate.value}_${endDate.value}`;
-                            triggerFilterChange(customValue);
-                        });
-
-                        // Cancel custom date range
-                        cancelBtn.addEventListener('click', function() {
-                            customDateRange.style.display = 'none';
-                            timeFilter.value = '30'; // Reset to default
-                            triggerFilterChange('30');
-                        });
-
-                        // Function to trigger filter change (you can modify this based on your needs)
-                        function triggerFilterChange(value) {
-                            console.log('Filter changed to:', value);
+                        <div class="col-md-2">
+                            <div class="mb-3">
+                                <label class="form-label">District</label>
+                                <select class="form-select" id="districtFilter" name="districtFilter">
+                                    <option value="">All Districts</option>
+                                    {% for district in districts %}
+                                    <option value="{{ district }}" {% if selected_district == district %}selected{% endif %}>{{ district }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="mb-3">
+                                <label class="form-label">Communities</label>
+                                <select class="form-select" id="societyFilter" name="societyFilter">
+                                    <option value="">All Communities</option>
+                                    {% for society in societies %}
+                                    <option value="{{ society }}" {% if selected_society == society %}selected{% endif %}>{{ society }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">Time Period</label>
+                                <select class="form-select" id="timeFilter" name="timeFilter">
+                                    <option value="7" {% if selected_period == "7" %}selected{% endif %}>Last 7 Days</option>
+                                    <option value="30" {% if selected_period == "30" or not selected_period %}selected{% endif %}>Last 30 Days</option>
+                                    <option value="90" {% if selected_period == "90" %}selected{% endif %}>Last 90 Days</option>
+                                    <option value="365" {% if selected_period == "365" %}selected{% endif %}>Last Year</option>
+                                    <option value="custom" {% if selected_period == "custom" %}selected{% endif %}>Custom Range</option>
+                                </select>
+                            </div>
                             
-                            // Dispatch a custom event that other parts of your code can listen for
-                            const event = new CustomEvent('timeFilterChanged', {
-                                detail: { 
-                                    filterValue: value,
-                                    startDate: value.startsWith('custom_') ? startDate.value : null,
-                                    endDate: value.startsWith('custom_') ? endDate.value : null
-                                }
-                            });
-                            document.dispatchEvent(event);
-                            
-                            // Or call your existing filter function
-                            // updateChartData(value);
-                        }
-
-                        // Add keyboard support
-                        startDate.addEventListener('keypress', function(e) {
-                            if (e.key === 'Enter') applyBtn.click();
-                        });
-
-                        endDate.addEventListener('keypress', function(e) {
-                            if (e.key === 'Enter') applyBtn.click();
-                        });
-                    });
-                    </script>
-
-                    <style>
-                    .custom-date-range {
-                        border-left: 3px solid #0d6efd;
-                        padding-left: 15px;
-                        margin-top: 10px;
-                        background-color: #f8f9fa;
-                        padding: 15px;
-                        border-radius: 6px;
-                    }
-
-                    .input-group-text {
-                        background-color: #e9ecef;
-                        border: 1px solid #ced4da;
-                    }
-
-                    #applyCustomRange, #cancelCustomRange {
-                        font-size: 0.875rem;
-                        padding: 0.25rem 0.75rem;
-                    }
-                    </style>
-                    <div class="col-md-3">
-                        <div class="mb-3">
-                            <label class="form-label">&nbsp;</label>
-                            <button class="btn btn-primary w-100" id="applyFilters">Apply Filters</button>
+                            <!-- Custom Date Range Picker -->
+                            <div class="mb-3 custom-date-range" style="display: {% if selected_period == 'custom' %}block{% else %}none{% endif %};">
+                                <label class="form-label">Custom Date Range</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="startDate" name="startDate" placeholder="Start Date" value="{{ start_date }}">
+                                    <span class="input-group-text">to</span>
+                                    <input type="date" class="form-control" id="endDate" name="endDate" placeholder="End Date" value="{{ end_date }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary w-50">Apply Filters</button>
+                                    <button type="button" class="btn btn-outline-secondary w-50" id="resetFilters">Reset</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
 
@@ -218,7 +108,7 @@
                     <div class="card-body">
                         <i class="fas fa-child float-end m-0 h2 text-muted"></i>
                         <h6 class="text-muted text-uppercase mt-0">Children Monitored</h6>
-                        <h3 class="my-3 counter-value" data-target="1587">1,587</h3>
+                        <h3 class="my-3 counter-value" data-target="{{ children_monitored }}">{{ children_monitored|intcomma }}</h3>
                         <span class="badge bg-success me-1"> +11% </span> 
                         <span class="text-muted">From last quarter</span>
                     </div>
@@ -230,7 +120,7 @@
                     <div class="card-body">
                         <i class="fas fa-graduation-cap float-end m-0 h2 text-muted"></i>
                         <h6 class="text-muted text-uppercase mt-0">School Enrollment</h6>
-                        <h3 class="my-3"><span class="counter-value" data-target="89">89</span><small>%</small></h3>
+                        <h3 class="my-3"><span class="counter-value" data-target="{{ school_enrollment_rate }}">{{ school_enrollment_rate }}</span><small>%</small></h3>
                         <span class="badge bg-success me-1"> +5% </span> 
                         <span class="text-muted">From last year</span>
                     </div>
@@ -242,7 +132,7 @@
                     <div class="card-body">
                         <i class="fas fa-exclamation-triangle float-end m-0 h2 text-muted"></i>
                         <h6 class="text-muted text-uppercase mt-0">At-Risk Cases</h6>
-                        <h3 class="my-3 counter-value" data-target="127">127</h3>
+                        <h3 class="my-3 counter-value" data-target="{{ risk_cases }}">{{ risk_cases|intcomma }}</h3>
                         <span class="badge bg-danger me-1"> +8% </span> 
                         <span class="text-muted">From last month</span>
                     </div>
@@ -254,7 +144,7 @@
                     <div class="card-body">
                         <i class="fas fa-hands-helping float-end m-0 h2 text-muted"></i>
                         <h6 class="text-muted text-uppercase mt-0">Interventions</h6>
-                        <h3 class="my-3 counter-value" data-target="342">342</h3>
+                        <h3 class="my-3 counter-value" data-target="{{ interventions }}">{{ interventions|intcomma }}</h3>
                         <span class="badge bg-success me-1"> +15% </span> 
                         <span class="text-muted">From last quarter</span>
                     </div>
@@ -262,7 +152,7 @@
             </div>
         </div> <!-- end row -->
 
-         <!-- Additional Charts Row -->
+        <!-- Additional Charts Row -->
         <div class="row mt-3">
             <div class="col-lg-6">
                 <div class="card card-body">
@@ -284,9 +174,9 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <h6 class="text-muted text-uppercase">Birth Certificates</h6>
-                        <h3 class="my-2">74%</h3>
+                        <h3 class="my-2">{{ birth_cert_rate }}%</h3>
                         <div class="progress mb-2" style="height: 6px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: 74%;" aria-valuenow="74" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ birth_cert_rate }}%;" aria-valuenow="{{ birth_cert_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <p class="mb-0 text-muted">Children with birth certificates</p>
                     </div>
@@ -296,9 +186,9 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <h6 class="text-muted text-uppercase">Light Work</h6>
-                        <h3 class="my-2">42%</h3>
+                        <h3 class="my-2">{{ light_work_rate }}%</h3>
                         <div class="progress mb-2" style="height: 6px;">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: 42%;" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ light_work_rate }}%;" aria-valuenow="{{ light_work_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <p class="mb-0 text-muted">Children engaged in light work</p>
                     </div>
@@ -308,9 +198,9 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <h6 class="text-muted text-uppercase">Heavy Work</h6>
-                        <h3 class="my-2">18%</h3>
+                        <h3 class="my-2">{{ heavy_work_rate }}%</h3>
                         <div class="progress mb-2" style="height: 6px;">
-                            <div class="progress-bar bg-danger" role="progressbar" style="width: 18%;" aria-valuenow="18" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ heavy_work_rate }}%;" aria-valuenow="{{ heavy_work_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <p class="mb-0 text-muted">Children engaged in heavy work</p>
                     </div>
@@ -320,9 +210,9 @@
                 <div class="card">
                     <div class="card-body text-center">
                         <h6 class="text-muted text-uppercase">Agrochemical Exposure</h6>
-                        <h3 class="my-2">9%</h3>
+                        <h3 class="my-2">{{ agrochemical_rate }}%</h3>
                         <div class="progress mb-2" style="height: 6px;">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: 9%;" aria-valuenow="9" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ agrochemical_rate }}%;" aria-valuenow="{{ agrochemical_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <p class="mb-0 text-muted">Children exposed to agrochemicals</p>
                     </div>
@@ -354,10 +244,6 @@
             </div><!-- end col-->
         </div> <!-- end row -->
 
-       
-
-       
-
         <!-- Detailed Data Row -->
         <div class="row mt-3">
             <div class="col-xl-7">
@@ -369,134 +255,45 @@
                             </div>
 
                             <div class="activity-widget px-4" data-simplebar style="max-height: 600px;">
+                                {% for activity in recent_activities %}
                                 <div class="d-flex align-items-center gap-2 py-2 border-bottom">
                                     <div class="activity-icon bg-soft-primary text-primary rounded-circle">
                                         <i class="fas fa-clipboard-check"></i>
                                     </div>
                                     <div class="me-auto">
-                                        <p class="text-body mb-0">New assessment</p>
-                                        <p class="text-muted mb-0">Household in Eastern Region</p>
+                                        <p class="text-body mb-0">Household assessment</p>
+                                        <p class="text-muted mb-0">{{ activity.farmer.first_name }} {{ activity.farmer.last_name }} - {{ activity.farmer.society_name.districtTbl_foreignkey.regionTbl_foreignkey.region }}</p>
                                     </div>
-                                    <p class="font-12 text-body">Today, 10:30 AM</p>
+                                    <p class="font-12 text-body">{{ activity.created_date|timesince }} ago</p>
                                 </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-danger text-danger rounded-circle">
-                                        <i class="fas fa-hands-helping"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">Intervention initiated</p>
-                                        <p class="text-muted mb-0">Family support program</p>
-                                    </div>
-                                    <p class="font-12 text-body">2 days ago</p>
+                                {% empty %}
+                                <div class="text-center py-3">
+                                    <p class="text-muted">No recent activities</p>
                                 </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-success text-success rounded-circle">
-                                        <i class="fas fa-home"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">Household survey</p>
-                                        <p class="text-muted mb-0">Completed in Ashanti Region</p>
-                                    </div>
-                                    <p class="font-12 text-body">3 days ago</p>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-success text-success rounded-circle">
-                                        <i class="fas fa-school"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">School enrollment</p>
-                                        <p class="text-muted mb-0">3 children enrolled in school</p>
-                                    </div>
-                                    <p class="font-12 text-body">Today, 08:45 AM</p>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-info text-info rounded-circle">
-                                        <i class="fas fa-exclamation-circle"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">Risk identified</p>
-                                        <p class="text-muted mb-0">Child labor case in Western Region</p>
-                                    </div>
-                                    <p class="font-12 text-body">Yesterday, 03:17 PM</p>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-warning text-warning rounded-circle">
-                                        <i class="fas fa-user-graduate"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">Educational assessment</p>
-                                        <p class="text-muted mb-0">Literacy test completed</p>
-                                    </div>
-                                    <p class="font-12 text-body">Yesterday, 12:20 PM</p>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-danger text-danger rounded-circle">
-                                        <i class="fas fa-hands-helping"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">Intervention initiated</p>
-                                        <p class="text-muted mb-0">Family support program</p>
-                                    </div>
-                                    <p class="font-12 text-body">2 days ago</p>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-info text-info rounded-circle">
-                                        <i class="fas fa-chart-line"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">Data analysis</p>
-                                        <p class="text-muted mb-0">Quarterly report generated</p>
-                                    </div>
-                                    <p class="font-12 text-body">4 days ago</p>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-success text-success rounded-circle">
-                                        <i class="fas fa-home"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">Household survey</p>
-                                        <p class="text-muted mb-0">Completed in Ashanti Region</p>
-                                    </div>
-                                    <p class="font-12 text-body">3 days ago</p>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 py-2 border-bottom">
-                                    <div class="activity-icon bg-soft-info text-info rounded-circle">
-                                        <i class="fas fa-chart-line"></i>
-                                    </div>
-                                    <div class="me-auto">
-                                        <p class="text-body mb-0">Data analysis</p>
-                                        <p class="text-muted mb-0">Quarterly report generated</p>
-                                    </div>
-                                    <p class="font-12 text-body">4 days ago</p>
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="card card-body">
-                            <h4 class="header-title mb-3">Child Labor Indicators</h4>
-                            <div id="labor-indicators-chart" style="height: 150px;"></div>
-                        </div>
-
-                        <div class="card card-body mt-3">
                             <h4 class="header-title mb-3">Assessment Status</h4>
                             <div class="assessment-status">
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Completed Surveys</span>
-                                    <span class="badge bg-success">1,245</span>
+                                    <span class="badge bg-success">{{ completed_surveys|intcomma }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Pending Review</span>
-                                    <span class="badge bg-warning">342</span>
+                                    <span class="badge bg-warning">{{ pending_review|intcomma }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Requiring Follow-up</span>
-                                    <span class="badge bg-danger">127</span>
+                                    <span class="badge bg-danger">{{ requiring_follow_up|intcomma }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <span>New This Week</span>
-                                    <span class="badge bg-info">58</span>
+                                    <span class="badge bg-info">{{ new_this_week|intcomma }}</span>
                                 </div>
                             </div>
                         </div>
@@ -504,22 +301,12 @@
                         <div class="card card-body mt-3">
                             <h4 class="header-title mb-3">Regional Distribution</h4>
                             <div class="regional-distribution">
+                                {% for region, percentage in regional_distribution.items %}
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>Ashanti Region</span>
-                                    <span>28%</span>
+                                    <span>{{ region }}</span>
+                                    <span>{{ percentage }}%</span>
                                 </div>
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>Western Region</span>
-                                    <span>22%</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>Eastern Region</span>
-                                    <span>18%</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span>Other Regions</span>
-                                    <span>32%</span>
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -539,43 +326,29 @@
                                     <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody>yt
+                                {% for case in recent_risk_cases %}
                                 <tr>
-                                    <td>CL-2023-0876</td>
-                                    <td>Western</td>
-                                    <td>High</td>
+                                    <td>CL-{{ case.assessment_date|date:"Y-m-d" }}-{{ case.child.id }}</td>
+                                    <td>{{ case.child.houseHold.farmer.society_name.districtTbl_foreignkey.regionTbl_foreignkey.region }}</td>
+                                    <td>
+                                        {% if case.risk_level == "no_risk" %}
+                                        <span class="badge bg-success">Low</span>
+                                        {% elif case.risk_level == "light_risk" %}
+                                        <span class="badge bg-warning">Medium</span>
+                                        {% elif case.risk_level == "heavy_risk" %}
+                                        <span class="badge bg-danger">High</span>
+                                        {% elif case.risk_level == "both_risk" %}
+                                        <span class="badge bg-danger">Critical</span>
+                                        {% endif %}
+                                    </td>
                                     <td><span class="badge bg-warning">Under Review</span></td>
                                 </tr>
+                                {% empty %}
                                 <tr>
-                                    <td>CL-2023-0875</td>
-                                    <td>Ashanti</td>
-                                    <td>Medium</td>
-                                    <td><span class="badge bg-info">Intervention</span></td>
+                                    <td colspan="4" class="text-center">No risk cases found</td>
                                 </tr>
-                                <tr>
-                                    <td>CL-2023-0874</td>
-                                    <td>Eastern</td>
-                                    <td>Critical</td>
-                                    <td><span class="badge bg-danger">Immediate Action</span></td>
-                                </tr>
-                                <tr>
-                                    <td>CL-2023-0873</td>
-                                    <td>Central</td>
-                                    <td>Low</td>
-                                    <td><span class="badge bg-success">Resolved</span></td>
-                                </tr>
-                                <tr>
-                                    <td>CL-2023-0872</td>
-                                    <td>Volta</td>
-                                    <td>Medium</td>
-                                    <td><span class="badge bg-info">Monitoring</span></td>
-                                </tr>
-                                 <tr>
-                                    <td>CL-2023-0877</td>
-                                    <td>Ahafo</td>
-                                    <td>Medium</td>
-                                    <td><span class="badge bg-info">Intervention</span></td>
-                                </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -584,34 +357,21 @@
                 <div class="card card-body mt-3">
                     <h4 class="header-title mb-3">Upcoming Interventions</h4>
                     <div class="upcoming-interventions">
+                        {% for intervention in upcoming_interventions %}
                         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                             <div>
-                                <h6 class="mb-0">Educational Support</h6>
-                                <small class="text-muted">Western Region - 5 children</small>
+                                <h6 class="mb-0">{{ intervention.title }}</h6>
+                                <small class="text-muted">{{ intervention.assigned_to.first_name }} {{ intervention.assigned_to.last_name }}</small>
                             </div>
-                            <span class="badge bg-primary">Tomorrow</span>
+                            <span class="badge bg-primary">{{ intervention.end_date|timeuntil }}</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                            <div>
-                                <h6 class="mb-0">Household Sensitization</h6>
-                                <small class="text-muted">Ashanti Region - 3 families</small>
-                            </div>
-                            <span class="badge bg-info">In 2 days</span>
+                        {% empty %}
+                        <div class="text-center py-3">
+                            <p class="text-muted">No upcoming interventions</p>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-0">Community Awareness</h6>
-                                <small class="text-muted">Eastern Region - Village meeting</small>
-                            </div>
-                            <span class="badge bg-success">Next Week</span>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-
-                <!-- <div class="card card-body mt-3">
-                    <h4 class="header-title mb-3">Intervention Effectiveness</h4>
-                    <div id="intervention-effectiveness-chart" style="height: 200px;"></div>
-                </div> -->
             </div><!-- end col-->
         </div> <!-- end row -->
 
@@ -724,76 +484,36 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% for case in child_labor_cases %}
                                     <tr>
-                                        <td>CL-2023-0876</td>
-                                        <td>Kofi Mensah</td>
-                                        <td>14</td>
-                                        <td>Western</td>
-                                        <td><span class="badge bg-danger">High</span></td>
-                                        <td>Not Enrolled</td>
-                                        <td>28 hrs/week</td>
-                                        <td>3 days ago</td>
+                                        <td>{{ case.case_id }}</td>
+                                        <td>{{ case.child_name }}</td>
+                                        <td>{{ case.age }}</td>
+                                        <td>{{ case.region }}</td>
+                                        <td>
+                                            {% if case.risk_level == "Low Risk" %}
+                                            <span class="badge bg-success">Low</span>
+                                            {% elif case.risk_level == "Medium Risk" %}
+                                            <span class="badge bg-warning">Medium</span>
+                                            {% elif case.risk_level == "High Risk" %}
+                                            <span class="badge bg-danger">High</span>
+                                            {% elif case.risk_level == "Critical Risk" %}
+                                            <span class="badge bg-danger">Critical</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ case.school_status }}</td>
+                                        <td>{{ case.work_hours }} hrs/week</td>
+                                        <td>{{ case.last_assessment }}</td>
                                         <td>
                                             <button class="btn btn-sm btn-primary">View</button>
                                             <button class="btn btn-sm btn-info">Intervene</button>
                                         </td>
                                     </tr>
+                                    {% empty %}
                                     <tr>
-                                        <td>CL-2023-0875</td>
-                                        <td>Ama Owusu</td>
-                                        <td>12</td>
-                                        <td>Ashanti</td>
-                                        <td><span class="badge bg-warning">Medium</span></td>
-                                        <td>Enrolled</td>
-                                        <td>15 hrs/week</td>
-                                        <td>1 week ago</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary">View</button>
-                                            <button class="btn btn-sm btn-info">Intervene</button>
-                                        </td>
+                                        <td colspan="9" class="text-center">No child labor cases found</td>
                                     </tr>
-                                    <tr>
-                                        <td>CL-2023-0874</td>
-                                        <td>Yaw Boateng</td>
-                                        <td>15</td>
-                                        <td>Eastern</td>
-                                        <td><span class="badge bg-success">Low</span></td>
-                                        <td>Enrolled</td>
-                                        <td>10 hrs/week</td>
-                                        <td>2 days ago</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary">View</button>
-                                            <button class="btn btn-sm btn-info">Intervene</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>CL-2023-0873</td>
-                                        <td>Abena Sarpong</td>
-                                        <td>13</td>
-                                        <td>Central</td>
-                                        <td><span class="badge bg-danger">Critical</span></td>
-                                        <td>Not Enrolled</td>
-                                        <td>35 hrs/week</td>
-                                        <td>5 days ago</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary">View</button>
-                                            <button class="btn btn-sm btn-info">Intervene</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>CL-2023-0872</td>
-                                        <td>Kwame Asante</td>
-                                        <td>16</td>
-                                        <td>Volta</td>
-                                        <td><span class="badge bg-warning">Medium</span></td>
-                                        <td>Enrolled</td>
-                                        <td>18 hrs/week</td>
-                                        <td>1 day ago</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-primary">View</button>
-                                            <button class="btn btn-sm btn-info">Intervene</button>
-                                        </td>
-                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>
@@ -802,8 +522,7 @@
             </div>
         </div>
 
-
-         <!-- Analytics Section -->
+        <!-- Analytics Section -->
         <div class="row mt-3">
             <div class="col-md-6 col-xl-4">
                 <div class="card card-body">
@@ -834,6 +553,36 @@
 <!-- ============================================================== -->
 
 <script>
+    // Data from Django context
+    const dashboardData = {
+        childrenMonitored: {{ children_monitored }},
+        schoolEnrollmentRate: {{ school_enrollment_rate }},
+        riskCases: {{ risk_cases }},
+        interventions: {{ interventions }},
+        birthCertRate: {{ birth_cert_rate }},
+        lightWorkRate: {{ light_work_rate }},
+        heavyWorkRate: {{ heavy_work_rate }},
+        agrochemicalRate: {{ agrochemical_rate }},
+        monthlyTrends: {{ monthly_trends|safe }},
+        riskData: {{ risk_data|safe }},
+        educationByAge: {{ education_by_age|safe }},
+        workTypes: {{ work_types|safe }},
+        ageDistribution: {{ age_distribution|safe }},
+        genderRegionData: {{ gender_region_data|safe }},
+        schoolAttendance: {{ school_attendance|safe }},
+        literacyLevels: {{ literacy_levels|safe }},
+        workHoursByAge: {{ work_hours_by_age|safe }},
+        taskTypes: {{ task_types|safe }},
+        riskCorrelation: {{ risk_correlation|safe }},
+        effectivenessRate: {{ effectiveness_rate }},
+        lightTasks: {{ light_tasks|safe }},
+        heavyTasks: {{ heavy_tasks|safe }},
+        educationStatus: {{ education_status|safe }},
+        childDemographics: {{ child_demographics|safe }}
+    };
+
+    console.log('Dashboard Data:', dashboardData);
+
     $(document).ready(function() {
         // Initialize counter animation
         $('.counter-value').counterUp({
@@ -841,18 +590,55 @@
             time: 1000
         });
 
-        // Filter functionality
-        $('#applyFilters').on('click', function() {
-            const region = $('#regionFilter').val();
-            const riskLevel = $('#riskFilter').val();
-            const timePeriod = $('#timeFilter').val();
-            
-            // In a real application, you would make an AJAX call here
-            console.log('Applying filters:', { region, riskLevel, timePeriod });
-            // updateCharts(region, riskLevel, timePeriod);
-            
-            // Show notification
-            toastr.success('Filters applied successfully');
+        // Show/hide custom date range based on selection
+        $('#timeFilter').on('change', function() {
+            if ($(this).val() === 'custom') {
+                $('.custom-date-range').show();
+            } else {
+                $('.custom-date-range').hide();
+            }
+        });
+
+        // Reset filters
+        $('#resetFilters').on('click', function() {
+            $('#dashboardFilters')[0].reset();
+            window.location.search = '';
+        });
+
+        // Auto-submit form when filters change (except for custom date inputs)
+        $('#regionFilter, #districtFilter, #societyFilter, #timeFilter').on('change', function() {
+            if ($('#timeFilter').val() !== 'custom') {
+                $('#dashboardFilters').submit();
+            }
+        });
+
+        // Auto-submit when custom dates are selected
+        $('#startDate, #endDate').on('change', function() {
+            if ($('#timeFilter').val() === 'custom') {
+                $('#dashboardFilters').submit();
+            }
+        });
+
+        // Load districts based on selected region
+        $('#regionFilter').on('change', function() {
+            const region = $(this).val();
+            if (region) {
+                // This would typically be an AJAX call to fetch districts
+                // For now, we'll just submit the form to reload with the region filter
+                $('#dashboardFilters').submit();
+            } else {
+                $('#districtFilter').val('');
+            }
+        });
+
+        // Load societies based on selected district
+        $('#districtFilter').on('change', function() {
+            const district = $(this).val();
+            if (district) {
+                $('#dashboardFilters').submit();
+            } else {
+                $('#societyFilter').val('');
+            }
         });
 
         // Chart period toggle
@@ -865,13 +651,11 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize all charts
+        // Initialize all charts with real data
         initLaborTrendChart();
         initRiskClassificationChart();
-        initLaborIndicatorsChart();
         initWorkTypeChart();
         initEducationAgeChart();
-        // initInterventionEffectivenessChart();
         initChildDemographicsChart();
         initEducationStatusChart();
         initWorkTypesChart();
@@ -888,10 +672,8 @@
         window.addEventListener('resize', function() {
             laborTrendChart.resize();
             riskClassificationChart.resize();
-            laborIndicatorsChart.resize();
             workTypeChart.resize();
             educationAgeChart.resize();
-            interventionEffectivenessChart.resize();
             childDemographicsChart.resize();
             educationStatusChart.resize();
             workTypesChart.resize();
@@ -907,8 +689,8 @@
     });
 
     // Chart instances
-    let laborTrendChart, riskClassificationChart, laborIndicatorsChart;
-    let workTypeChart, educationAgeChart, interventionEffectivenessChart;
+    let laborTrendChart, riskClassificationChart;
+    let workTypeChart, educationAgeChart;
     let childDemographicsChart, educationStatusChart, workTypesChart;
     let ageDistributionChart, genderRegionChart, schoolAttendanceChart;
     let literacyLevelsChart, workHoursChart, taskTypesChart;
@@ -916,6 +698,16 @@
 
     function initLaborTrendChart() {
         laborTrendChart = echarts.init(document.getElementById('labor-trend-chart'));
+        
+        const regionNames = dashboardData.monthlyTrends.map(item => item.name);
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const seriesData = dashboardData.monthlyTrends.map(region => ({
+            name: region.name,
+            type: 'bar',
+            data: region.data,
+            itemStyle: { color: getRandomColor() }
+        }));
+        
         const option = {
             tooltip: {
                 trigger: 'axis',
@@ -932,7 +724,7 @@
                 }
             },
             legend: {
-                data: ['Western Region', 'Ashanti Region', 'Eastern Region', 'Central Region', 'National Average'],
+                data: regionNames,
                 type: 'scroll',
                 orient: 'horizontal',
                 bottom: 0,
@@ -943,7 +735,7 @@
             },
             xAxis: {
                 type: 'category',
-                data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                data: monthNames.slice(0, dashboardData.monthlyTrends[0]?.data.length || 12),
                 axisLine: {
                     lineStyle: {
                         color: '#999'
@@ -976,60 +768,9 @@
                 axisLabel: {
                     formatter: '{value}',
                     color: '#666'
-                },
-                min: 0,
-                max: 100
-            },
-            series: [
-                {
-                    name: 'Western Region',
-                    type: 'bar',
-                    data: [45, 38, 55, 48, 56, 52, 61, 58, 54, 60, 65, 70],
-                    itemStyle: {
-                        color: '#3bafda'
-                    }
-                },
-                {
-                    name: 'Ashanti Region',
-                    type: 'bar',
-                    data: [35, 42, 38, 45, 50, 48, 52, 55, 58, 62, 60, 65],
-                    itemStyle: {
-                        color: '#1abc9c'
-                    }
-                },
-                {
-                    name: 'Eastern Region',
-                    type: 'bar',
-                    data: [25, 30, 28, 32, 35, 40, 38, 42, 45, 48, 50, 52],
-                    itemStyle: {
-                        color: '#f7b84b'
-                    }
-                },
-                {
-                    name: 'Central Region',
-                    type: 'bar',
-                    data: [15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40, 42],
-                    itemStyle: {
-                        color: '#e83e8c'
-                    }
-                },
-                {
-                    name: 'National Average',
-                    type: 'line',
-                    symbol: 'none',
-                    lineStyle: {
-                        width: 3,
-                        type: 'dashed',
-                        color: '#6c757d'
-                    },
-                    data: [30, 32, 35, 37, 42, 42, 45, 47, 48, 52, 54, 57],
-                    tooltip: {
-                        formatter: function(params) {
-                            return `National Average: <strong>${params.value} cases</strong>`;
-                        }
-                    }
                 }
-            ],
+            },
+            series: seriesData,
             animation: true,
             animationDuration: 1500,
             animationEasing: 'cubicInOut'
@@ -1046,7 +787,8 @@
             legend: {
                 orient: 'vertical',
                 right: 10,
-                top: 'center'
+                top: 'center',
+                data: ['No Risk', 'Light Risk', 'Heavy Risk', 'Both Risk']
             },
             series: [
                 {
@@ -1074,10 +816,10 @@
                         show: false
                     },
                     data: [
-                        { value: 35, name: 'Low Risk', itemStyle: { color: '#1abc9c' } },
-                        { value: 30, name: 'Medium Risk', itemStyle: { color: '#f7b84b' } },
-                        { value: 20, name: 'High Risk', itemStyle: { color: '#e83e8c' } },
-                        { value: 15, name: 'Critical Risk', itemStyle: { color: '#f1556c' } }
+                        { value: dashboardData.riskData.no_risk, name: 'No Risk', itemStyle: { color: '#1abc9c' } },
+                        { value: dashboardData.riskData.light_risk, name: 'Light Risk', itemStyle: { color: '#f7b84b' } },
+                        { value: dashboardData.riskData.heavy_risk, name: 'Heavy Risk', itemStyle: { color: '#e83e8c' } },
+                        { value: dashboardData.riskData.both_risk, name: 'Both Risk', itemStyle: { color: '#f1556c' } }
                     ]
                 }
             ]
@@ -1085,52 +827,22 @@
         riskClassificationChart.setOption(option);
     }
 
-    function initLaborIndicatorsChart() {
-        laborIndicatorsChart = echarts.init(document.getElementById('labor-indicators-chart'));
-        const option = {
-            tooltip: {
-                trigger: 'axis',
-                axisPointer: {
-                    type: 'shadow'
-                }
-            },
-            grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '3%',
-                containLabel: true
-            },
-            xAxis: {
-                type: 'category',
-                data: ['School Dropout', 'Light Work', 'Heavy Work', 'Hazardous Work']
-            },
-            yAxis: {
-                type: 'value',
-                name: 'Percentage',
-                max: 100
-            },
-            series: [
-                {
-                    name: 'Indicator Prevalence',
-                    type: 'bar',
-                    data: [
-                        { value: 25, itemStyle: { color: '#3bafda' } },
-                        { value: 45, itemStyle: { color: '#1abc9c' } },
-                        { value: 18, itemStyle: { color: '#f7b84b' } },
-                        { value: 12, itemStyle: { color: '#e83e8c' } }
-                    ],
-                    showBackground: true,
-                    backgroundStyle: {
-                        color: 'rgba(180, 180, 180, 0.2)'
-                    }
-                }
-            ]
-        };
-        laborIndicatorsChart.setOption(option);
-    }
-
     function initWorkTypeChart() {
         workTypeChart = echarts.init(document.getElementById('work-type-chart'));
+        
+        const lightTaskData = dashboardData.lightTasks.map(task => ({
+            name: task.task__name,
+            value: task.count
+        }));
+        
+        const heavyTaskData = dashboardData.heavyTasks.map(task => ({
+            name: task.task__name,
+            value: task.count
+        }));
+        
+        // Combine light and heavy tasks
+        const allTasks = [...lightTaskData, ...heavyTaskData];
+        
         const option = {
             tooltip: {
                 trigger: 'item'
@@ -1144,13 +856,11 @@
                     name: 'Work Type',
                     type: 'pie',
                     radius: '70%',
-                    data: [
-                        { value: 45, name: 'Harvesting', itemStyle: { color: '#3bafda' } },
-                        { value: 25, name: 'Weeding', itemStyle: { color: '#1abc9c' } },
-                        { value: 15, name: 'Transport', itemStyle: { color: '#f7b84b' } },
-                        { value: 10, name: 'Processing', itemStyle: { color: '#e83e8c' } },
-                        { value: 5, name: 'Other', itemStyle: { color: '#6c757d' } }
-                    ],
+                    data: allTasks.map((task, index) => ({
+                        value: task.value,
+                        name: task.name,
+                        itemStyle: { color: getRandomColor(index) }
+                    })),
                     emphasis: {
                         itemStyle: {
                             shadowBlur: 10,
@@ -1166,6 +876,11 @@
 
     function initEducationAgeChart() {
         educationAgeChart = echarts.init(document.getElementById('education-age-chart'));
+        
+        const ageGroups = Object.keys(dashboardData.educationByAge);
+        const enrolledData = ageGroups.map(group => dashboardData.educationByAge[group].enrolled);
+        const notEnrolledData = ageGroups.map(group => dashboardData.educationByAge[group].not_enrolled);
+        
         const option = {
             tooltip: {
                 trigger: 'axis'
@@ -1175,23 +890,23 @@
             },
             xAxis: {
                 type: 'category',
-                data: ['5-9 years', '10-12 years', '13-15 years', '16-17 years']
+                data: ageGroups
             },
             yAxis: {
                 type: 'value',
-                name: 'Percentage'
+                name: 'Number of Children'
             },
             series: [
                 {
                     name: 'Enrolled',
                     type: 'bar',
-                    data: [95, 88, 76, 62],
+                    data: enrolledData,
                     itemStyle: { color: '#1abc9c' }
                 },
                 {
                     name: 'Not Enrolled',
                     type: 'bar',
-                    data: [5, 12, 24, 38],
+                    data: notEnrolledData,
                     itemStyle: { color: '#e83e8c' }
                 }
             ]
@@ -1199,41 +914,26 @@
         educationAgeChart.setOption(option);
     }
 
-    // function initInterventionEffectivenessChart() {
-    //     interventionEffectivenessChart = echarts.init(document.getElementById('intervention-effectiveness-chart'));
-    //     const option = {
-    //         tooltip: {
-    //             trigger: 'axis'
-    //         },
-    //         xAxis: {
-    //             type: 'category',
-    //             data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-    //         },
-    //         yAxis: {
-    //             type: 'value',
-    //             name: 'Success Rate (%)'
-    //         },
-    //         series: [
-    //             {
-    //                 name: 'Intervention Success',
-    //                 type: 'line',
-    //                 data: [65, 70, 76, 80, 82, 85],
-    //                 smooth: true,
-    //                 lineStyle: {
-    //                     width: 3,
-    //                     color: '#1abc9c'
-    //                 },
-    //                 itemStyle: {
-    //                     color: '#1abc9c'
-    //                 }
-    //             }
-    //         ]
-    //     };
-    //     interventionEffectivenessChart.setOption(option);
-    // }
-
     function initChildDemographicsChart() {
         childDemographicsChart = echarts.init(document.getElementById('child-demographics-chart'));
+        
+        // Group ages into categories
+        const ageGroups = {
+            '5-9 years': 0,
+            '10-14 years': 0,
+            '15-17 years': 0
+        };
+        
+        dashboardData.childDemographics.forEach(item => {
+            if (item.age >= 5 && item.age <= 9) {
+                ageGroups['5-9 years'] += item.count;
+            } else if (item.age >= 10 && item.age <= 14) {
+                ageGroups['10-14 years'] += item.count;
+            } else if (item.age >= 15 && item.age <= 17) {
+                ageGroups['15-17 years'] += item.count;
+            }
+        });
+        
         const option = {
             tooltip: {
                 trigger: 'item',
@@ -1243,7 +943,7 @@
                 orient: 'vertical',
                 right: 10,
                 top: 'center',
-                data: ['5-9 years', '10-14 years', '15-17 years']
+                data: Object.keys(ageGroups)
             },
             series: [{
                 name: 'Age Groups',
@@ -1265,9 +965,9 @@
                     show: false
                 },
                 data: [
-                    {value: 485, name: '5-9 years', itemStyle: {color: '#1abc9c'}},
-                    {value: 672, name: '10-14 years', itemStyle: {color: '#3498db'}},
-                    {value: 430, name: '15-17 years', itemStyle: {color: '#9b59b6'}}
+                    {value: ageGroups['5-9 years'], name: '5-9 years', itemStyle: {color: '#1abc9c'}},
+                    {value: ageGroups['10-14 years'], name: '10-14 years', itemStyle: {color: '#3498db'}},
+                    {value: ageGroups['15-17 years'], name: '15-17 years', itemStyle: {color: '#9b59b6'}}
                 ]
             }]
         };
@@ -1276,6 +976,7 @@
 
     function initEducationStatusChart() {
         educationStatusChart = echarts.init(document.getElementById('education-status-chart'));
+        
         const option = {
             tooltip: {
                 trigger: 'axis',
@@ -1300,7 +1001,12 @@
             series: [{
                 name: 'Education Status',
                 type: 'bar',
-                data: [1412, 89, 56, 30],
+                data: [
+                    dashboardData.educationStatus.enrolled,
+                    dashboardData.educationStatus.not_enrolled,
+                    dashboardData.educationStatus.dropout,
+                    dashboardData.educationStatus.never_attended
+                ],
                 itemStyle: {
                     color: function(params) {
                         var colorList = ['#1abc9c', '#e74c3c', '#f39c12', '#95a5a6'];
@@ -1318,6 +1024,7 @@
 
     function initWorkTypesChart() {
         workTypesChart = echarts.init(document.getElementById('work-types-chart'));
+        
         const option = {
             tooltip: {
                 trigger: 'item',
@@ -1349,10 +1056,10 @@
                     show: false
                 },
                 data: [
-                    {value: 45, name: 'Light Work', itemStyle: {color: '#1abc9c'}},
-                    {value: 25, name: 'Heavy Work', itemStyle: {color: '#f39c12'}},
-                    {value: 18, name: 'Hazardous', itemStyle: {color: '#e74c3c'}},
-                    {value: 12, name: 'Domestic', itemStyle: {color: '#3498db'}}
+                    {value: dashboardData.workTypes.light_work, name: 'Light Work', itemStyle: {color: '#1abc9c'}},
+                    {value: dashboardData.workTypes.heavy_work, name: 'Heavy Work', itemStyle: {color: '#f39c12'}},
+                    {value: dashboardData.workTypes.hazardous, name: 'Hazardous', itemStyle: {color: '#e74c3c'}},
+                    {value: dashboardData.workTypes.domestic, name: 'Domestic', itemStyle: {color: '#3498db'}}
                 ]
             }]
         };
@@ -1361,6 +1068,10 @@
 
     function initAgeDistributionChart() {
         ageDistributionChart = echarts.init(document.getElementById('age-distribution-chart'));
+        
+        const ages = Object.keys(dashboardData.ageDistribution);
+        const counts = Object.values(dashboardData.ageDistribution);
+        
         const option = {
             tooltip: {
                 trigger: 'axis',
@@ -1376,7 +1087,7 @@
             },
             xAxis: {
                 type: 'category',
-                data: ['5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17']
+                data: ages
             },
             yAxis: {
                 type: 'value',
@@ -1385,7 +1096,7 @@
             series: [{
                 name: 'Children',
                 type: 'bar',
-                data: [85, 78, 92, 88, 142, 135, 148, 156, 143, 125, 118, 95, 77],
+                data: counts,
                 itemStyle: {
                     color: '#3498db'
                 }
@@ -1396,6 +1107,11 @@
 
     function initGenderRegionChart() {
         genderRegionChart = echarts.init(document.getElementById('gender-region-chart'));
+        
+        const regions = Object.keys(dashboardData.genderRegionData);
+        const maleData = regions.map(region => dashboardData.genderRegionData[region].male);
+        const femaleData = regions.map(region => dashboardData.genderRegionData[region].female);
+        
         const option = {
             tooltip: {
                 trigger: 'axis'
@@ -1405,7 +1121,7 @@
             },
             xAxis: {
                 type: 'category',
-                data: ['Western', 'Ashanti', 'Eastern', 'Central', 'Volta']
+                data: regions
             },
             yAxis: {
                 type: 'value',
@@ -1415,13 +1131,13 @@
                 {
                     name: 'Boys',
                     type: 'bar',
-                    data: [320, 302, 341, 374, 290],
+                    data: maleData,
                     itemStyle: {color: '#3498db'}
                 },
                 {
                     name: 'Girls',
                     type: 'bar',
-                    data: [220, 182, 191, 234, 190],
+                    data: femaleData,
                     itemStyle: {color: '#e83e8c'}
                 }
             ]
@@ -1431,13 +1147,17 @@
 
     function initSchoolAttendanceChart() {
         schoolAttendanceChart = echarts.init(document.getElementById('school-attendance-chart'));
+        
+        const ageGroups = Object.keys(dashboardData.schoolAttendance);
+        const attendanceRates = Object.values(dashboardData.schoolAttendance);
+        
         const option = {
             tooltip: {
                 trigger: 'axis'
             },
             xAxis: {
                 type: 'category',
-                data: ['5-9', '10-12', '13-15', '16-17']
+                data: ageGroups
             },
             yAxis: {
                 type: 'value',
@@ -1446,7 +1166,7 @@
             series: [{
                 name: 'Attendance Rate',
                 type: 'line',
-                data: [98, 92, 78, 65],
+                data: attendanceRates,
                 smooth: true,
                 lineStyle: {
                     width: 3,
@@ -1462,6 +1182,7 @@
 
     function initLiteracyLevelsChart() {
         literacyLevelsChart = echarts.init(document.getElementById('literacy-levels-chart'));
+        
         const option = {
             tooltip: {
                 trigger: 'axis'
@@ -1477,7 +1198,12 @@
             series: [{
                 name: 'Literacy Levels',
                 type: 'bar',
-                data: [45, 30, 15, 10],
+                data: [
+                    dashboardData.literacyLevels.basic,
+                    dashboardData.literacyLevels.intermediate,
+                    dashboardData.literacyLevels.advanced,
+                    dashboardData.literacyLevels.illiterate
+                ],
                 itemStyle: {
                     color: function(params) {
                         var colorList = ['#1abc9c', '#3498db', '#9b59b6', '#e74c3c'];
@@ -1491,13 +1217,17 @@
 
     function initWorkHoursChart() {
         workHoursChart = echarts.init(document.getElementById('work-hours-chart'));
+        
+        const ageGroups = Object.keys(dashboardData.workHoursByAge);
+        const workHours = Object.values(dashboardData.workHoursByAge);
+        
         const option = {
             tooltip: {
                 trigger: 'axis'
             },
             xAxis: {
                 type: 'category',
-                data: ['5-9', '10-12', '13-15', '16-17']
+                data: ageGroups
             },
             yAxis: {
                 type: 'value',
@@ -1506,7 +1236,7 @@
             series: [{
                 name: 'Work Hours',
                 type: 'bar',
-                data: [5, 12, 18, 25],
+                data: workHours,
                 itemStyle: {
                     color: '#f39c12'
                 }
@@ -1517,6 +1247,10 @@
 
     function initTaskTypesChart() {
         taskTypesChart = echarts.init(document.getElementById('task-types-chart'));
+        
+        const taskNames = Object.keys(dashboardData.taskTypes);
+        const taskCounts = Object.values(dashboardData.taskTypes);
+        
         const option = {
             tooltip: {
                 trigger: 'item',
@@ -1531,13 +1265,11 @@
                 name: 'Task Types',
                 type: 'pie',
                 radius: '70%',
-                data: [
-                    {value: 35, name: 'Harvesting', itemStyle: {color: '#1abc9c'}},
-                    {value: 25, name: 'Weeding', itemStyle: {color: '#3498db'}},
-                    {value: 20, name: 'Processing', itemStyle: {color: '#9b59b6'}},
-                    {value: 15, name: 'Transport', itemStyle: {color: '#f39c12'}},
-                    {value: 5, name: 'Other', itemStyle: {color: '#e74c3c'}}
-                ]
+                data: taskNames.map((name, index) => ({
+                    value: taskCounts[index],
+                    name: name,
+                    itemStyle: { color: getRandomColor(index) }
+                }))
             }]
         };
         taskTypesChart.setOption(option);
@@ -1545,6 +1277,7 @@
 
     function initRiskCorrelationChart() {
         riskCorrelationChart = echarts.init(document.getElementById('risk-correlation-chart'));
+        
         const option = {
             tooltip: {
                 trigger: 'axis'
@@ -1563,19 +1296,15 @@
                 type: 'radar',
                 data: [
                     {
-                        value: [85, 92, 78, 90, 65],
-                        name: 'High Risk',
+                        value: [
+                            dashboardData.riskCorrelation.poverty,
+                            dashboardData.riskCorrelation.education,
+                            dashboardData.riskCorrelation.family_size,
+                            dashboardData.riskCorrelation.work_hours,
+                            dashboardData.riskCorrelation.region
+                        ],
+                        name: 'Risk Factors',
                         itemStyle: {color: '#e74c3c'}
-                    },
-                    {
-                        value: [45, 60, 40, 35, 50],
-                        name: 'Medium Risk',
-                        itemStyle: {color: '#f39c12'}
-                    },
-                    {
-                        value: [20, 30, 25, 15, 20],
-                        name: 'Low Risk',
-                        itemStyle: {color: '#1abc9c'}
                     }
                 ]
             }]
@@ -1585,12 +1314,10 @@
 
     function initInterventionEffectivenessDetailedChart() {
         interventionEffectivenessDetailedChart = echarts.init(document.getElementById('intervention-effectiveness-detailed-chart'));
+        
         const option = {
             tooltip: {
                 trigger: 'axis'
-            },
-            legend: {
-                data: ['Educational Support', 'Family Assistance', 'Community Programs', 'Policy Changes']
             },
             xAxis: {
                 type: 'category',
@@ -1600,40 +1327,14 @@
                 type: 'value',
                 name: 'Success Rate (%)'
             },
-            series: [
-                {
-                    name: 'Educational Support',
-                    type: 'line',
-                    data: [65, 70, 75, 82],
-                    smooth: true,
-                    lineStyle: {color: '#1abc9c'},
-                    itemStyle: {color: '#1abc9c'}
-                },
-                {
-                    name: 'Family Assistance',
-                    type: 'line',
-                    data: [60, 68, 72, 78],
-                    smooth: true,
-                    lineStyle: {color: '#3498db'},
-                    itemStyle: {color: '#3498db'}
-                },
-                {
-                    name: 'Community Programs',
-                    type: 'line',
-                    data: [55, 62, 68, 75],
-                    smooth: true,
-                    lineStyle: {color: '#9b59b6'},
-                    itemStyle: {color: '#9b59b6'}
-                },
-                {
-                    name: 'Policy Changes',
-                    type: 'line',
-                    data: [50, 58, 65, 72],
-                    smooth: true,
-                    lineStyle: {color: '#f39c12'},
-                    itemStyle: {color: '#f39c12'}
-                }
-            ]
+            series: [{
+                name: 'Intervention Effectiveness',
+                type: 'line',
+                data: [65, 70, 75, dashboardData.effectivenessRate],
+                smooth: true,
+                lineStyle: {color: '#1abc9c'},
+                itemStyle: {color: '#1abc9c'}
+            }]
         };
         interventionEffectivenessDetailedChart.setOption(option);
     }
@@ -1642,48 +1343,26 @@
         // In a real application, you would fetch new data based on the period
         console.log('Updating charts for period:', period);
         
-        // Simulate data change
-        if (period === 'quarterly') {
-            laborTrendChart.setOption({
-                xAxis: {
-                    data: ['Q1', 'Q2', 'Q3', 'Q4']
-                },
-                series: [
-                    { data: [138, 156, 173, 195] },
-                    { data: [125, 143, 165, 187] },
-                    { data: [85, 95, 110, 125] },
-                    { data: [55, 65, 75, 90] },
-                    { data: [101, 115, 128, 145] }
-                ]
-            });
-        } else if (period === 'yearly') {
-            laborTrendChart.setOption({
-                xAxis: {
-                    data: ['2020', '2021', '2022', '2023']
-                },
-                series: [
-                    { data: [520, 580, 622, 662] },
-                    { data: [480, 520, 580, 620] },
-                    { data: [320, 350, 390, 415] },
-                    { data: [210, 240, 275, 285] },
-                    { data: [382, 422, 466, 495] }
-                ]
-            });
-        } else {
-            // Monthly
-            laborTrendChart.setOption({
-                xAxis: {
-                    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                },
-                series: [
-                    { data: [45, 38, 55, 48, 56, 52, 61, 58, 54, 60, 65, 70] },
-                    { data: [35, 42, 38, 45, 50, 48, 52, 55, 58, 62, 60, 65] },
-                    { data: [25, 30, 28, 32, 35, 40, 38, 42, 45, 48, 50, 52] },
-                    { data: [15, 18, 20, 22, 25, 28, 30, 32, 35, 38, 40, 42] },
-                    { data: [30, 32, 35, 37, 42, 42, 45, 47, 48, 52, 54, 57] }
-                ]
-            });
+        // For now, we'll just reload the page with the new period parameter
+        let urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('timeFilter', period);
+        window.location.search = urlParams.toString();
+    }
+
+    // Helper function to generate random colors
+    function getRandomColor(index = null) {
+        const colors = [
+            '#3bafda', '#1abc9c', '#f7b84b', '#e83e8c', '#6c757d',
+            '#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#95a5a6',
+            '#9b59b6', '#16a085', '#27ae60', '#d35400', '#c0392b'
+        ];
+        
+        if (index !== null) {
+            return colors[index % colors.length];
         }
+        
+        return colors[Math.floor(Math.random() * colors.length)];
     }
 </script>
+
 {% endblock %}

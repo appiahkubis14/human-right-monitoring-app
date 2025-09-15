@@ -5,6 +5,8 @@ from django.forms import ValidationError
 from multiselectfield import MultiSelectField
 from datetime import datetime
 from django.contrib.auth import get_user_model
+
+from portal.validators import FlexibleIntegerValidator
 from .utils import *
 #group
 from django.contrib.auth.models import Group
@@ -368,7 +370,8 @@ class schhoolTbl(timeStamp):
         return f"{self.name}"
     
     
-####pass#########################################################################
+
+#############################################################################
 #Household Survey
 #################################################################################
 
@@ -380,7 +383,8 @@ class houseHoldTbl(timeStamp):
     gps_point = models.CharField(max_length=100,verbose_name="GPS Point of the Household", blank=True, null=True)
     community_type = models.CharField( max_length=20, choices=COMMUNITY_CHOICES, verbose_name="Type of Community", blank=True, null=True)
     farmer_resides_in_community = models.CharField(null=False,blank=False,choices=YES_OR_NO ,verbose_name="Does the farmer reside in the community stated on the cover?",help_text="Does the farmer reside in the community stated on the cover?")
-
+    latitude = models.CharField(max_length=100,blank=True, null=True)
+    longitude = models.CharField(max_length=100,blank=True, null=True)
     # If No, provide the name of the community the farmer resides in.
     # This field expects capital letters and numbers only.
    
@@ -391,7 +395,7 @@ class houseHoldTbl(timeStamp):
     # Who is available to answer for the farmer?
     available_answer_by = models.CharField(max_length=20,choices=ANSWER_BY_CHOICES,blank=True,help_text="Who is available to answer for the farmer?")    
     refusal_toa_participate_reason_survey = models.CharField(max_length=500,blank=True,help_text="If the farmer refused to participate, provide the reason here." )
-   
+    
     total_adults = models.PositiveIntegerField(verbose_name="Total number of adults in the household (producer/manager/owner not included)",help_text="Household means people that dwell under the same roof and share the same meal.",validators=[MinValueValidator(1)])
     is_name_correct = models.CharField(choices = CORRECT_RESPONSE_PROVIDED,verbose_name="Is the name of the respondent correct?",help_text="If 'No', please fill in the exact name and surname of the producer.")
     exact_name = models.CharField(max_length=200,blank=True,validators=[allowed_chars_validator],help_text="Exact name and surname of the producer (if respondent name is incorrect).")
@@ -465,11 +469,10 @@ class houseHoldTbl(timeStamp):
 class AdultHouseholdMember(timeStamp):
 
     houseHold = models.ForeignKey('houseHoldTbl', on_delete=models.CASCADE, related_name="members")
-
     full_name = models.CharField(max_length=200, verbose_name="Full Name", help_text="Enter full name without special characters.",validators=[name_validator])
     relationship = models.CharField(max_length=50,choices=RELATIONSHIP_CHOICES,verbose_name="Relationship to the respondent")
     relationship_other = models.CharField(max_length=100,blank=True,verbose_name="Specify relationship (if Other)",help_text="If 'Other' is selected, please specify.")
-    gender = models.CharField(max_length=6,choices=GENDER_CHOICES,verbose_name="Gender")
+    gender = models.CharField(max_length=20,choices=GENDER_CHOICES,verbose_name="Gender")
     nationality = models.CharField(max_length=20,choices=NATIONALITY_CHOICES,verbose_name="Nationality")
     country_origin = models.CharField(max_length=50,choices=COUNTRY_ORIGIN_CHOICES,blank=True,verbose_name="Country of origin (if Non Ghanaian)")
     country_origin_other = models.CharField(max_length=100,blank=True,verbose_name="Specify country of origin (if Other)")
@@ -477,108 +480,123 @@ class AdultHouseholdMember(timeStamp):
     birth_certificate = models.CharField( max_length=3, choices=BIRTH_CERTIFICATE_CHOICES,verbose_name="Does this member have a birth certificate?")
     main_work = models.CharField( max_length=30, choices=MAIN_WORK_CHOICES, verbose_name="Main work/occupation")
     main_work_other = models.CharField(max_length=100,blank=True,verbose_name="Specify main work (if Other)",help_text="If 'Other' is selected, please specify." )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):
-        return f"{self.full_name} (Household {self.household.id})"
+        return f"{self.full_name} (Household {self.houseHold.id})"
+    
+
 
     #################################################################################
     # CHILDREN IN THE RESPONDENT'S HOUSEHOLD MODEL
     #################################################################################
 
 
-
 class ChildInHouseholdTbl(timeStamp):
-       # Gender choices
     houseHold = models.ForeignKey('houseHoldTbl', on_delete=models.CASCADE, related_name='children')
 
-    child_declared_in_cover = models.CharField(choices=YES_NO_CHOICES,verbose_name="Is the child among those declared in the cover as the farmer's child?",help_text="Yes if the child is already listed in the cover; No otherwise.")
-    child_identifier = models.PositiveSmallIntegerField(verbose_name="Child identifier",validators=[MinValueValidator(1), MaxValueValidator(19)],help_text="Enter the number attached to the child's name in the cover (must be less than 20).")
-    child_can_be_surveyed = models.CharField(choices=YES_NO_CHOICES,verbose_name="Can the child be surveyed now?",help_text="Answer Yes if the child is available for survey; No otherwise.")
-    child_unavailability_reason = models.CharField(max_length=20,choices=CHILD_UNAVAILABILITY_REASON_CHOICES,blank=True,verbose_name="Reason for child not being surveyed",help_text="Select the reason if the child cannot be surveyed.")
-    child_not_avail = models.CharField(max_length=200,blank=True,  verbose_name="Other reasons (in capital letters) for child not being available", help_text="Provide reasons in capital letters. (Minimum length can be validated separately.)")
-    who_answers_child_unavailable = models.CharField(max_length=20,choices=WHO_ANSWERS_CHOICES,blank=True,verbose_name="Who is answering for the child (if not available)")
-    who_answers_child_unavailable_other = models.CharField(max_length=100,blank=True,verbose_name="Specify who is answering (if Other is selected)")
-    child_first_name = models.CharField(max_length=100,validators=[words_validator],verbose_name="Child's First Name")
-    child_surname = models.CharField(max_length=100,validators=[words_validator],verbose_name="Child's Surname" )
-    child_gender = models.CharField(max_length=4,choices=GENDER_CHOICES,verbose_name="Gender of the Child")
-    child_year_birth = models.IntegerField(verbose_name="Year of Birth of the Child",validators=[MinValueValidator(2007), MaxValueValidator(2020)],help_text="The year must be between 2007 and 2020 (child must be between 5 and 17 years old).")
-    child_birth_certificate = models.CharField(max_length=3,choices=BIRTH_CERTIFICATE_CHOICES,verbose_name="Does the child have a birth certificate?")
-    child_birth_certificate_reason = models.CharField(max_length=200,blank=True,verbose_name="If no, please specify why",help_text="Provide a reason if the child does not have a birth certificate.")
+    child_declared_in_cover = models.CharField(max_length=3, choices=YES_NO_CHOICES, verbose_name="Is the child among those declared in the cover as the farmer's child?", help_text="Yes if the child is already listed in the cover; No otherwise.")
+    child_identifier = models.PositiveSmallIntegerField(verbose_name="Child identifier", help_text="Enter the number attached to the child's name in the cover (must be less than 20).")
+    child_can_be_surveyed = models.CharField(max_length=3, choices=YES_NO_CHOICES, verbose_name="Can the child be surveyed now?", help_text="Answer Yes if the child is available for survey; No otherwise.")
+    child_unavailability_reason = models.CharField(max_length=20, choices=CHILD_UNAVAILABILITY_REASON_CHOICES, null=True, blank=True, verbose_name="Reason for child not being surveyed", help_text="Select the reason if the child cannot be surveyed.")
+    child_not_avail = models.CharField(max_length=200, null=True, blank=True, verbose_name="Other reasons (in capital letters) for child not being available", help_text="Provide reasons in capital letters.")
+    who_answers_child_unavailable = models.CharField(max_length=20, choices=WHO_ANSWERS_CHOICES, null=True, blank=True, verbose_name="Who is answering for the child (if not available)")
+    who_answers_child_unavailable_other = models.CharField(max_length=100, null=True, blank=True, verbose_name="Specify who is answering (if Other is selected)")
+    child_first_name = models.CharField(max_length=100, validators=[words_validator], verbose_name="Child's First Name")
+    child_surname = models.CharField(max_length=100, validators=[words_validator], verbose_name="Child's Surname")
+    child_gender = models.CharField(max_length=4, choices=GENDER_CHOICES, verbose_name="Gender of the Child")
+    child_year_birth = models.IntegerField(verbose_name="Year of Birth of the Child", help_text="The year must be between 2007 and 2020 (child must be between 5 and 17 years old).")
+    child_birth_certificate = models.CharField(max_length=3, choices=BIRTH_CERTIFICATE_CHOICES, verbose_name="Does the child have a birth certificate?")
+    child_birth_certificate_reason = models.CharField(max_length=200, null=True, blank=True, verbose_name="If no, please specify why", help_text="Provide a reason if the child does not have a birth certificate.")
     
     child_born_in_community = models.CharField(max_length=20, choices=CHILD_BORN_CHOICES, verbose_name="Is the child born in this community?", help_text="Select an option.")  
-    child_country_of_birth = models.CharField(max_length=20, choices=COUNTRY_OF_BIRTH_CHOICES, blank=True, verbose_name="In which country is the child born?", help_text="Provide this only if 'No, born in another country' is selected.")  
-    child_country_of_birth_other = models.CharField(max_length=100, blank=True, verbose_name="Specify country of birth (if Other)", help_text="Use capital letters without special characters.", validators=[capital_letters_numbers_validator])  
+    child_country_of_birth = models.CharField(max_length=20, choices=COUNTRY_OF_BIRTH_CHOICES, null=True, blank=True, verbose_name="In which country is the child born?", help_text="Provide this only if 'No, born in another country' is selected.")  
+    child_country_of_birth_other = models.CharField(max_length=100, null=True, blank=True, verbose_name="Specify country of birth (if Other)", help_text="Use capital letters without special characters.", validators=[capital_letters_numbers_validator])  
     child_relationship_to_head = models.CharField(max_length=50, choices=CHILD_RELATIONSHIP_CHOICES, verbose_name="Relationship of the child to the head of the household")  
-    child_relationship_to_head_other = models.CharField(max_length=100, blank=True, verbose_name="Specify relationship (if Other)", help_text="Write in capital letters without special characters.", validators=[capital_letters_numbers_validator])  
-    child_not_live_with_family_reason = models.CharField(max_length=50, choices=CHILD_NOT_LIVE_REASONS, blank=True, verbose_name="Why does the child not live with his/her family?")  
-    child_not_live_with_family_reason_other = models.CharField(max_length=200, blank=True, verbose_name="Other reason (if Other is selected)")  
+    child_relationship_to_head_other = models.CharField(max_length=100, null=True, blank=True, verbose_name="Specify relationship (if Other)", help_text="Write in capital letters without special characters.", validators=[capital_letters_numbers_validator])  
+    child_not_live_with_family_reason = models.CharField(max_length=50, choices=CHILD_NOT_LIVE_REASONS, null=True, blank=True, verbose_name="Why does the child not live with his/her family?")  
+    child_not_live_with_family_reason_other = models.CharField(max_length=200, null=True, blank=True, verbose_name="Other reason (if Other is selected)")  
     child_decision_maker = models.CharField(max_length=30, choices=CHILD_DECISION_MAKER_CHOICES, verbose_name="Who decided that the child comes into the household?")  
-    child_decision_maker_other = models.CharField(max_length=100, blank=True, verbose_name="Specify decision maker (if Other is selected)")  
+    child_decision_maker_other = models.CharField(max_length=100, null=True, blank=True, verbose_name="Specify decision maker (if Other is selected)")  
     child_agree_with_decision = models.CharField(max_length=3, choices=YES_NO_CHOICES, verbose_name="Did the child agree with this decision?")  
     child_seen_parents = models.CharField(max_length=3, choices=YES_NO_CHOICES, verbose_name="Has the child seen and/or spoken with his/her parents in the past year?")  
     child_last_seen_parent = models.CharField(max_length=20, choices=LAST_SEEN_CHOICES, verbose_name="When was the last time the child saw/talked with a parent?")  
     child_living_duration = models.CharField(max_length=20, choices=LIVING_DURATION_CHOICES, verbose_name="For how long has the child been living in the household?")  
     child_accompanied_by = models.CharField(max_length=20, choices=CHILD_ACCOMPANIED_CHOICES, verbose_name="Who accompanied the child to come here?")  
-    child_accompanied_by_other = models.CharField(max_length=100, blank=True, verbose_name="Specify accompaniment (if Other is selected)")  
+    child_accompanied_by_other = models.CharField(max_length=100, null=True, blank=True, verbose_name="Specify accompaniment (if Other is selected)")  
 
-    ############################################
-    # ChildEducationDetails Model   
-    ############################################
-    # Model fields
+    # ChildEducationDetails
     child_father_location = models.CharField(max_length=50, choices=FATHER_LOCATION_CHOICES, null=True, blank=True, help_text="Where does the child's father live?")
     child_father_country = models.CharField(max_length=50, choices=COUNTRY_CHOICES, null=True, blank=True, help_text="Father's country of residence.")
     child_father_country_other = models.CharField(max_length=100, null=True, blank=True, help_text="If 'Other' is selected, specify the country (in capital letters).")
     child_mother_location = models.CharField(max_length=50, choices=FATHER_LOCATION_CHOICES, null=True, blank=True, help_text="Where does the child's mother live?")
     child_mother_country = models.CharField(max_length=50, choices=COUNTRY_CHOICES, null=True, blank=True, help_text="Mother's country of residence.")
     child_mother_country_other = models.CharField(max_length=100, null=True, blank=True, help_text="If 'Other' is selected, specify the country (in capital letters).")
-    child_educated = models.IntegerField(choices=EDUCATION_STATUS_CHOICES, help_text="Is the child currently enrolled in school? (1 = Yes, 0 = No)")
+    
+    # Convert these to CharField to handle string inputs
+    child_educated = models.CharField(max_length=3, choices=YES_NO_CHOICES, null=True, blank=True, help_text="Is the child currently enrolled in school?")
     child_school_name = models.CharField(max_length=200, null=True, blank=True, help_text="Name of the school (if enrolled).")
     school_type = models.CharField(max_length=20, choices=SCHOOL_TYPE_CHOICES, null=True, blank=True, help_text="Is the school public or private?")
     child_grade = models.CharField(max_length=10, choices=GRADE_CHOICES, null=True, blank=True, help_text="What grade is the child enrolled in?")
-    sch_going_times = models.IntegerField(choices=SCHOOL_GOING_TIMES_CHOICES, null=True, blank=True, help_text="How many times does the child go to school in a week?")
+    sch_going_times = models.CharField(max_length=10, choices=SCHOOL_GOING_TIMES_CHOICES, null=True, blank=True, help_text="How many times does the child go to school in a week?")
     basic_need_available = models.CharField(max_length=100, null=True, blank=True, help_text="Comma-separated basic needs available (e.g., books, bag, pen, uniform, shoes, none).")
-    child_schl2 = models.IntegerField(choices=SCHL2_CHOICES, null=True, blank=True, help_text="Has the child ever been to school (if not currently enrolled)?")
+    child_schl2 = models.CharField(max_length=3, choices=YES_NO_CHOICES, null=True, blank=True, help_text="Has the child ever been to school (if not currently enrolled)?")
     child_schl_left_age = models.IntegerField(null=True, blank=True, help_text="Which year did the child leave school? (Or the age at which they left)")
 
-    #################################################################################
-    # CHILD EDUCATIONAL ASSESSMENT MODEL
-    #################################################################################
-  
-    calculation_response = models.CharField(max_length=20,choices=CALCULATION_RESPONSE_CHOICES,help_text="Response to the calculation task.")
-    reading_response = models.CharField(max_length=20,choices=READING_RESPONSE_CHOICES,help_text="Response to the reading task.")
-    writing_response = models.CharField(max_length=20,choices=WRITING_RESPONSE_CHOICES,help_text="Response to the writing task.")
-    education_level = models.CharField(max_length=30,choices=EDUCATION_LEVEL_CHOICES,help_text="What is the education level of the child?")
-    child_schl_left_why = models.CharField(max_length=20,choices=SCHOOL_LEFT_REASON_CHOICES,null=True,blank=True,help_text="What is the main reason for the child leaving school?")
-    child_schl_left_why_other = models.CharField(max_length=200,null=True,blank=True,help_text="Specify the reason if 'Other' is selected.")
-    child_why_no_school = models.CharField(max_length=20,choices=NEVER_SCHOOL_REASON_CHOICES,null=True,blank=True,help_text="Why has the child never been to school?")
-    child_why_no_school_other = models.CharField(max_length=200,null=True,blank=True,help_text="Specify the reason if 'Other' is selected.")
-    child_school_7days = models.CharField(max_length=3, choices=SCHOOL_7DAYS_CHOICES, null=True,blank=True,help_text="Has the child been to school in the past 7 days?")
-    child_school_absence_reason = models.CharField(max_length=20,choices=SCHOOL_ABSENCE_REASON_CHOICES,null=True,blank=True,help_text="If not, why has the child not been to school?")
-    child_school_absence_reason_other = models.CharField(max_length=200,null=True,blank=True,help_text="Specify the reason if 'Other' is selected.")
-    missed_school = models.CharField( max_length=3,choices=MISSED_SCHOOL_CHOICES,help_text="Has the child missed school days in the past 7 days? (Mandatory if basic_need_available is not null)")
-    missed_school_reason = models.CharField(max_length=20,choices=MISSED_SCHOOL_REASON_CHOICES,null=True,blank=True,help_text="Why did the child miss school? (Only applicable if missed_school is 'yes')")
-    missed_school_reason_other = models.CharField(max_length=200,null=True,blank=True,help_text="If 'Other' is selected for why the child missed school, please specify.")
-    work_in_house = models.CharField(max_length=3,choices=WORK_IN_HOUSE_CHOICES,help_text="In the past 7 days, has the child worked in the house? (Mandatory if child_educated is not null)")
-    work_on_cocoa = models.CharField(max_length=3,choices=WORK_ON_COCOA_CHOICES,help_text="In the past 7 days, has the child been working on the cocoa farm? (Mandatory if child_work_house is not null)")
-    work_frequency = models.CharField(max_length=10,choices=WORK_FREQUENCY_CHOICES,null=True,blank=True ,help_text="How often has the child worked in the past 7 days? (Mandatory if work_in_house or work_on_cocoa is 'yes')")
-    observed_work = models.CharField(max_length=3, choices=OBSERVED_WORK_CHOICES, null=True, blank=True, help_text="Did the enumerator observe the child working in a real situation? (Only applicable if work_in_house is 'yes')")
-    # performed_tasks = models.CharField(max_length=500,null=True,blank=True,help_text="Which of these tasks has the child performed in the last 7 days? ""If multiple, separate using commas.")
-    # Alternatively, if you install and use django-multiselectfield, you might do:
-    performed_tasks = MultiSelectField(choices=TASK_CHOICES, max_length=500, help_text="Select tasks performed in the last 7 days")
+    # ChildEducationalAssessment
+    calculation_response = models.CharField(max_length=20, choices=CALCULATION_RESPONSE_CHOICES, null=True, blank=True, help_text="Response to the calculation task.")
+    reading_response = models.CharField(max_length=20, choices=READING_RESPONSE_CHOICES, null=True, blank=True, help_text="Response to the reading task.")
+    writing_response = models.CharField(max_length=20, choices=WRITING_RESPONSE_CHOICES, null=True, blank=True, help_text="Response to the writing task.")
+    education_level = models.CharField(max_length=30, choices=EDUCATION_LEVEL_CHOICES, null=True, blank=True, help_text="What is the education level of the child?")
+    child_schl_left_why = models.CharField(max_length=20, choices=SCHOOL_LEFT_REASON_CHOICES, null=True, blank=True, help_text="What is the main reason for the child leaving school?")
+    child_schl_left_why_other = models.CharField(max_length=200, null=True, blank=True, help_text="Specify the reason if 'Other' is selected.")
+    child_why_no_school = models.CharField(max_length=20, choices=NEVER_SCHOOL_REASON_CHOICES, null=True, blank=True, help_text="Why has the child never been to school?")
+    child_why_no_school_other = models.CharField(max_length=200, null=True, blank=True, help_text="Specify the reason if 'Other' is selected.")
+    child_school_7days = models.CharField(max_length=3, choices=SCHOOL_7DAYS_CHOICES, null=True, blank=True, help_text="Has the child been to school in the past 7 days?")
+    child_school_absence_reason = models.CharField(max_length=20, choices=SCHOOL_ABSENCE_REASON_CHOICES, null=True, blank=True, help_text="If not, why has the child not been to school?")
+    child_school_absence_reason_other = models.CharField(max_length=200, null=True, blank=True, help_text="Specify the reason if 'Other' is selected.")
+    missed_school = models.CharField(max_length=3, choices=MISSED_SCHOOL_CHOICES, null=True, blank=True, help_text="Has the child missed school days in the past 7 days?")
+    missed_school_reason = models.CharField(max_length=20, choices=MISSED_SCHOOL_REASON_CHOICES, null=True, blank=True, help_text="Why did the child miss school? (Only applicable if missed_school is 'yes')")
+    missed_school_reason_other = models.CharField(max_length=200, null=True, blank=True, help_text="If 'Other' is selected for why the child missed school, please specify.")
+    work_in_house = models.CharField(max_length=3, choices=WORK_IN_HOUSE_CHOICES, null=True, blank=True, help_text="In the past 7 days, has the child worked in the house?")
+    work_on_cocoa = models.CharField(max_length=3, choices=WORK_ON_COCOA_CHOICES, null=True, blank=True, help_text="In the past 7 days, has the child been working on the cocoa farm?")
+    work_frequency = models.CharField(max_length=10, choices=WORK_FREQUENCY_CHOICES, null=True, blank=True, help_text="How often has the child worked in the past 7 days?")
+    observed_work = models.CharField(max_length=3, choices=OBSERVED_WORK_CHOICES, null=True, blank=True, help_text="Did the enumerator observe the child working in a real situation?")
+    
+    performed_tasks = MultiSelectField(choices=TASK_CHOICES, max_choices=20, max_length=500, null=True, blank=True, help_text="Select tasks performed in the last 7 days")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    def __str__(self):
+        return f"{self.child_first_name} {self.child_surname} (Household {self.houseHold.id})"
+
+    def save(self, *args, **kwargs):
+        # Convert string values to appropriate types before saving
+        if isinstance(self.child_identifier, str) and self.child_identifier.isdigit():
+            self.child_identifier = int(self.child_identifier)
+        
+        if isinstance(self.child_year_birth, str) and self.child_year_birth.isdigit():
+            self.child_year_birth = int(self.child_year_birth)
+        
+        if isinstance(self.child_schl_left_age, str) and self.child_schl_left_age.isdigit():
+            self.child_schl_left_age = int(self.child_schl_left_age)
+        
+        super().save(*args, **kwargs)
 
 
 
 class lightTaskTbl(timeStamp):
    name = models.CharField(max_length=100)
+   created_at = models.DateTimeField(auto_now=True)
+   updated_at = models.DateTimeField(auto_now=True)
    
 
 class heavyTaskTbl(timeStamp):
-   name = models.CharField(max_length=100)
-
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class childLightTaskTbl(timeStamp):
     task = models.ForeignKey('lightTaskTbl', on_delete=models.CASCADE)
@@ -1051,7 +1069,385 @@ class RiskAssessmentHistory(timeStamp):
 
 
 
-
-
 ###################################################################################################
+
+# models.py - Add these audit models
+class AuditStatus(timeStamp):
+    """
+    Description: Status options for audit checks (e.g., Pending, In Progress, Completed, Failed)
+    """
+    name = models.CharField(max_length=100, unique=True)
+    color = models.CharField(max_length=7, default='#6c757d')  # Hex color code
+    description = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name_plural = "Audit Statuses"
+
+
+class AuditType(timeStamp):
+    """
+    Description: Types of audit checks (e.g., Data Validation, Field Verification, Photo Verification)
+    """
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name_plural = "Audit Types"
+
+
+class AuditCheck(timeStamp):
+    """
+    Description: Main audit check model
+    """
+    AUDIT_METHODS = (
+        ('phone', 'Phone Call'),
+        ('field_visit', 'Field Visit'),
+        ('data_review', 'Data Review'),
+        ('photo_verification', 'Photo Verification'),
+        ('gps_verification', 'GPS Verification'),
+    )
+    
+    audit_id = models.CharField(max_length=20, unique=True, blank=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    audit_type = models.ForeignKey(AuditType, on_delete=models.CASCADE)
+    status = models.ForeignKey(AuditStatus, on_delete=models.CASCADE, default=1)  # Default to Pending
+    audit_method = models.CharField(max_length=20, choices=AUDIT_METHODS, default='data_review')
+    
+    # Relationships
+    household = models.ForeignKey('houseHoldTbl', on_delete=models.CASCADE, null=True, blank=True)
+    farmer = models.ForeignKey('farmerTbl', on_delete=models.CASCADE, null=True, blank=True)
+    child = models.ForeignKey('ChildInHouseholdTbl', on_delete=models.CASCADE, null=True, blank=True)
+    assigned_to = models.ForeignKey('staffTbl', on_delete=models.CASCADE, related_name='assigned_audits')
+    created_by = models.ForeignKey('staffTbl', on_delete=models.CASCADE, related_name='created_audits')
+    
+    # Dates
+    scheduled_date = models.DateTimeField()
+    completed_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)
+    
+    # Results
+    is_passed = models.BooleanField(default=False)
+    score = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    findings = models.TextField(blank=True, null=True)
+    recommendations = models.TextField(blank=True, null=True)
+    
+    # Flags
+    requires_follow_up = models.BooleanField(default=False)
+    is_high_priority = models.BooleanField(default=False)
+    is_random_selection = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.audit_id} - {self.title}"
+    
+    def save(self, *args, **kwargs):
+        if not self.audit_id:
+            self.audit_id = self.generate_audit_id()
+        super().save(*args, **kwargs)
+    
+    def generate_audit_id(self):
+        """
+        Generate audit ID in format AUD-YYYYMMDD-XXX
+        """
+        date_str = timezone.now().strftime('%Y%m%d')
+        last_audit = AuditCheck.objects.filter(audit_id__startswith=f'AUD-{date_str}').order_by('-audit_id').first()
+        
+        if last_audit:
+            try:
+                last_number = int(last_audit.audit_id.split('-')[-1])
+                next_number = last_number + 1
+            except (ValueError, IndexError):
+                next_number = 1
+        else:
+            next_number = 1
+        
+        return f"AUD-{date_str}-{next_number:03d}"
+    
+    @property
+    def is_overdue(self):
+        if self.due_date and self.status.name != 'Completed' and self.status.name != 'Failed':
+            return timezone.now() > self.due_date
+        return False
+    
+    @property
+    def days_remaining(self):
+        if self.due_date and not self.completed_date:
+            remaining = (self.due_date - timezone.now()).days
+            return max(0, remaining)
+        return 0
+    
+    class Meta:
+        verbose_name_plural = "Audit Checks"
+        ordering = ['-scheduled_date']
+
+
+class AuditFinding(timeStamp):
+    """
+    Description: Detailed findings from audit checks
+    """
+    SEVERITY_LEVELS = (
+        ('critical', 'Critical'),
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+        ('info', 'Informational'),
+    )
+    
+    audit = models.ForeignKey(AuditCheck, on_delete=models.CASCADE, related_name='audit_findings')
+    finding_type = models.CharField(max_length=100)
+    description = models.TextField()
+    severity = models.CharField(max_length=20, choices=SEVERITY_LEVELS, default='medium')
+    evidence = models.TextField(blank=True, null=True)
+    recommended_action = models.TextField(blank=True, null=True)
+    is_resolved = models.BooleanField(default=False)
+    resolved_date = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def __str__(self):
+        return f"Finding: {self.finding_type} - {self.audit.audit_id}"
+    
+    class Meta:
+        verbose_name_plural = "Audit Findings"
+
+
+class AuditAttachment(timeStamp):
+    """
+    Description: Attachments for audit checks (photos, documents, evidence)
+    """
+    audit = models.ForeignKey(AuditCheck, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to='audit_attachments/')
+    file_name = models.CharField(max_length=255)
+    file_type = models.CharField(max_length=50)
+    uploaded_by = models.ForeignKey('staffTbl', on_delete=models.CASCADE)
+    description = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.file_name
+    
+    class Meta:
+        verbose_name_plural = "Audit Attachments"
+
+
+class AuditHistory(timeStamp):
+    """
+    Description: History of audit status changes and updates
+    """
+    audit = models.ForeignKey(AuditCheck, on_delete=models.CASCADE, related_name='history')
+    previous_status = models.CharField(max_length=100)
+    new_status = models.CharField(max_length=100)
+    changed_by = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True)
+    change_reason = models.TextField(blank=True, null=True)
+    change_date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Status change: {self.previous_status} → {self.new_status}"
+    
+    class Meta:
+        verbose_name_plural = "Audit History"
+        ordering = ['-change_date']
+
+
+class AuditTemplate(timeStamp):
+    """
+    Description: Templates for different types of audit checks
+    """
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    audit_type = models.ForeignKey(AuditType, on_delete=models.CASCADE)
+    checklist_items = models.JSONField()  # Stores checklist items as JSON
+    scoring_criteria = models.JSONField()  # Stores scoring criteria as JSON
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name_plural = "Audit Templates"
+
+
+
+
+
+
+######################################################################################################################################################
+
+# models.py - Add these models for quality control
+
+class ValidationRule(timeStamp):
+    """
+    Description: Rules for validating household survey data
+    """
+    RULE_TYPES = (
+        ('completeness', 'Data Completeness'),
+        ('consistency', 'Data Consistency'),
+        ('range', 'Value Range Check'),
+        ('logic', 'Logical Validation'),
+        ('cross_field', 'Cross-field Validation'),
+    )
+    
+    SEVERITY_LEVELS = (
+        ('critical', 'Critical'),
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+    )
+    
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    rule_type = models.CharField(max_length=20, choices=RULE_TYPES)
+    severity = models.CharField(max_length=20, choices=SEVERITY_LEVELS)
+    field_name = models.CharField(max_length=100, blank=True, null=True)
+    validation_expression = models.TextField(help_text="Python expression or validation logic")
+    error_message = models.TextField()
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name_plural = "Validation Rules"
+
+
+class SurveyValidationResult(timeStamp):
+    """
+    Description: Results of validation checks for household surveys
+    """
+    VALIDATION_STATUS = (
+        ('pending', 'Pending Validation'),
+        ('passed', 'Validation Passed'),
+        ('failed', 'Validation Failed'),
+        ('requires_review', 'Requires Manual Review'),
+    )
+    
+    household_survey = models.ForeignKey('houseHoldTbl', on_delete=models.CASCADE, related_name='validation_results')
+    validation_rule = models.ForeignKey(ValidationRule, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=VALIDATION_STATUS, default='pending')
+    error_details = models.TextField(blank=True, null=True)
+    validated_by = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True, blank=True)
+    validated_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.household_survey} - {self.validation_rule}"
+    
+    class Meta:
+        verbose_name_plural = "Survey Validation Results"
+        unique_together = ('household_survey', 'validation_rule')
+
+
+class SurveyApproval(timeStamp):
+    """
+    Description: Approval status and comments for household surveys
+    """
+    APPROVAL_STATUS = (
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('requires_correction', 'Requires Correction'),
+    )
+    
+    household_survey = models.OneToOneField('houseHoldTbl', on_delete=models.CASCADE, related_name='approval')
+    status = models.CharField(max_length=20, choices=APPROVAL_STATUS, default='pending')
+    approved_by = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_surveys')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_surveys')
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    correction_required = models.BooleanField(default=False)
+    correction_details = models.TextField(blank=True, null=True)
+    correction_deadline = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.household_survey} - {self.status}"
+    
+    class Meta:
+        verbose_name_plural = "Survey Approvals"
+
+
+# class AuditCheck(timeStamp):
+#     """
+#     Description: Random audit checks for quality assurance
+#     """
+#     CHECK_TYPES = (
+#         ('random', 'Random Selection'),
+#         ('targeted', 'Targeted Check'),
+#         ('follow_up', 'Follow-up Check'),
+#     )
+    
+#     CHECK_STATUS = (
+#         ('scheduled', 'Scheduled'),
+#         ('in_progress', 'In Progress'),
+#         ('completed', 'Completed'),
+#         ('cancelled', 'Cancelled'),
+#     )
+    
+#     household_survey = models.ForeignKey('houseHoldTbl', on_delete=models.CASCADE, related_name='audit_checks')
+#     check_type = models.CharField(max_length=20, choices=CHECK_TYPES)
+#     status = models.CharField(max_length=20, choices=CHECK_STATUS, default='scheduled')
+#     scheduled_date = models.DateTimeField()
+#     completed_date = models.DateTimeField(null=True, blank=True)
+#     assigned_to = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_audits')
+#     conducted_by = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True, blank=True, related_name='conducted_audits')
+#     findings = models.TextField(blank=True, null=True)
+#     recommendations = models.TextField(blank=True, null=True)
+#     requires_follow_up = models.BooleanField(default=False)
+#     follow_up_details = models.TextField(blank=True, null=True)
+    
+#     def __str__(self):
+#         return f"Audit Check - {self.household_survey}"
+    
+#     class Meta:
+#         verbose_name_plural = "Audit Checks"
+
+
+class HighRiskCase(timeStamp):
+    """
+    Description: High-risk cases identified during validation
+    """
+    RISK_CATEGORIES = (
+        ('data_quality', 'Data Quality Issues'),
+        ('child_labor', 'Child Labor Indicators'),
+        ('forced_labor', 'Forced Labor Indicators'),
+        ('safety', 'Safety Concerns'),
+        ('ethical', 'Ethical Concerns'),
+    )
+    
+    PRIORITY_LEVELS = (
+        ('critical', 'Critical'),
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+    )
+    
+    household_survey = models.ForeignKey('houseHoldTbl', on_delete=models.CASCADE, related_name='high_risk_cases')
+    risk_category = models.CharField(max_length=20, choices=RISK_CATEGORIES)
+    priority = models.CharField(max_length=20, choices=PRIORITY_LEVELS)
+    description = models.TextField()
+    indicators = models.TextField(help_text="Specific indicators that triggered this risk case")
+    assigned_to = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True, blank=True)
+    due_date = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=(
+        ('open', 'Open'),
+        ('investigating', 'Under Investigation'),
+        ('resolved', 'Resolved'),
+        ('escalated', 'Escalated'),
+    ), default='open')
+    resolution = models.TextField(blank=True, null=True)
+    resolved_by = models.ForeignKey('staffTbl', on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_cases')
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"High Risk Case - {self.household_survey}"
+    
+    class Meta:
+        verbose_name_plural = "High Risk Cases"
+
+
+
 

@@ -20,7 +20,7 @@
 
     <!-- Vendor css -->
     <link href="/static/assets/css/vendor.min.css" rel="stylesheet" type="text/css" />
-
+    <link href="/static/assets/css/ChatBotWidget.css" rel="stylesheet" type="text/css" />
     <!-- App css -->
     <link href="/static/assets/css/app.min.css" rel="stylesheet" type="text/css" id="app-style" />
 
@@ -29,6 +29,7 @@
 
     <!-- Theme Config Js -->
     <script src="/static/assets/js/config.js"></script>
+    <!-- <script src="/static/assets/css/ChatBotWidget.css"></script> -->
 
     
 
@@ -155,7 +156,7 @@
             <div class="page-container">
                 <div class="row">
                     <div class="col-md-12 text-center">
-                        <script>document.write(new Date().getFullYear())</script> © Afari-Sense <span class="fw-semibold text-decoration-underline text-primary"></span>
+                        <script>document.write(new Date().getFullYear())</script> © Human Right Monitoring System (HRMS) <span class="fw-semibold text-decoration-underline text-primary"></span>
                     </div>
                 </div>
             </div>
@@ -249,6 +250,57 @@
         });
     });
     </script>
+    <!-- <script>
+    window.ChatBotConfig = {
+        apiUrl: 'http://localhost:8000',
+        theme: 'green',
+        position: 'bottom-right',
+        botName: 'AI Assistant',
+        welcomeMessage: "Hi! I'm your AI assistant. How can I help you today?",
+        enableSound: true,
+        showTypingIndicator: true
+    };
+</script>
+<script src="/static/assets/bot-js/chatbot-widget.js"></script> -->
+
+
+<!-- In your HTML template -->
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<script>
+    // Load configuration from your backend
+    document.addEventListener('DOMContentLoaded', function() {
+        const websiteId = '16def077-e5fe-4b40-abab-42a4cb2318da'; // Replace with actual website ID
+
+        fetch(`http://172.20.10.2:5000/api/config/${websiteId}/`)
+            .then(response => response.json())
+            .then(config => {
+                window.ChatBotConfig = config;
+                // Initialize the chatbot after config is loaded
+                if (typeof initChatBot === 'function') {
+                    console.log('Initializing chatbot with config:', config);
+                    initChatBot(config);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to load chatbot config:', error);
+                // Fallback to default config
+                window.ChatBotConfig = {
+                   apiUrl: 'http://172.20.10.2:5000',
+                    websiteId: '{{ website.id }}', 
+                    theme: 'green',
+                    position: 'bottom-right',
+                    botName: 'AI Assistant',
+                    websiteId: websiteId,
+                    // websiteId: '{{ website.id }}',
+                };
+                if (typeof initChatBot === 'function') {
+                    console.log('Initializing chatbot with default config:', window.ChatBotConfig);
+                    initChatBot(window.ChatBotConfig);
+                }
+            });
+    });
+</script>
+<script src="/static/assets/bot-js/chatbot-widget.js"></script>
 </body>
 
 </html>

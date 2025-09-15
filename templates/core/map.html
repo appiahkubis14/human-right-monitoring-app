@@ -1,0 +1,2554 @@
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <br>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    
+                    <div class="card-body">
+                        <!-- Filters Panel -->
+                        <div class="row mb-3" id="filtersPanel">
+                            <div class="col-md-2">
+                                <label class="form-label">Validation Status</label>
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="requires_correction">Requires Correction</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Risk Level</label>
+                                <select class="form-select" id="riskFilter">
+                                    <option value="">All Risk Levels</option>
+                                    <option value="no_risk">No Risk</option>
+                                    <option value="light_risk">Light Risk</option>
+                                    <option value="heavy_risk">Heavy Risk</option>
+                                    <option value="both_risk">Both Risks</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Enumerator</label>
+                                <select class="form-select" id="enumeratorFilter">
+                                    <option value="">All Enumerators</option>
+                                    <!-- Enumerators will be loaded via AJAX -->
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">District</label>
+                                <select class="form-select" id="districtFilter">
+                                    <option value="">All Districts</option>
+                                    <!-- Districts will be loaded via AJAX -->
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Date Range</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="dateFromFilter" placeholder="From">
+                                    <span class="input-group-text">to</span>
+                                    <input type="date" class="form-control" id="dateToFilter" placeholder="To">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Data Quality</label>
+                                <select class="form-select" id="qualityFilter">
+                                    <option value="">All Quality</option>
+                                    <option value="high">High Quality</option>
+                                    <option value="medium">Medium Quality</option>
+                                    <option value="low">Low Quality</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Statistics Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-2">
+                                <div class="card bg-primary-subtle border-primary-subtle text-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-muted small text-uppercase fw-bold">TOTAL SURVEYS</h6>
+                                        <h3 class="fw-bold text-primary" id="totalSurveys">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-success-subtle border-success-subtle text-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-muted small text-uppercase fw-bold">WITH COORDINATES</h6>
+                                        <h3 class="fw-bold text-success" id="withCoords">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-info-subtle border-info-subtle text-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-muted small text-uppercase fw-bold">COVERAGE</h6>
+                                        <h3 class="fw-bold text-info" id="coveragePercent">0%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-danger-subtle border-danger-subtle text-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-muted small text-uppercase fw-bold">HIGH RISK</h6>
+                                        <h3 class="fw-bold text-danger" id="highRiskCount">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-warning-subtle border-warning-subtle text-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-muted small text-uppercase fw-bold">MEDIUM RISK</h6>
+                                        <h3 class="fw-bold text-warning" id="mediumRiskCount">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-secondary-subtle border-secondary-subtle text-dark">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-muted small text-uppercase fw-bold">LOW RISK</h6>
+                                        <h3 class="fw-bold text-secondary" id="lowRiskCount">0</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Map Container -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    
+                                    <div class="card-body p-0 position-relative">
+                                        <div id="map" style="height: 700px; width: 100%;"></div>
+                                        <div id="mapLoading" class="map-loading-overlay">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p>Loading map data...</p>
+                                        </div>
+                                        <div id="mapCoordinates" class="map-coordinates-display">
+                                            Lat: <span id="latValue">0.0000</span>, Lng: <span id="lngValue">0.0000</span>
+                                        </div>
+                                        <div id="mapScale" class="map-scale-display">
+                                            Scale: 1:<span id="scaleValue">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Map Legend</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="legend-marker bg-success me-2" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                                                    <span>No Risk</span>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="legend-marker bg-info me-2" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                                                    <span>Light Risk</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="legend-marker bg-warning me-2" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                                                    <span>Heavy Risk</span>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="legend-marker bg-danger me-2" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                                                    <span>Both Risks</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <div class="legend-marker bg-primary me-2" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                                                    <span>Cluster (Size indicates count)</span>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-user-circle text-purple me-2"></i>
+                                                    <span>Enumerator Location</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                                    <span>Validation Passed</span>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                                    <span>Validation Failed</span>
+                                                </div>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                                    <span>Requires Attention</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Survey Details Modal -->
+        <div class="modal fade" id="surveyDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title">Survey Location Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="surveyDetails">
+                            <!-- Details will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="viewFullDetailsBtn">
+                            <i class="fas fa-external-link-alt"></i> View Full Details
+                        </button>
+                        <button type="button" class="btn btn-info" id="viewOnMapBtn">
+                            <i class="fas fa-map-marker-alt"></i> View on Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cluster Details Modal -->
+        <div class="modal fade" id="clusterDetailModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-info">
+                        <h5 class="modal-title">Cluster Information</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="clusterDetails">
+                            <!-- Cluster details will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enumerator Tracking Modal -->
+        <div class="modal fade" id="trackingModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-warning">
+                        <h5 class="modal-title">Enumerator Tracking</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Select Enumerator</label>
+                                <select class="form-select" id="trackingEnumeratorSelect">
+                                    <option value="">Select Enumerator</option>
+                                    <!-- Enumerators will be loaded via AJAX -->
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date Range</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="trackingDateFrom" placeholder="From">
+                                    <span class="input-group-text">to</span>
+                                    <input type="date" class="form-control" id="trackingDateTo" placeholder="To">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div id="trackingStats" class="alert alert-info">
+                                    Select an enumerator and date range to view tracking information.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="startTrackingBtn">
+                            <i class="fas fa-play"></i> Start Tracking
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen map container (hidden by default) -->
+<div id="fullscreenMap" class="fullscreen-map-container">
+    <div class="fullscreen-map-header">
+        <h4 class="text-white mb-0">Survey Map - Fullscreen Mode</h4>
+        <button class="btn btn-sm btn-light" id="exitFullScreenBtn">
+            <i class="fas fa-compress"></i> Exit Fullscreen
+        </button>
+    </div>
+    <div id="fullscreenMapContent" style="height: 100%; width: 100%;"></div>
+</div>
+
+<style>
+    /* Awesome Map Controls Styling */
+.custom-map-controls {
+    /* background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); */
+    padding: 3px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.map-controls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.control-group {
+    text-align: center;
+}
+
+.control-group-title {
+    color: #ecf0f1;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+.btn-control {
+    width: 3px;
+    height: 35px;
+    border-radius: 12px !important;
+    border: 2px solid transparent;
+    /* background: linear-gradient(145deg, #34495e, #2c3e50); */
+    color: #ecf0f1;
+    font-size: 16px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-control:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+}
+
+.btn-control:hover:before {
+    left: 100%;
+}
+
+.btn-control:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-control:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Specific button colors */
+/* .btn-zoom-in {
+    background: linear-gradient(145deg, #27ae60, #2ecc71);
+}
+
+.btn-zoom-out {
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+}
+
+.btn-reset {
+    background: linear-gradient(145deg, #3498db, #2980b9);
+}
+
+.btn-clusters {
+    background: linear-gradient(145deg, #9b59b6, #8e44ad);
+}
+
+.btn-3d {
+    background: linear-gradient(145deg, #f39c12, #e67e22);
+}
+
+.btn-tracking {
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+}
+
+.btn-refresh {
+    background: linear-gradient(145deg, #3498db, #2980b9);
+}
+
+.btn-filters {
+    background: linear-gradient(145deg, #27ae60, #2ecc71);
+}
+
+.btn-locate {
+    background: linear-gradient(145deg, #f39c12, #e67e22);
+}
+
+.btn-export {
+    background: linear-gradient(145deg, #27ae60, #2ecc71);
+}
+
+.btn-print {
+    background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+}
+.btn-fullscreen {
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+}
+
+.btn-layers {
+    background: linear-gradient(145deg, #9b59b6, #8e44ad); */
+/* } */
+
+/* Dropdown styling */
+/* .dropdown-menu {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+} */
+
+/* .dropdown-item {
+    color: #ecf0f1;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 2px 5px;
+    width: auto;
+    transition: all 0.3s ease;
+} */
+
+/* .dropdown-item:hover {
+    background: linear-gradient(145deg, #3498db, #2980b9);
+    color: white;
+    transform: translateX(5px);
+} */
+
+/* Button active states */
+.btn-control.active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) inset;
+}
+
+.btn-control.active:after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .custom-map-controls {
+        padding: 10px;
+        border-radius: 12px;
+    }
+    
+    .btn-control {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+    
+    .control-group-title {
+        font-size: 9px;
+    }
+    
+    .map-controls-container {
+        gap: 15px;
+    }
+}
+
+/* Animation for button hover effects */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.btn-control:hover {
+    animation: pulse 0.3s ease;
+}
+
+/* Tooltip styling */
+.btn-control {
+    position: relative;
+}
+
+.btn-control::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(44, 62, 80, 0.9);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.btn-control:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: -35px;
+}
+
+/* Icon enhancements */
+.btn-control i {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: all 0.3s ease;
+}
+
+.btn-control:hover i {
+    transform: scale(1.1);
+}
+
+/* Group separators */
+.control-group:not(:last-child):after {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    margin: 10px 0;
+    width: 100%;
+}
+</style>
+
+<!-- JavaScript Libraries -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<!-- Leaflet MarkerCluster -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<!-- Leaflet Fullscreen -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@2.4.0/Control.FullScreen.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@2.4.0/Control.FullScreen.js"></script>
+<!-- Leaflet Elevation -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-elevation@1.0.0/dist/Leaflet.Elevation-0.0.4.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet-elevation@1.0.0/dist/Leaflet.Elevation-0.0.4.min.js"></script>
+<!-- Heatmap.js -->
+<script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
+<!-- Leaflet Heatmap -->
+<script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.js"></script>
+
+<!-- JavaScript -->
+<script>
+// Map and global variables
+let map, fullscreenMap;
+let markers = [];
+let clusters = [];
+let markerCluster;
+let currentSurveyId = null;
+let showClusters = true;
+let is3DView = false;
+let isTracking = false;
+let currentLayer = 'osm';
+let enumeratorPaths = {};
+let heatmapLayer = null;
+let currentMarker = null;
+let locateMe = false;
+let exportMap = false;
+let printMap = null;
+
+// Base layers
+let baseLayers = {
+    osm: null,
+    satellite: null,
+    terrain: null,
+    dark: null
+};
+
+// Risk level colors
+const riskColors = {
+    'no_risk': '#28a745',    // Green
+    'light_risk': '#17a2b8', // Blue
+    'heavy_risk': '#ffc107', // Yellow
+    'both_risk': '#dc3545'   // Red
+};
+
+// Risk level names
+const riskNames = {
+    'no_risk': 'No Risk',
+    'light_risk': 'Light Risk',
+    'heavy_risk': 'Heavy Risk',
+    'both_risk': 'Both Risks'
+};
+
+// Three.js variables
+let threeDScene, threeDCamera, threeDRenderer, threeDMarkers = [], threeDContainer;
+
+$(document).ready(function() {
+    // Initialize the map
+    initMap();
+    
+    // Load initial data
+    loadMapData();
+    loadFilterOptions();
+    loadTrackingEnumerators();
+    
+    // Set default date range to last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    $('#dateFromFilter').val(thirtyDaysAgo.toISOString().split('T')[0]);
+    $('#dateToFilter').val(new Date().toISOString().split('T')[0]);
+    
+    // Event listeners
+    $('#refreshMapBtn').click(loadMapData);
+    $('#toggleFiltersBtn').click(function() {
+        $('#filtersPanel').toggle();
+    });
+    $('#zoomInBtn').click(() => map.zoomIn());
+    $('#zoomOutBtn').click(() => map.zoomOut());
+    $('#resetViewBtn').click(resetMapView);
+    $('#toggleClustersBtn').click(toggleClusters);
+    $('#toggle3DViewBtn').click(toggle3DView);
+    $('#toggleTrackingBtn').click(showTrackingModal);
+    $('#fullScreenBtn').click(enterFullscreen);
+    $('#exitFullScreenBtn').click(exitFullscreen);
+    $('#viewOnMapBtn').click(centerOnSelectedSurvey);
+    $('#startTrackingBtn').click(startTracking);
+    $('#locateMeBtn').click(locateUser);
+    $('#printMapBtn').click(printMap);
+    $('#exportMapBtn').click(exportMapFunction);
+    
+    // Filter change events
+    $('#statusFilter, #riskFilter, #enumeratorFilter, #districtFilter, #dateFromFilter, #dateToFilter, #qualityFilter').change(loadMapData);
+    
+    // Layer selection
+    $('.layer-option').click(function(e) {
+        e.preventDefault();
+        const layer = $(this).data('layer');
+        changeBaseLayer(layer);
+    });
+    
+    // Add keyboard shortcuts
+    $(document).keydown(function(e) {
+        // Ctrl + F to toggle filters
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            $('#filtersPanel').toggle();
+        }
+        // Ctrl + R to refresh
+        if (e.ctrlKey && e.key === 'r') {
+            e.preventDefault();
+            loadMapData();
+        }
+        // ESC to exit fullscreen
+        if (e.key === 'Escape' && $('body').hasClass('fullscreen-mode')) {
+            exitFullscreen();
+        }
+    });
+});
+
+function initMap() {
+    // Initialize map with Ghana centered view
+    map = L.map('map').setView([7.9465, -1.0232], 7); // Center on Ghana
+    
+    // Add base layers
+    baseLayers.osm = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: '&copy; Google Maps'
+    }).addTo(map);
+    
+    baseLayers.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 18
+    });
+    
+    baseLayers.terrain = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+        maxZoom: 17
+    });
+    
+    baseLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        maxZoom: 20
+    });
+    
+    // Add scale control
+    L.control.scale({metric: true, imperial: false}).addTo(map);
+    
+    // Add fullscreen control
+    map.addControl(new L.Control.FullScreen());
+    
+    // Add coordinates display
+    map.on('mousemove', function(e) {
+        $('#latValue').text(e.latlng.lat.toFixed(4));
+        $('#lngValue').text(e.latlng.lng.toFixed(4));
+    });
+    
+    // Update scale on zoom
+    map.on('zoomend', function() {
+        const zoom = map.getZoom();
+        const scale = Math.round(591657550 / Math.pow(2, zoom-1));
+        $('#scaleValue').text(scale.toLocaleString());
+    });
+    
+    // Initialize marker cluster group
+    markerCluster = L.markerClusterGroup({
+        chunkedLoading: true,
+        maxClusterRadius: 40,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: true,
+        zoomToBoundsOnClick: true,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            let size = 'small';
+            if (count > 50) size = 'large';
+            else if (count > 10) size = 'medium';
+            
+            return L.divIcon({
+                html: '<div><span>' + count + '</span></div>',
+                className: 'marker-cluster marker-cluster-' + size,
+                iconSize: L.point(40, 40)
+            });
+        }
+    });
+    
+    map.addLayer(markerCluster);
+    
+    // Initialize heatmap layer
+    heatmapLayer = L.heatLayer([], {
+        radius: 25,
+        blur: 15,
+        maxZoom: 17,
+        gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'}
+    });
+    
+    // Add custom controls to the map
+    addMapControls();
+}
+
+function addMapControls() {
+    // Create a custom control container
+    const customControls = L.control({ position: 'topright' });
+    
+    customControls.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'custom-map-controls');
+        
+        // Add all control buttons with improved styling
+        div.innerHTML = `
+            <div class="map-controls-container">
+                <!-- Zoom Controls Group -->
+                <div class="control-group">
+                    
+                    <div class="btn-group-vertical">
+                        <button class="btn btn-control btn-zoom-in" id="mapZoomInBtn" title="Zoom In">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                        <button class="btn btn-control btn-zoom-out" id="mapZoomOutBtn" title="Zoom Out">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <button class="btn btn-control btn-reset" id="mapResetViewBtn" title="Reset View">
+                            <i class="fas fa-globe-americas"></i>
+                        </button>
+                         <button class="btn btn-control btn-refresh" id="mapRefreshBtn" title="Refresh Map">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="btn btn-control btn-filters" id="mapToggleFiltersBtn" title="Toggle Filters">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button class="btn btn-control btn-locate" id="mapLocateMeBtn" title="Locate Me">
+                            <i class="fas fa-location-crosshairs"></i>
+                        </button>
+                        <button class="btn btn-control btn-clusters" id="mapToggleClustersBtn" title="Toggle Clusters">
+                            <i class="fas fa-layer-group"></i>
+                        </button>
+                        <button class="btn btn-control btn-3d" id="mapToggle3DViewBtn" title="3D View">
+                            <i class="fas fa-cube"></i>
+                        </button>
+                        <button class="btn btn-control btn-tracking" id="mapToggleTrackingBtn" title="Tracking">
+                            <i class="fas fa-satellite"></i>
+                        </button>
+                        <button class="btn btn-control btn-fullscreen" id="fullscreenTrackingBtn" title="Tracking">
+                            <i class="fas fa-maximize"></i>
+                        </button>
+                        <button class="btn btn-control btn-export" id="mapExportBtn" title="Export Map">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-control btn-print" id="mapPrintBtn" title="Print Map">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-control btn-layers dropdown-toggle" type="button" id="mapLayerDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Map Layers">
+                                <i class="fas fa-map"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="mapLayerDropdown">
+                                <li><a class="dropdown-item layer-option" href="#" data-layer="osm">
+                                    <i class="fas fa-road me-2"></i>OpenStreetMap
+                                </a></li>
+                                <li><a class="dropdown-item layer-option" href="#" data-layer="satellite">
+                                    <i class="fas fa-satellite me-2"></i>Satellite
+                                </a></li>
+                                <li><a class="dropdown-item layer-option" href="#" data-layer="terrain">
+                                    <i class="fas fa-mountain me-2"></i>Terrain
+                                </a></li>
+                                <li><a class="dropdown-item layer-option" href="#" data-layer="dark">
+                                    <i class="fas fa-moon me-2"></i>Dark Mode
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                
+            </div>
+        `;
+        
+        // Prevent map events from being intercepted by buttons
+        L.DomEvent.disableClickPropagation(div);
+        L.DomEvent.disableScrollPropagation(div);
+        
+        return div;
+    };
+    
+    customControls.addTo(map);
+    
+    // Add event listeners to map controls
+    $('#mapZoomInBtn').click(() => map.zoomIn());
+    $('#mapZoomOutBtn').click(() => map.zoomOut());
+    $('#mapResetViewBtn').click(resetMapView);
+    $('#mapToggleClustersBtn').click(toggleClusters);
+    $('#mapToggle3DViewBtn').click(toggle3DView);
+    $('#mapToggleTrackingBtn').click(showTrackingModal);
+    $('#mapRefreshBtn').click(loadMapData);
+    $('#mapToggleFiltersBtn').click(() => $('#filtersPanel').toggle());
+    $('#mapLocateMeBtn').click(locateUser);
+    $('#mapExportBtn').click(exportMapFunction);
+    $('#mapPrintBtn').click(printMapFunction);
+    
+    // Layer selection for map controls
+    $('#mapLayerDropdown').next().find('.layer-option').click(function(e) {
+        e.preventDefault();
+        const layer = $(this).data('layer');
+        changeBaseLayer(layer);
+    });
+}
+
+function loadMapData() {
+    showMapLoading(true);
+    
+    // Clear existing markers
+    clearMarkers();
+    
+    // Get filter values
+    const filters = {
+        status: $('#statusFilter').val(),
+        risk_level: $('#riskFilter').val(),
+        enumerator: $('#enumeratorFilter').val(),
+        district: $('#districtFilter').val(),
+        date_from: $('#dateFromFilter').val(),
+        date_to: $('#dateToFilter').val(),
+        quality: $('#qualityFilter').val()
+    };
+    
+    $.ajax({
+        url: "{% url 'survey_locations_api' %}",
+        type: "GET",
+        data: filters,
+        success: function(response) {
+            showMapLoading(false);
+            if (response.success) {
+                displaySurveysOnMap(response.data);
+                updateStatistics(response.statistics);
+                
+                // Update heatmap if enabled
+                if ($('#showHeatmap').is(':checked')) {
+                    updateHeatmap(response.data);
+                }
+            } else {
+                showErrorAlert(response.message || 'Failed to load survey locations');
+            }
+        },
+        error: function(xhr) {
+            showMapLoading(false);
+            handleAjaxError(xhr, 'load survey locations');
+        }
+    });
+}
+
+function displaySurveysOnMap(surveys) {
+    const heatmapData = [];
+    
+    surveys.forEach(survey => {
+        const marker = createSurveyMarker(survey);
+        markers.push(marker);
+        
+        if (showClusters) {
+            markerCluster.addLayer(marker);
+        } else {
+            marker.addTo(map);
+        }
+        
+        // Add to heatmap data
+        heatmapData.push([survey.latitude, survey.longitude, 1]);
+    });
+    
+    // Update heatmap
+    heatmapLayer.setLatLngs(heatmapData);
+    
+    // If no clusters, fit bounds to show all markers
+    if (!showClusters && markers.length > 0) {
+        const group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
+}
+
+function createSurveyMarker(survey) {
+    const { latitude, longitude, risk_level, survey_id, farmer_name, community, validation_status } = survey;
+    
+    // Create custom icon based on risk level
+    const icon = L.divIcon({
+        className: 'custom-marker',
+        html: `
+            <div class="marker-container" style="background-color: ${riskColors[risk_level]}; 
+                  width: 24px; height: 24px; border-radius: 50%; border: 2px solid white;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: flex; align-items: center; 
+                  justify-content: center;">
+                ${validation_status.passed > validation_status.failed ? 
+                  '<i class="fas fa-check" style="color: white; font-size: 12px;"></i>' :
+                  validation_status.failed > validation_status.passed ?
+                  '<i class="fas fa-times" style="color: white; font-size: 12px;"></i>' :
+                  '<i class="fas fa-exclamation" style="color: white; font-size: 12px;"></i>'}
+            </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+    
+    const marker = L.marker([latitude, longitude], { icon: icon });
+    
+    // Add popup with basic info
+    marker.bindPopup(`
+        <div class="map-popup">
+            <h6>${survey_id}</h6>
+            <p><strong>Farmer:</strong> ${farmer_name}</p>
+            <p><strong>Community:</strong> ${community}</p>
+            <p><strong>Risk Level:</strong> <span class="badge" style="background-color: ${riskColors[risk_level]}">${riskNames[risk_level]}</span></p>
+            <p><strong>Validation:</strong> ${validation_status.passed} passed, ${validation_status.failed} failed</p>
+            <button class="btn btn-primary btn-sm w-100 mt-2" onclick="showSurveyDetails(${survey.id})">
+                View Details
+            </button>
+        </div>
+    `);
+    
+    // Store survey data in marker
+    marker.surveyData = survey;
+    
+    return marker;
+}
+
+function showSurveyDetails(surveyId) {
+    currentSurveyId = surveyId;
+    
+    // Find the survey data
+    const survey = markers.find(m => m.surveyData.id === surveyId)?.surveyData;
+    
+    if (survey) {
+        // Get detailed survey data via AJAX
+        showLoadingAlert('Loading survey details...');
+        
+        $.ajax({
+            url: `/portal/api/survey-details/${surveyId}/`,
+            type: "GET",
+            success: function(detailResponse) {
+                Swal.close();
+                if (detailResponse.success) {
+                    const surveyDetails = detailResponse.data;
+                    const detailsHtml = createDetailedSurveyHtml(surveyDetails);
+                    $('#surveyDetails').html(detailsHtml);
+                    $('#surveyDetailModal').modal('show');
+                } else {
+                    showErrorAlert(detailResponse.message || 'Failed to load survey details');
+                }
+            },
+            error: function(xhr) {
+                Swal.close();
+                handleAjaxError(xhr, 'load survey details');
+            }
+        });
+    }
+}
+
+function createDetailedSurveyHtml(survey) {
+    return `
+        <div class="survey-details">
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <h4>${survey.survey_id}</h4>
+                    <p class="text-muted">Conducted on ${survey.interview_date} by ${survey.enumerator}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-${getApprovalBadgeClass(survey.approval_status)}">${survey.approval_status}</span>
+                    <span class="badge" style="background-color: ${riskColors[survey.risk_level]}">${riskNames[survey.risk_level]}</span>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Location Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Farmer:</strong> ${survey.farmer_name} (${survey.farmer_code})</p>
+                            <p><strong>Community:</strong> ${survey.community}, ${survey.district}</p>
+                            <p><strong>Coordinates:</strong> ${survey.latitude.toFixed(6)}, ${survey.longitude.toFixed(6)}</p>
+                            <p><strong>GPS Accuracy:</strong> ${survey.gps_accuracy}</p>
+                            <p><strong>Community Type:</strong> ${survey.community_type}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Household Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Total Adults:</strong> ${survey.total_adults}</p>
+                            <p><strong>Total Children (5-17):</strong> ${survey.total_children}</p>
+                            <p><strong>Nationality:</strong> ${survey.nationality}</p>
+                            ${survey.country_origin ? `<p><strong>Country of Origin:</strong> ${survey.country_origin}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Survey Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Enumerator:</strong> ${survey.enumerator}</p>
+                            <p><strong>Interview Date:</strong> ${survey.interview_date}</p>
+                            <p><strong>Validation Results:</strong> ${survey.validation_status.passed} passed, ${survey.validation_status.failed} failed out of ${survey.validation_status.total} rules</p>
+                            <p><strong>Data Quality Score:</strong> ${calculateQualityScore(survey.validation_status)}%</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Risk Assessment</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="risk-level-display mb-2" style="background-color: ${riskColors[survey.risk_level]}; color: white; padding: 5px; border-radius: 4px; text-align: center;">
+                                <strong>${riskNames[survey.risk_level]}</strong>
+                            </div>
+                            ${survey.risk_indicators ? `<p><strong>Risk Indicators:</strong> ${survey.risk_indicators}</p>` : ''}
+                            ${survey.risk_notes ? `<p><strong>Notes:</strong> ${survey.risk_notes}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            ${survey.children && survey.children.length > 0 ? `
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Children in Household</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Age</th>
+                                            <th>Gender</th>
+                                            <th>Education</th>
+                                            <th>Risk Level</th>
+                                            <th>Tasks Performed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${survey.children.map(child => `
+                                            <tr>
+                                                <td>${child.first_name} ${child.last_name}</td>
+                                                <td>${calculateAge(child.birth_year)}</td>
+                                                <td>${child.gender}</td>
+                                                <td>${child.education_status}</td>
+                                                <td><span class="badge" style="background-color: ${riskColors[child.risk_level]}">${riskNames[child.risk_level]}</span></td>
+                                                <td>${child.tasks_performed.join(', ') || 'None'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+            
+            ${survey.validation_issues && survey.validation_issues.length > 0 ? `
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Validation Issues</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Rule</th>
+                                            <th>Severity</th>
+                                            <th>Description</th>
+                                            <th>Field</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${survey.validation_issues.map(issue => `
+                                            <tr>
+                                                <td>${issue.rule_name}</td>
+                                                <td><span class="badge bg-${getSeverityBadgeClass(issue.severity)}">${issue.severity}</span></td>
+                                                <td>${issue.description}</td>
+                                                <td>${issue.field_name}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function calculateQualityScore(validationStatus) {
+    if (validationStatus.total === 0) return 100;
+    return Math.round((validationStatus.passed / validationStatus.total) * 100);
+}
+
+function calculateAge(birthYear) {
+    const currentYear = new Date().getFullYear();
+    return currentYear - birthYear;
+}
+
+function getSeverityBadgeClass(severity) {
+    switch(severity.toLowerCase()) {
+        case 'critical': return 'danger';
+        case 'high': return 'warning';
+        case 'medium': return 'info';
+        case 'low': return 'secondary';
+        default: return 'secondary';
+    }
+}
+
+function updateStatistics(stats) {
+    $('#totalSurveys').text(stats.total_surveys);
+    $('#withCoords').text(stats.surveys_with_coords);
+    $('#coveragePercent').text(`${stats.coverage_percentage.toFixed(1)}%`);
+    $('#highRiskCount').text(stats.risk_stats.both_risk + stats.risk_stats.heavy_risk);
+    $('#mediumRiskCount').text(stats.risk_stats.light_risk);
+    $('#lowRiskCount').text(stats.risk_stats.no_risk);
+}
+
+function clearMarkers() {
+    markers.forEach(marker => {
+        if (showClusters) {
+            markerCluster.removeLayer(marker);
+        } else {
+            map.removeLayer(marker);
+        }
+    });
+    markers = [];
+}
+
+function resetMapView() {
+    map.setView([7.9465, -1.0232], 7); // Reset to Ghana view
+}
+
+function toggleClusters() {
+    showClusters = !showClusters;
+    
+    if (showClusters) {
+        $('#toggleClustersBtn').html('<i class="fas fa-layer-group"></i> Clusters On');
+        markers.forEach(marker => {
+            map.removeLayer(marker);
+            markerCluster.addLayer(marker);
+        });
+    } else {
+        $('#toggleClustersBtn').html('<i class="fas fa-layer-group"></i> Clusters Off');
+        markerCluster.clearLayers();
+        markers.forEach(marker => marker.addTo(map));
+        
+        // Fit bounds to show all markers
+        if (markers.length > 0) {
+            const group = new L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.1));
+        }
+    }
+}
+
+function showTrackingModal() {
+    $('#trackingModal').modal('show');
+}
+
+function startTracking() {
+    const enumeratorId = $('#trackingEnumeratorSelect').val();
+    const dateFrom = $('#trackingDateFrom').val();
+    const dateTo = $('#trackingDateTo').val();
+    
+    if (!enumeratorId) {
+        showWarningAlert('Please select an enumerator to track');
+        return;
+    }
+    
+    $('#trackingModal').modal('hide');
+    showLoadingAlert('Loading enumerator tracking data...');
+    
+    $.ajax({
+        url: `/portal/api/enumerator-tracking/${enumeratorId}/`,
+        type: "GET",
+        data: {
+            date_from: dateFrom,
+            date_to: dateTo
+        },
+        success: function(response) {
+            Swal.close();
+            if (response.success) {
+                displayEnumeratorTracking(response.data);
+                isTracking = true;
+                $('#toggleTrackingBtn').html('<i class="fas fa-satellite"></i> Stop Tracking');
+            } else {
+                showErrorAlert(response.message || 'Failed to load tracking data');
+            }
+        },
+        error: function(xhr) {
+            Swal.close();
+            handleAjaxError(xhr, 'load tracking data');
+        }
+    });
+}
+
+function displayEnumeratorTracking(trackingData) {
+    // Clear previous tracking data
+    if (enumeratorPaths[trackingData.enumerator.id]) {
+        map.removeLayer(enumeratorPaths[trackingData.enumerator.id]);
+    }
+    
+    // Create polyline for enumerator path
+    const pathCoordinates = trackingData.locations.map(loc => [loc.latitude, loc.longitude]);
+    const path = L.polyline(pathCoordinates, {
+        color: '#007bff',
+        weight: 4,
+        opacity: 0.7,
+        dashArray: '5, 10'
+    }).addTo(map);
+    
+    // Add markers for each survey location
+    trackingData.surveys.forEach(survey => {
+        const marker = L.marker([survey.latitude, survey.longitude], {
+            icon: L.divIcon({
+                className: 'enumerator-survey-marker',
+                html: `<div class="enumerator-marker">S</div>`,
+                iconSize: [20, 20]
+            })
+        }).addTo(map);
+        
+        marker.bindPopup(`
+            <div class="map-popup">
+                <h6>${survey.survey_id}</h6>
+                <p><strong>Farmer:</strong> ${survey.farmer_name}</p>
+                <p><strong>Date:</strong> ${survey.interview_date}</p>
+                <p><strong>Status:</strong> ${survey.approval_status}</p>
+            </div>
+        `);
+        
+        markers.push(marker);
+    });
+    
+    // Fit map to show the entire path
+    if (pathCoordinates.length > 0) {
+        map.fitBounds(path.getBounds().pad(0.1));
+    }
+    
+    // Store reference to path
+    enumeratorPaths[trackingData.enumerator.id] = path;
+    
+    // Show tracking stats
+    showSuccessAlert(`Tracking enumerator: ${trackingData.enumerator.name}<br>
+        Period: ${trackingData.date_from} to ${trackingData.date_to}<br>
+        Surveys conducted: ${trackingData.surveys.length}<br>
+        Distance covered: ${trackingData.distance_km.toFixed(2)} km`);
+}
+
+function enterFullscreen() {
+    $('#fullscreenMap').addClass('active');
+    $('body').addClass('fullscreen-mode');
+    
+    // Initialize fullscreen map if not already done
+    if (!fullscreenMap) {
+        fullscreenMap = L.map('fullscreenMapContent').setView(map.getCenter(), map.getZoom());
+        
+        // Add the current base layer
+        baseLayers[currentLayer].addTo(fullscreenMap);
+        
+        // Copy all markers and layers
+        if (showClusters) {
+            markerCluster.addTo(fullscreenMap);
+        } else {
+            markers.forEach(marker => marker.addTo(fullscreenMap));
+        }
+        
+        // Add controls
+        fullscreenMap.addControl(new L.Control.FullScreen());
+        L.control.scale({metric: true, imperial: false}).addTo(fullscreenMap);
+    } else {
+        fullscreenMap.setView(map.getCenter(), map.getZoom());
+    }
+}
+
+function exitFullscreen() {
+    $('#fullscreenMap').removeClass('active');
+    $('body').removeClass('fullscreen-mode');
+    
+    // Sync back any changes to the main map
+    if (fullscreenMap) {
+        map.setView(fullscreenMap.getCenter(), fullscreenMap.getZoom());
+    }
+}
+
+function centerOnSelectedSurvey() {
+    if (currentSurveyId) {
+        const surveyMarker = markers.find(m => m.surveyData.id === currentSurveyId);
+        if (surveyMarker) {
+            map.setView(surveyMarker.getLatLng(), 15);
+            surveyMarker.openPopup();
+            $('#surveyDetailModal').modal('hide');
+        }
+    }
+}
+
+function changeBaseLayer(layerName) {
+    // Remove current layer
+    if (baseLayers[currentLayer]) {
+        map.removeLayer(baseLayers[currentLayer]);
+        if (fullscreenMap) {
+            fullscreenMap.removeLayer(baseLayers[currentLayer]);
+        }
+    }
+    
+    // Add new layer
+    baseLayers[layerName].addTo(map);
+    if (fullscreenMap) {
+        baseLayers[layerName].addTo(fullscreenMap);
+    }
+    
+    currentLayer = layerName;
+    
+    // Update dropdown text
+    $('#layerDropdown').html(`<i class="fas fa-layer-group"></i> ${layerName.charAt(0).toUpperCase() + layerName.slice(1)}`);
+}
+
+function updateHeatmap(surveys) {
+    const points = surveys.map(survey => [survey.latitude, survey.longitude, 1]);
+    heatmapLayer.setLatLngs(points);
+    
+    if (!$('#heatmapOverlay').is(':checked')) {
+        map.addLayer(heatmapLayer);
+        $('#heatmapOverlay').prop('checked', true);
+    }
+}
+
+function showMapLoading(show) {
+    if (show) {
+        $('#mapLoading').addClass('active');
+    } else {
+        $('#mapLoading').removeClass('active');
+    }
+}
+
+function loadFilterOptions() {
+    console.log('Loading filter options...');
+    
+    // Load enumerators for both filter and tracking dropdowns
+    $.ajax({
+        url: "{% url 'get_enumerators_api' %}",
+        type: "GET",
+        success: function(response) {
+            console.log('Enumerators response:', response);
+            
+            if (response.success) {
+                console.log('Enumerators data:', response.data);
+                
+                // Update tracking dropdown
+                $('#trackingEnumeratorSelect').empty().append('<option value="" selected>Select Enumerator</option>');
+                
+                // Update filter dropdown
+                $('#enumeratorFilter').empty().append('<option value="" selected>All Enumerators</option>');
+                
+                if (response.data && response.data.length > 0) {
+                    $.each(response.data, function(index, item) {
+                        console.log('Enumerator:', item);
+                        // Add to tracking dropdown
+                        $('#trackingEnumeratorSelect').append($('<option>', {
+                            value: item.id,
+                            text: `${item.first_name} ${item.last_name} (${item.staffid})`
+                        }));
+                        
+                        // Add to filter dropdown
+                        $('#enumeratorFilter').append($('<option>', {
+                            value: item.id,
+                            text: `${item.first_name} ${item.last_name} (${item.staffid})`
+                        }));
+                    });
+                } else {
+                    console.warn('No enumerators found in response');
+                }
+            } else {
+                showErrorAlert(response.message || 'Failed to load enumerators');
+            }
+        },
+        error: function(xhr) {
+            console.error('Error loading enumerators:', xhr);
+            handleAjaxError(xhr, 'load enumerators');
+        }
+    });
+
+    // Load districts
+    $.ajax({
+        url: "{% url 'get_districts_api' %}",
+        type: "GET",
+        success: function(response) {
+            console.log('Districts response:', response);
+            
+            if (response.success) {
+                console.log('Districts data:', response.data);
+                
+                $('#districtFilter').empty().append('<option value="" selected>All Districts</option>');
+                
+                if (response.data && response.data.length > 0) {
+                    $.each(response.data, function(index, item) {
+                        $('#districtFilter').append($('<option>', {
+                            value: item.id,
+                            text: item.district
+                        }));
+                    });
+                } else {
+                    console.warn('No districts found in response');
+                }
+            } else {
+                showErrorAlert(response.message || 'Failed to load districts');
+            }
+        },
+        error: function(xhr) {
+            console.error('Error loading districts:', xhr);
+            handleAjaxError(xhr, 'load districts');
+        }
+    });
+}
+
+function loadTrackingEnumerators() {
+    $.ajax({
+        url: "{% url 'get_enumerators_api' %}",
+        type: "GET",
+        success: function(data) {
+            $('#trackingEnumeratorSelect').empty().append('<option value="" selected>Select Enumerator</option>');
+            $.each(data, function(index, item) {
+                $('#trackingEnumeratorSelect').append($('<option>', {
+                    value: item.id,
+                    text: `${item.first_name} ${item.last_name} (${item.staffid})`
+                }));
+            });
+        }
+    });
+}
+
+function getApprovalBadgeClass(status) {
+    status = status.toLowerCase();
+    if (status.includes('approved')) return 'success';
+    if (status.includes('rejected')) return 'danger';
+    if (status.includes('pending')) return 'warning';
+    if (status.includes('requires_correction')) return 'info';
+    if (status.includes('not_validated')) return 'secondary';
+    return 'secondary';
+}
+
+// Helper functions
+function showSuccessAlert(message) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        html: message,
+        timer: 3000,
+        showConfirmButton: false
+    });
+}
+
+function showWarningAlert(message) {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        text: message,
+        timer: 3000,
+        showConfirmButton: false
+    });
+}
+
+function showErrorAlert(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message
+    });
+}
+
+function showLoadingAlert(message) {
+    Swal.fire({
+        title: 'Please wait',
+        html: message,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}
+
+function handleAjaxError(xhr, action) {
+    let message = `Failed to ${action}. `;
+    if (xhr.responseJSON && xhr.responseJSON.message) {
+        message += xhr.responseJSON.message;
+    } else {
+        message += 'Please try again later.';
+    }
+    showErrorAlert(message);
+}
+
+// View full details button handler
+$('#viewFullDetailsBtn').click(function() {
+    if (currentSurveyId) {
+        window.location.href = `/portal/quality/validate-data/?survey=${currentSurveyId}`;
+    }
+});
+
+function exportMapFunction() {
+    showLoadingAlert('Preparing export...');
+    
+    setTimeout(() => {
+        Swal.close();
+        showSuccessAlert('Map exported successfully!');
+    }, 1500);
+}
+
+function printMapFunction() {
+    // Create print header with logo and company name
+    const printHeader = document.createElement('div');
+    printHeader.innerHTML = `
+        <div style="
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            padding: 10px 15px; 
+            border-bottom: 2px solid #2c7be5;
+            background: linear-gradient(90deg, #f8f9fa 0%, #ffffff 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        ">
+            <div style="display: flex; align-items: center;">
+                <img src="https://kapture.turkson.org/static/img/logo.svg" 
+                    style="height: 40px; margin-right: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
+                <div>
+                    <h1 style="
+                        margin: 0; 
+                        font-size: 28px; 
+                        font-weight: 700;
+                        color: #2c7be5;
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                    ">
+                        Kapture
+                    </h1>
+                </div>
+            </div>
+            <div style="
+                text-align: right;
+                font-size: 12px;
+                color: #95aac9;
+            ">
+                <div>${new Date().toLocaleDateString()}</div>
+                <div style="margin-top: 5px;">${new Date().toLocaleTimeString()}</div>
+            </div>
+        </div>
+    `;
+    printHeader.style.position = 'fixed';
+    printHeader.style.top = '0';
+    printHeader.style.left = '0';
+    printHeader.style.width = '100%';
+    printHeader.style.backgroundColor = 'white';
+    printHeader.style.zIndex = '1000';
+    printHeader.style.display = 'none'; // Hidden by default
+
+    document.body.appendChild(printHeader);
+
+    // Add print-specific styles
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @media print {
+            @page {
+                margin-top: 100px; /* Space for header */
+            }
+            
+            @page :right {
+                display: none;
+            }
+            
+            @page :left {
+                display: auto;
+            }
+        
+            .print-header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    setTimeout(() => {
+        printHeader.style.display = 'block'; // Show header only for print
+        window.print();
+
+        // Cleanup
+        setTimeout(() => {
+            document.body.removeChild(printHeader);
+            document.head.removeChild(style);
+        }, 50);
+    }, 100);
+}
+
+function locateUser() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const userLatLng = [pos.coords.latitude, pos.coords.longitude];
+                console.log('User location:', userLatLng);
+
+                // Remove old marker if it exists
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                }
+
+                // Fly to the new location with animation
+                flyToLocation(userLatLng, 'Me');
+            },
+            (err) => {
+                console.error("Geolocation error:", err);
+                alert("Could not get your location. Please enable geolocation permissions.");
+            }
+        );
+    } else {
+        console.error("Geolocation is not supported by this browser");
+    }
+}
+
+// Fly to a location and place a marker
+function flyToLocation(coords, displayName) {
+    // Calculate zoom level based on location type (city vs specific place)
+    const zoomLevel = displayName.includes(',') ? 20 : 18;
+
+    // Remove previous marker if exists
+    if (currentMarker) {
+        // Fade out animation for old marker
+        currentMarker.setOpacity(0);
+        setTimeout(() => {
+            map.removeLayer(currentMarker);
+        }, 900);
+    }
+
+    // Create a pulse effect circle while flying
+    const pulseCircle = L.circle(coords, {
+        radius: 50,
+        fillColor: "#3388ff",
+        color: "#3388ff",
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.3
+    }).addTo(map);
+
+    // Animate the pulse circle
+    let radius = 50;
+    let opacity = 0.7;
+    const pulseInterval = setInterval(() => {
+        radius += 20;
+        opacity -= 0.05;
+        pulseCircle.setRadius(radius);
+        pulseCircle.setStyle({ opacity: opacity });
+
+        if (opacity <= 0) {
+            clearInterval(pulseInterval);
+            map.removeLayer(pulseCircle);
+        }
+    }, 100);
+
+    // Fly to location with enhanced animation
+    map.flyTo(coords, zoomLevel, {
+        duration: 2.5, // Longer duration for smoother flight
+        easeLinearity: 0.1, // More pronounced curve
+        noMoveStart: true, // Don't jump at start
+
+        // Custom animation steps
+        onStart: function () {
+            // Add a flight path line
+            if (map.getCenter()) {
+                const flightPath = L.polyline([map.getCenter(), coords], {
+                    color: '#3388ff',
+                    weight: 2,
+                    dashArray: '10, 10',
+                    opacity: 0.7
+                }).addTo(map);
+
+                // Animate the flight path
+                setTimeout(() => {
+                    flightPath.setStyle({ opacity: 0 });
+                    setTimeout(() => map.removeLayer(flightPath), 500);
+                }, 1000);
+            }
+        }
+    });
+
+    // Add new marker with animation
+    setTimeout(() => {
+        // Create a temporary larger marker that shrinks into place
+        const tempMarker = L.marker(coords, {
+            icon: L.divIcon({
+                className: 'temp-marker',
+                html: '<div class="animated-marker"></div>',
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
+            })
+        }).addTo(map);
+
+        // Add the permanent marker after animation
+        setTimeout(() => {
+            map.removeLayer(tempMarker);
+
+            currentMarker = L.marker(coords, {
+                icon: L.divIcon({
+                    className: 'permanent-marker',
+                    html: `
+                    <div class="marker-pin"></div>
+                    <div class="marker-pulse"></div>
+                `,
+                    iconSize: [30, 42],
+                    iconAnchor: [15, 42]
+                })
+            }).addTo(map)
+                .bindPopup(displayName);
+
+            // Open popup after a slight delay
+            setTimeout(() => {
+                currentMarker.openPopup();
+
+                // Add a final ripple effect
+                const ripple = L.circle(coords, {
+                    radius: 10,
+                    fillColor: "#3388ff",
+                    color: "#3388ff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.3
+                }).addTo(map);
+
+                // Animate ripple
+                let rippleRadius = 10;
+                let rippleOpacity = 0.7;
+                const rippleInterval = setInterval(() => {
+                    rippleRadius += 15;
+                    rippleOpacity -= 0.05;
+                    ripple.setRadius(rippleRadius);
+                    ripple.setStyle({ opacity: rippleOpacity });
+
+                    if (rippleOpacity <= 0) {
+                        clearInterval(rippleInterval);
+                        map.removeLayer(ripple);
+                    }
+                }, 50);
+            }, 300);
+        }, 500);
+    }, 800);
+}
+
+// Three.js integration for 3D map view
+function initThreeJS() {
+    // Create a container for Three.js rendering
+    threeDContainer = document.createElement('div');
+    threeDContainer.style.width = '100%';
+    threeDContainer.style.height = '100%';
+    threeDContainer.style.zIndex = '1000';
+    threeDContainer.style.display = 'none';
+    document.getElementById('map').appendChild(threeDContainer);
+
+    // Initialize Three.js scene
+    threeDScene = new THREE.Scene();
+    threeDScene.background = new THREE.Color(0x87CEEB); // Sky blue background
+
+    // Create camera
+    threeDCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    threeDCamera.position.set(0, 10, 15);
+
+    // Create renderer
+    threeDRenderer = new THREE.WebGLRenderer({ antialias: true });
+    threeDRenderer.setSize(threeDContainer.offsetWidth, threeDContainer.offsetHeight);
+    threeDContainer.appendChild(threeDRenderer.domElement);
+
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    threeDScene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 1, 1);
+    threeDScene.add(directionalLight);
+
+    // Create ground plane
+    const groundGeometry = new THREE.PlaneGeometry(100, 100);
+    const groundMaterial = new THREE.MeshPhongMaterial({ 
+        color: 0x228B22, // Forest green
+        side: THREE.DoubleSide
+    });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.5;
+    threeDScene.add(ground);
+
+    // Add grid helper
+    const gridHelper = new THREE.GridHelper(100, 20, 0x000000, 0x000000);
+    gridHelper.position.y = -0.49;
+    threeDScene.add(gridHelper);
+
+    // Handle window resize
+    window.addEventListener('resize', onWindowResize);
+}
+
+function onWindowResize() {
+    if (is3DView) {
+        threeDCamera.aspect = threeDContainer.offsetWidth / threeDContainer.offsetHeight;
+        threeDCamera.updateProjectionMatrix();
+        threeDRenderer.setSize(threeDContainer.offsetWidth, threeDContainer.offsetHeight);
+    }
+}
+
+function toggle3DView() {
+    if (!is3DView) {
+        // Enable 3D view
+        showLoadingAlert('Loading 3D view...');
+        
+        // Initialize Three.js if not already done
+        if (!threeDScene) {
+            initThreeJS();
+        }
+        
+        // Hide Leaflet map and show Three.js container
+        map.getContainer().style.display = 'none';
+        threeDContainer.style.display = 'block';
+        
+        // Convert 2D markers to 3D objects
+        convertMarkersTo3D();
+        
+        // Start animation loop
+        animate3D();
+        
+        is3DView = true;
+        $('#toggle3DViewBtn').html('<i class="fas fa-cube"></i> 2D View');
+        $('#toggle3DViewBtn').removeClass('btn-outline-primary').addClass('btn-primary');
+        
+        // Add orbit controls
+        initOrbitControls();
+        
+        Swal.close();
+        showSuccessAlert('3D view enabled. Use mouse to rotate and zoom.');
+    } else {
+        // Disable 3D view
+        threeDContainer.style.display = 'none';
+        map.getContainer().style.display = 'block';
+        
+        is3DView = false;
+        $('#toggle3DViewBtn').html('<i class="fas fa-cube"></i> 3D View');
+        $('#toggle3DViewBtn').removeClass('btn-primary').addClass('btn-outline-primary');
+        
+        // Clean up Three.js resources
+        cleanup3DScene();
+    }
+}
+
+function convertMarkersTo3D() {
+    // Clear existing 3D markers
+    cleanup3DMarkers();
+    
+    // Convert each Leaflet marker to a 3D object
+    markers.forEach((marker, index) => {
+        const survey = marker.surveyData;
+        const lat = survey.latitude;
+        const lon = survey.longitude;
+        
+        // Convert lat/lon to 3D coordinates (scaled for better visualization)
+        const x = (lon - map.getCenter().lng) * 1000; // Scale for better visibility
+        const z = (lat - map.getCenter().lat) * 1000;
+        
+        // Create 3D marker based on risk level
+        const marker3D = create3DMarker(survey, x, z);
+        threeDScene.add(marker3D);
+        threeDMarkers.push(marker3D);
+        
+        // Add hover effect
+        addMarkerInteractivity(marker3D, survey);
+    });
+    
+    // Position camera to view all markers
+    positionCameraForOverview();
+}
+
+function create3DMarker(survey, x, z) {
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+    
+    // Create base pillar
+    const pillarGeometry = new THREE.CylinderGeometry(0.3, 0.5, 2, 8);
+    const pillarMaterial = new THREE.MeshPhongMaterial({ 
+        color: getRiskColor(survey.risk_level),
+        shininess: 30
+    });
+    const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+    pillar.position.y = 1;
+    group.add(pillar);
+    
+    // Create risk level indicator (floating above pillar)
+    const indicatorGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+    const indicatorMaterial = new THREE.MeshPhongMaterial({ 
+        color: getRiskColor(survey.risk_level),
+        emissive: getRiskColor(survey.risk_level),
+        emissiveIntensity: 0.3
+    });
+    const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
+    indicator.position.y = 2.5;
+    
+    // Add pulsing animation
+    indicator.userData.originalScale = indicator.scale.clone();
+    indicator.userData.pulseDirection = 1;
+    indicator.userData.pulseSpeed = 0.01;
+    group.add(indicator);
+    
+    // Add validation status icon
+    const iconGeometry = new THREE.PlaneGeometry(0.8, 0.8);
+    const iconMaterial = new THREE.MeshBasicMaterial({
+        color: survey.validation_status.passed > survey.validation_status.failed ? 0x00ff00 : 0xff0000,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide
+    });
+    const icon = new THREE.Mesh(iconGeometry, iconMaterial);
+    icon.position.y = 2.5;
+    icon.rotation.x = -Math.PI / 2; // Make it face upward
+    group.add(icon);
+    
+    // Add text label (simplified - in real implementation, use Three.js text geometry)
+    const label = createTextLabel(survey.survey_id);
+    label.position.set(0, 3.5, 0);
+    group.add(label);
+    
+    // Store survey data for interactivity
+    group.userData.survey = survey;
+    
+    return group;
+}
+
+function getRiskColor(riskLevel) {
+    const colors = {
+        'no_risk': 0x28a745,    // Green
+        'light_risk': 0x17a2b8, // Blue
+        'heavy_risk': 0xffc107, // Yellow
+        'both_risk': 0xdc3545   // Red
+    };
+    return colors[riskLevel] || 0x808080; // Default to gray
+}
+
+function createTextLabel(text) {
+    // Create a simple text label using CSS2DRenderer or sprite
+    // For simplicity, we'll use a plane with texture (in real implementation, use proper text rendering)
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 64;
+    const context = canvas.getContext('2d');
+    
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.font = '24px Arial';
+    context.fillStyle = '#000000';
+    context.textAlign = 'center';
+    context.fillText(text, canvas.width / 2, canvas.height / 2 + 8);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        side: THREE.DoubleSide
+    });
+    const geometry = new THREE.PlaneGeometry(4, 1);
+    const mesh = new THREE.Mesh(geometry, material);
+    
+    return mesh;
+}
+
+function addMarkerInteractivity(marker3D, survey) {
+    // Store original scale for hover effect
+    marker3D.userData.originalScale = marker3D.scale.clone();
+    
+    // Add raycasting for interactivity
+    marker3D.userData.onHover = function() {
+        marker3D.scale.set(1.2, 1.2, 1.2);
+        showTooltip(survey);
+    };
+    
+    marker3D.userData.onHoverOut = function() {
+        marker3D.scale.copy(marker3D.userData.originalScale);
+        hideTooltip();
+    };
+    
+    marker3D.userData.onClick = function() {
+        showSurveyDetails(survey.id);
+    };
+}
+
+function positionCameraForOverview() {
+    if (threeDMarkers.length === 0) return;
+    
+    // Calculate bounding box of all markers
+    const box = new THREE.Box3();
+    threeDMarkers.forEach(marker => box.expandByObject(marker));
+    
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    
+    // Position camera to view all markers
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const fov = threeDCamera.fov * (Math.PI / 180);
+    let cameraZ = Math.abs(maxDim / Math.sin(fov / 2));
+    
+    threeDCamera.position.set(center.x, cameraZ * 0.8, center.z + cameraZ);
+    threeDCamera.lookAt(center);
+}
+
+function animate3D() {
+    if (!is3DView) return;
+    
+    requestAnimationFrame(animate3D);
+    
+    // Animate the risk indicators (pulsing effect)
+    threeDMarkers.forEach(marker => {
+        const indicator = marker.children.find(child => child.geometry instanceof THREE.SphereGeometry);
+        if (indicator) {
+            const scale = indicator.userData.originalScale;
+            const pulse = Math.sin(Date.now() * indicator.userData.pulseSpeed) * 0.1 + 1;
+            indicator.scale.set(scale.x * pulse, scale.y * pulse, scale.z * pulse);
+        }
+    });
+    
+    // Handle raycasting for interactivity
+    handle3DInteractions();
+    
+    threeDRenderer.render(threeDScene, threeDCamera);
+}
+
+function handle3DInteractions() {
+    // Simple raycasting implementation for hover effects
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    
+    // For simplicity, we'll use a basic approach
+    // In a real implementation, you'd use proper mouse coordinates
+}
+
+function initOrbitControls() {
+    // Initialize orbit controls for 3D navigation
+    const controls = new THREE.OrbitControls(threeDCamera, threeDRenderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 5;
+    controls.maxDistance = 100;
+    controls.maxPolarAngle = Math.PI / 2;
+    
+    controls.update();
+    
+    // Store controls for cleanup
+    threeDScene.userData.controls = controls;
+}
+
+function showTooltip(survey) {
+    // Create or update tooltip
+    let tooltip = document.getElementById('threeDTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'threeDTooltip';
+        tooltip.style.position = 'absolute';
+        tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+        tooltip.style.color = 'white';
+        tooltip.style.padding = '10px';
+        tooltip.style.borderRadius = '5px';
+        tooltip.style.pointerEvents = 'none';
+        tooltip.style.zIndex = '1001';
+        document.body.appendChild(tooltip);
+    }
+    
+    tooltip.innerHTML = `
+        <strong>${survey.survey_id}</strong><br>
+        ${survey.farmer_name}<br>
+        Risk: ${survey.risk_level}<br>
+        Validation: ${survey.validation_status.passed}/${survey.validation_status.total}
+    `;
+}
+
+function hideTooltip() {
+    const tooltip = document.getElementById('threeDTooltip');
+    if (tooltip) {
+        tooltip.style.display = 'none';
+    }
+}
+
+function cleanup3DMarkers() {
+    threeDMarkers.forEach(marker => threeDScene.remove(marker));
+    threeDMarkers = [];
+}
+
+function cleanup3DScene() {
+    if (threeDScene.userData.controls) {
+        threeDScene.userData.controls.dispose();
+    }
+    
+    cleanup3DMarkers();
+    
+    // Dispose of geometries and materials to prevent memory leaks
+    threeDScene.traverse(object => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+            if (Array.isArray(object.material)) {
+                object.material.forEach(material => material.dispose());
+            } else {
+                object.material.dispose();
+            }
+        }
+    });
+}
+
+// Add the 3D toggle button to your UI
+function add3DButtonToUI() {
+    const button = document.createElement('button');
+    button.id = 'toggle3DViewBtn';
+    button.className = 'btn btn-outline-primary btn-sm';
+    button.innerHTML = '<i class="fas fa-cube"></i> 3D View';
+    button.onclick = toggle3DView;
+    
+    // Add to your map controls
+    const controlContainer = document.querySelector('.leaflet-control-container');
+    if (controlContainer) {
+        const div = document.createElement('div');
+        div.className = 'leaflet-control leaflet-bar';
+        div.appendChild(button);
+        controlContainer.appendChild(div);
+    }
+}
+
+// Initialize when page loads
+$(document).ready(function() {
+    // Add Three.js CDN if not already included
+    if (typeof THREE === 'undefined') {
+        const threeScript = document.createElement('script');
+        threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        threeScript.onload = function() {
+            // Also load OrbitControls
+            const orbitScript = document.createElement('script');
+            orbitScript.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+            orbitScript.onload = add3DButtonToUI;
+            document.head.appendChild(orbitScript);
+        };
+        document.head.appendChild(threeScript);
+    } else {
+        add3DButtonToUI();
+    }
+});
+</script>
+
+<style>
+/* Map container styling */
+#map {
+    border-radius: 0.375rem;
+    z-index: 1;
+}
+
+/* Fullscreen mode */
+.fullscreen-map-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    z-index: 9999;
+    display: none;
+}
+
+.fullscreen-map-container.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.fullscreen-map-header {
+    background: #2c3e50;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+body.fullscreen-mode {
+    overflow: hidden;
+}
+
+/* Map loading overlay */
+.map-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    display: none;
+}
+
+.map-loading-overlay.active {
+    display: flex;
+}
+
+/* Map coordinates and scale display */
+.map-coordinates-display {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 500;
+}
+
+.map-scale-display {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 500;
+}
+
+/* Custom marker styles */
+.custom-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.marker-container {
+    transition: all 0.2s ease-in-out;
+}
+
+.marker-container:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3) !important;
+}
+
+.enumerator-survey-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.enumerator-marker {
+    background: #6f42c1;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Popup styling */
+.map-popup {
+    min-width: 250px;
+}
+
+.map-popup h6 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.map-popup p {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+/* Leaflet cluster styles */
+.marker-cluster {
+    background-color: rgba(41, 128, 185, 0.6);
+    border-radius: 50%;
+}
+
+.marker-cluster div {
+    background-color: rgba(52, 152, 219, 0.8);
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marker-cluster-small {
+    background-color: rgba(181, 226, 140, 0.6);
+}
+
+.marker-cluster-small div {
+    background-color: rgba(110, 204, 57, 0.8);
+    width: 30px;
+    height: 30px;
+}
+
+.marker-cluster-medium {
+    background-color: rgba(241, 211, 87, 0.6);
+}
+
+.marker-cluster-medium div {
+    background-color: rgba(240, 194, 12, 0.8);
+    width: 40px;
+    height: 40px;
+}
+
+.marker-cluster-large {
+    background-color: rgba(253, 156, 115, 0.6);
+}
+
+.marker-cluster-large div {
+    background-color: rgba(241, 128, 23, 0.8);
+    width: 50px;
+    height: 50px;
+}
+
+/* Survey details styling */
+.survey-details h4 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.survey-details .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.survey-details .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+}
+
+.risk-level-display {
+    font-size: 1.1rem;
+}
+
+/* Table styling */
+.table th {
+    background-color: #f8f9fa;
+    border-top: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #map {
+        height: 400px;
+    }
+    
+    .card-header .btn-group {
+        margin-top: 0.5rem;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .card-header .btn-group .btn {
+        margin: 0.125rem;
+        font-size: 0.75rem;
+    }
+    
+    .fullscreen-map-header {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+}
+
+/* Animation for smooth transitions */
+.leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-popup {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Custom scrollbar for modal */
+.modal-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Button enhancements */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Card enhancements */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
+}
+
+/* Statistics cards hover effect */
+.card.bg-primary-subtle:hover,
+.card.bg-success-subtle:hover,
+.card.bg-info-subtle:hover,
+.card.bg-danger-subtle:hover,
+.card.bg-warning-subtle:hover,
+.card.bg-secondary-subtle:hover {
+    transform: translateY(-2px);
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Map control buttons */
+.leaflet-control-zoom {
+    border: 2px solid rgba(0, 0, 0, 0.2) !important;
+    border-radius: 0.375rem !important;
+}
+
+.leaflet-control-zoom a {
+    border-radius: 0.25rem !important;
+    margin: 2px !important;
+}
+
+/* Loading state for buttons */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin-left: -0.5rem;
+    margin-top: -0.5rem;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-right-color: transparent;
+    animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Heatmap legend */
+.heatmap-legend {
+    padding: 10px;
+    background: white;
+    border-radius: 5px;
+}
+
+.heatmap-legend h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.heatmap-gradient {
+    height: 15px;
+    width: 100%;
+    background: linear-gradient(to right, blue, lime, red);
+    margin-bottom: 5px;
+}
+
+.heatmap-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+}
+</style>
+{% endblock %}

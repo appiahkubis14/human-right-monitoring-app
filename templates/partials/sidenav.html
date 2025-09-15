@@ -8,6 +8,10 @@
         .side-nav-link .menu-icon {
             min-width: 24px;
         }
+        .sub-menu .side-nav-link .menu-icon {
+            font-size: 18px;
+            margin-right: 8px;
+        }
     </style>
 
     <!-- Brand Logo -->
@@ -36,14 +40,37 @@
     <div data-simplebar>
         <!--- Sidenav Menu -->
         <ul class="side-nav">
-            <li class="side-nav-title">Navigation</li>
-
-            <li class="side-nav-item">
-                <a href="/" class="side-nav-link">
+      
+            <!-- <li class="side-nav-item">
+                <a href="/portal/dashboard/" class="side-nav-link">
                     <span class="menu-icon"><i class="mdi mdi-view-dashboard"></i></span>
                     <span class="menu-text"> Dashboard </span>
                     <span class="badge bg-success rounded-pill">5</span>
                 </a>
+            </li> -->
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarDashboard" aria-expanded="false" aria-controls="sidebarDashboard" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-view-dashboard"></i></span>
+                    <span class="menu-text"> Dashboard Overview</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarDashboard">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/portal/dashboard/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-view-dashboard"></i></span>
+                                <span class="menu-text">Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/portal/map-overview/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-map"></i></span>
+                                <span class="menu-text">Map Overview</span>
+                            </a>
+                        </li>
+                       
+                    </ul>
+                </div>
             </li>
             
             <li class="side-nav-title">Task Management Hub</li>
@@ -58,18 +85,50 @@
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="/portal/staff-management/" class="side-nav-link">
-                                <span class="menu-text">Assign/Unassign Enumerators</span>
+                                <span class="menu-icon"><i class="mdi mdi-account-switch"></i></span>
+                                <span class="menu-text">Enumerators</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/portal/assignments-overview/" class="side-nav-link">
-                                <span class="menu-text">View All Assignments</span>
+                                <span class="menu-icon"><i class="mdi mdi-clipboard-check"></i></span>
+                                <span class="menu-text">Assignments</span>
                             </a>
                         </li>
-                        
                         <li class="side-nav-item">
                             <a href="/portal/priorities-deadlines-assignments/" class="side-nav-link">
-                                <span class="menu-text">Set Deadlines & Priorities</span>
+                                <span class="menu-icon"><i class="mdi mdi-calendar-clock"></i></span>
+                                <span class="menu-text">Deadlines & Priorities</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#sidebarPagesError" aria-expanded="false" aria-controls="sidebarPagesError" class="side-nav-link">
+                    <span class="menu-icon"><i class="mdi mdi-alert-circle-outline"></i></span>
+                    <span class="menu-text"> Remediation </span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse" id="sidebarPagesError">
+                    <ul class="sub-menu">
+                        <li class="side-nav-item">
+                            <a href="/payment-history/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-heart-plus"></i></span>
+                                <span class="menu-text">Child Remediation</span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="/invoices/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-home-heart"></i></span>
+                                <span class="menu-text">Household Sensitization</span>
+                            </a>
+                        </li>
+                         <li class="side-nav-item">
+                            <a href="/invoices/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-clipboard-flow"></i></span>
+                                <span class="menu-text">Intervention Plans</span>
                             </a>
                         </li>
                     </ul>
@@ -86,21 +145,25 @@
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="/progress/work-in-progress/" class="side-nav-link">
-                                <span class="menu-text">View Work in Progress</span>
+                                <span class="menu-icon"><i class="mdi mdi-progress-clock"></i></span>
+                                <span class="menu-text">Work in Progress</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/progress/completed-tasks/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-check-all"></i></span>
                                 <span class="menu-text">Track Completed Tasks</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/progress/pending-followups/" class="side-nav-link">
-                                <span class="menu-text">Check Pending Follow-ups</span>
+                                <span class="menu-icon"><i class="mdi mdi-alert-circle"></i></span>
+                                <span class="menu-text">Follow-ups</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/progress/performance/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-account-star"></i></span>
                                 <span class="menu-text">Enumerator Performance</span>
                             </a>
                         </li>
@@ -118,15 +181,16 @@
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="/portal/send-query/" class="side-nav-link">
-                                <span class="menu-text">Send Query to Enumerator</span>
+                                <span class="menu-icon"><i class="mdi mdi-send"></i></span>
+                                <span class="menu-text">Send Query</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/portal/review-responses/" class="side-nav-link">
-                                <span class="menu-text">Review Enumerator Responses</span>
+                                <span class="menu-icon"><i class="mdi mdi-message-reply-text"></i></span>
+                                <span class="menu-text">Enumerator Responses</span>
                             </a>
                         </li>
-                        
                     </ul>
                 </div>
             </li>
@@ -140,25 +204,24 @@
                 <div class="collapse" id="sidebarQuality">
                     <ul class="sub-menu">
                         <li class="side-nav-item">
-                            <a href="/quality/validate-data/" class="side-nav-link">
+                            <a href="/portal/quality/validate-data/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-file-check"></i></span>
                                 <span class="menu-text">Validate Submitted Data</span>
                             </a>
                         </li>
+                        
                         <li class="side-nav-item">
-                            <a href="/quality/approve-surveys/" class="side-nav-link">
-                                <span class="menu-text">Household Surveys</span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="/quality/audit-checks/" class="side-nav-link">
+                            <a href="/portal/quality/audit-checks/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-magnify-scan"></i></span>
                                 <span class="menu-text">Random Audit Checks</span>
                             </a>
                         </li>
-                        <li class="side-nav-item">
+                        <!-- <li class="side-nav-item">
                             <a href="/quality/spot-checks/" class="side-nav-link">
-                                <span class="menu-text">Spot Check High-Risk Cases</span>
+                                <span class="menu-icon"><i class="mdi mdi-alert-octagon"></i></span>
+                                <span class="menu-text">High-Risk Cases</span>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
                 </div>
             </li>
@@ -175,59 +238,67 @@
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="/portal/societies/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-account-group"></i></span>
                                 <span class="menu-text">Communities</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/portal/community-pci/" class="side-nav-link">
-                                <span class="menu-text">Community Protective Index</span>
+                                <span class="menu-icon"><i class="mdi mdi-shield-account"></i></span>
+                                <span class="menu-text">Community Index(PCI)</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/portal/farmers-management/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-account-tie"></i></span>
                                 <span class="menu-text">Farmers</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/farmer-children/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-baby-face-outline"></i></span>
                                 <span class="menu-text">Farmer Children</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/portal/risk-assessment/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-alert-box"></i></span>
                                 <span class="menu-text">Risk Assessment</span>
                             </a>
                         </li>
-                        
                     </ul>
                 </div>
             </li>
 
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarPages" aria-expanded="false" aria-controls="sidebarPages" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-file-document-outline"></i></span>
+                    <span class="menu-icon"><i class="mdi mdi-home"></i></span>
                     <span class="menu-text"> Household Survey </span>
                     <span class="menu-arrow"></span>
                 </a>
                 <div class="collapse" id="sidebarPages">
                     <ul class="sub-menu">
                         <li class="side-nav-item">
-                            <a href="/available-contracts/" class="side-nav-link">
+                            <a href="/portal/adult-members/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-account-switch"></i></span>
                                 <span class="menu-text">Adult Members</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
-                            <a href="/my-contracts/" class="side-nav-link">
+                            <a href="/portal/child-members/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-account-child"></i></span>
                                 <span class="menu-text">Child Members</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
-                            <a href="/price-trends/" class="side-nav-link">
+                            <a href="/portal/light-tasks/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-briefcase-outline"></i></span>
                                 <span class="menu-text">Light Tasks</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
-                            <a href="/product-listings/" class="side-nav-link">
+                            <a href="/portal/heavy-tasks/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-hard-hat"></i></span>
                                 <span class="menu-text">Heavy Tasks</span>
                             </a>
                         </li>
@@ -235,32 +306,7 @@
                 </div>
             </li>
 
-            <li class="side-nav-item">
-                <a data-bs-toggle="collapse" href="#sidebarPagesError" aria-expanded="false" aria-controls="sidebarPagesError" class="side-nav-link">
-                    <span class="menu-icon"><i class="mdi mdi-alert-circle-outline"></i></span>
-                    <span class="menu-text"> Remediation </span>
-                    <span class="menu-arrow"></span>
-                </a>
-                <div class="collapse" id="sidebarPagesError">
-                    <ul class="sub-menu">
-                        <li class="side-nav-item">
-                            <a href="/payment-history/" class="side-nav-link">
-                                <span class="menu-text">Child Remediation</span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="/invoices/" class="side-nav-link">
-                                <span class="menu-text">Household Sensitization</span>
-                            </a>
-                        </li>
-                         <li class="side-nav-item">
-                            <a href="/invoices/" class="side-nav-link">
-                                <span class="menu-text">Intervention Plans</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
+            
 
             <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarExtendedUI" aria-expanded="false" aria-controls="sidebarExtendedUI" class="side-nav-link">
@@ -272,24 +318,23 @@
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="/reports/progress/" class="side-nav-link">
-                                <span class="menu-text">Daily/Weekly Progress Reports</span>
+                                <span class="menu-icon"><i class="mdi mdi-chart-areaspline"></i></span>
+                                <span class="menu-text">Progress Reports</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/reports/coverage/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-map-marker-radius"></i></span>
                                 <span class="menu-text">Coverage Statistics</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/reports/remediation/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-chart-pie"></i></span>
                                 <span class="menu-text">Remediation Status Overview</span>
                             </a>
                         </li>
-                        <li class="side-nav-item">
-                            <a href="/reports/export/" class="side-nav-link">
-                                <span class="menu-text">Export Data (PDF, Excel, CSV)</span>
-                            </a>
-                        </li>
+                       
                     </ul>
                 </div>
             </li>
@@ -304,12 +349,13 @@
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="/accounts/profile-settings/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-account-cog"></i></span>
                                 <span class="menu-text">Profile Settings</span>
                             </a>
                         </li>
-                        
                         <li class="side-nav-item">
                             <a href="/accounts/notification/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-bell-cog"></i></span>
                                 <span class="menu-text">Notifications</span>
                             </a>
                         </li>
@@ -327,16 +373,19 @@
                     <ul class="sub-menu">
                         <li class="side-nav-item">
                             <a href="/admin/user-management/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-account-multiple-cog"></i></span>
                                 <span class="menu-text">User Management</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/admin/regions-communities/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-map-marker-multiple"></i></span>
                                 <span class="menu-text">Update Regions/Communities</span>
                             </a>
                         </li>
                         <li class="side-nav-item">
                             <a href="/admin/questionnaire-templates/" class="side-nav-link">
+                                <span class="menu-icon"><i class="mdi mdi-clipboard-list"></i></span>
                                 <span class="menu-text">Configure Questionnaire Templates</span>
                             </a>
                         </li>

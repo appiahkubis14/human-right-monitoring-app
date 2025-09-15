@@ -63,7 +63,7 @@ class SchhoolTblResource(resources.ModelResource):
 class HouseHoldTblResource(resources.ModelResource):
     class Meta:
         model = houseHoldTbl
-        fields = ('id', 'enumerator', 'farmer', 'interview_start_time', 'gps_point', 
+        fields = ('id', 'enumerator', 'farmer', 'interview_start_time', 'gps_point','latitude', 'longitude',
                  'community_type', 'farmer_resides_in_community', 
                  'farmer_residing_community', 'farmer_available', 'reason_unavailable', 
                  'reason_unavailable_other', 'available_answer_by', 
@@ -524,3 +524,160 @@ class RiskAssessmentHistoryAdmin(ImportExportModelAdmin):
     list_filter = ('previous_risk_level', 'new_risk_level', 'change_date')
     search_fields = ('risk_assessment__child__first_name', 'risk_assessment__child__last_name', 'change_reason')
     readonly_fields = ('change_date',)
+
+
+
+
+
+from django.contrib import admin
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
+from .models import ValidationRule, SurveyValidationResult, SurveyApproval, HighRiskCase
+
+# Resources for import-export
+class ValidationRuleResource(resources.ModelResource):
+    class Meta:
+        model = ValidationRule
+        fields = ('id', 'name', 'description', 'rule_type', 'severity', 'field_name', 
+                 'validation_expression', 'error_message', 'is_active', )
+        export_order = fields
+
+class SurveyValidationResultResource(resources.ModelResource):
+    class Meta:
+        model = SurveyValidationResult
+        fields = ('id', 'household_survey', 'validation_rule', 'status', 'error_details', 
+                 'validated_by', 'validated_at', )
+        export_order = fields
+
+class SurveyApprovalResource(resources.ModelResource):
+    class Meta:
+        model = SurveyApproval
+        fields = ('id', 'household_survey', 'status', 'approved_by', 'approved_at', 
+                 'rejected_by', 'rejected_at', 'rejection_reason', 'comments', 
+                 'correction_required', 'correction_details', 'correction_deadline', 
+                 )
+        export_order = fields
+
+class HighRiskCaseResource(resources.ModelResource):
+    class Meta:
+        model = HighRiskCase
+        fields = ('id', 'household_survey', 'risk_category', 'priority', 'description', 
+                 'indicators', 'assigned_to', 'due_date', 'status', 'resolution', 
+                 'resolved_by', 'resolved_at', )
+        export_order = fields
+
+# Admin classes
+@admin.register(ValidationRule)
+class ValidationRuleAdmin(ImportExportModelAdmin):
+    resource_class = ValidationRuleResource
+    list_display = ('name', 'rule_type', 'severity', 'field_name', 'is_active',)
+    list_filter = ('rule_type', 'severity', 'is_active',)
+    search_fields = ('name', 'description', 'field_name', 'validation_expression')
+    list_editable = ('is_active',)
+    readonly_fields = ()
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'description', 'is_active')
+        }),
+        ('Rule Configuration', {
+            'fields': ('rule_type', 'severity', 'field_name', 'validation_expression', 'error_message')
+        }),
+        ('Timestamps', {
+            'fields': (),
+            'classes': ('collapse',)
+        }),
+    )
+
+@admin.register(SurveyValidationResult)
+class SurveyValidationResultAdmin(ImportExportModelAdmin):
+    resource_class = SurveyValidationResultResource
+    list_display = ('household_survey', 'validation_rule', 'status', 'validated_by', 'validated_at')
+    list_filter = ('status', 'validation_rule__rule_type', 'validated_at', )
+    search_fields = ('household_survey__survey_id', 'validation_rule__name', 'error_details')
+    readonly_fields = ()
+    autocomplete_fields = ('household_survey', 'validation_rule', 'validated_by')
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'household_survey', 'validation_rule', 'validated_by'
+        )
+
+@admin.register(SurveyApproval)
+class SurveyApprovalAdmin(ImportExportModelAdmin):
+    resource_class = SurveyApprovalResource
+    list_display = ('household_survey', 'status', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at')
+    list_filter = ('status', 'correction_required', 'approved_at', 'rejected_at', )
+    search_fields = ('household_survey__survey_id', 'rejection_reason', 'comments')
+    readonly_fields = ()
+    autocomplete_fields = ('household_survey', 'approved_by', 'rejected_by')
+    
+    fieldsets = (
+        ('Approval Information', {
+            'fields': ('household_survey', 'status')
+        }),
+        ('Approval Details', {
+            'fields': ('approved_by', 'approved_at'),
+            'classes': ('collapse',)
+        }),
+        ('Rejection Details', {
+            'fields': ('rejected_by', 'rejected_at', 'rejection_reason'),
+            'classes': ('collapse',)
+        }),
+        ('Correction Details', {
+            'fields': ('correction_required', 'correction_details', 'correction_deadline', 'comments')
+        }),
+        ('Timestamps', {
+            'fields': (),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'household_survey', 'approved_by', 'rejected_by'
+        )
+
+@admin.register(HighRiskCase)
+class HighRiskCaseAdmin(ImportExportModelAdmin):
+    resource_class = HighRiskCaseResource
+    list_display = ('household_survey', 'risk_category', 'priority', 'status', 'assigned_to', 'due_date')
+    list_filter = ('risk_category', 'priority', 'status', 'due_date')
+    search_fields = ('household_survey__survey_id', 'description', 'indicators', 'resolution')
+    readonly_fields = ( 'resolved_at',)
+    autocomplete_fields = ('household_survey', 'assigned_to', 'resolved_by')
+    
+    fieldsets = (
+        ('Case Information', {
+            'fields': ('household_survey', 'risk_category', 'priority')
+        }),
+        ('Case Details', {
+            'fields': ('description', 'indicators')
+        }),
+        ('Assignment & Due Date', {
+            'fields': ('assigned_to', 'due_date')
+        }),
+        ('Resolution', {
+            'fields': ('status', 'resolution', 'resolved_by', 'resolved_at')
+        }),
+        ('Timestamps', {
+            'fields': (),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'household_survey', 'assigned_to', 'resolved_by'
+        )
+
+# Optional: Custom admin actions
+def mark_as_active(modeladmin, request, queryset):
+    queryset.update(is_active=True)
+mark_as_active.short_description = "Mark selected items as active"
+
+def mark_as_inactive(modeladmin, request, queryset):
+    queryset.update(is_active=False)
+mark_as_inactive.short_description = "Mark selected items as inactive"
+
+# Add actions to specific admins
+ValidationRuleAdmin.actions = [mark_as_active, mark_as_inactive]

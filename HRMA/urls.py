@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include('core.urls')),
     path('accounts/', include('accounts.urls')),
     path('portal/', include('portal.urls')),
+    path('api/', include('api.urls')),
 
     # path('pos/', include('pos.urls')),
     # path('<path:not_found>/', TemplateView.as_view(template_name='pages-404.html'), name='404'),

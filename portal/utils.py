@@ -118,7 +118,9 @@ GRADE_CHOICES = [
     ('JHS1', 'JHS/JSS 1'), ('JHS2', 'JHS/JSS 2'), ('JHS3', 'JHS/JSS 3'),
     ('SSS1', 'SSS/JHS 1'), ('SSS2', 'SSS/JHS 2'), ('SSS3', 'SSS/JHS 3'), ('SSS4', 'SSS/JHS 4'),
 ]
-SCHOOL_GOING_TIMES_CHOICES = [('01', 'Once'), ('02', 'Twice'), ('03', 'Thrice'), ('04', 'Four times'), ('05', 'Five times')]
+SCHOOL_GOING_TIMES_CHOICES = [
+    ('once', 'Once'),
+                               ('twice', 'Twice'), ('thrice', 'Thrice'), ('four_times', 'Four times'), ('five_times', 'Five times')]
 BASIC_NEED_CHOICES = [('books', 'Books'), ('bag', 'School bag'), ('pen', 'Pen / Pencils'), ('uniform', 'School Uniforms'), ('shoes', 'Shoes and Socks'), ('none', 'None of the above')]
 SCHL2_CHOICES = [('01', 'Yes, they went to school but stopped'), ('00', 'No, they have never been to school')]
 

@@ -5,6 +5,8 @@ from . import views
 
 urlpatterns = [
 
+    path('dashboard/', views.child_labor_dashboard, name='dashboard'),
+
     path('staff-management/', views.StaffManagementView.as_view(), name='staff_management'),
     path('staff-data/', views.get_staff_data, name='get_staff_data'),
     path('details/', views.get_staff_details, name='get_staff_details'),
@@ -125,4 +127,110 @@ urlpatterns = [
     path('api/risk-assessment/reassess-all/', views.reassess_all_risks_api, name='reassess_all_risks_api'),
     path('api/risk-assessment/reassess-child/<int:child_id>/', views.reassess_child_risk_api, name='reassess_child_risk_api'),
 
+
+    ########################################################################################################
+
+    # Adult Members pages
+    path('adult-members/', views.adult_members_view, name='adult_members'),
+    
+    # API endpoints
+    path('api/adult-members/', views.adult_members_list_api, name='adult_members_list_api'),
+    path('api/adult-members/create/', views.create_adult_member_api, name='create_adult_member_api'),
+    path('api/adult-members/<int:member_id>/', views.adult_member_detail_api, name='adult_member_detail_api'),
+    path('api/adult-members/<int:member_id>/update/', views.update_adult_member_api, name='update_adult_member_api'),
+    path('api/adult-members/<int:member_id>/delete/', views.delete_adult_member_api, name='delete_adult_member_api'),
+    
+    # Filter data endpoints
+    path('api/households/', views.get_households_api, name='get_households_api'),
+    path('api/farmers/', views.get_farmers_api, name='get_farmers_api'),
+
+
+    ########################################################################################################
+
+    path('child-members/', views.ChildMembersView.as_view(), name='child_members'),
+    path('child-members/data/', views.get_child_members_data, name='get_child_members_data'),
+    path('child-members/details/', views.get_child_member_details, name='get_child_member_details'),
+    path('child-members/create/', views.create_child_member, name='create_child_member'),
+    path('child-members/update/<int:child_id>/', views.update_child_member, name='update_child_member'),
+    path('child-members/delete/<int:child_id>/', views.delete_child_member, name='delete_child_member'),
+    path('child-members/options/', views.get_child_options_data, name='get_child_options'),
+
+
+    ############################################################################################################
+
+    path('light-tasks/', views.light_tasks_list, name='light_tasks_list'),
+    path('light-tasks/data/', views.get_light_tasks_data, name='get_light_tasks_data'),
+    path('light-tasks/create/', views.create_light_task, name='create_light_task'),
+    path('light-tasks/<int:task_id>/details/', views.get_light_task_details, name='get_light_task_details'),
+    path('light-tasks/<int:task_id>/update/', views.update_light_task, name='update_light_task'),
+    path('light-tasks/<int:task_id>/delete/', views.delete_light_task, name='delete_light_task'),
+
+    ###############################################################################################################
+
+     # Heavy Tasks URLs
+    path('heavy-tasks/', views.heavy_tasks_list, name='heavy_tasks_list'),
+    path('heavy-tasks/data/', views.get_heavy_tasks_data, name='get_heavy_tasks_data'),
+    path('heavy-tasks/create/', views.create_heavy_task, name='create_heavy_task'),
+    path('heavy-tasks/<int:task_id>/details/', views.get_heavy_task_details, name='get_heavy_task_details'),
+    path('heavy-tasks/<int:task_id>/update/', views.update_heavy_task, name='update_heavy_task'),
+    path('heavy-tasks/<int:task_id>/delete/', views.delete_heavy_task, name='delete_heavy_task'),
+    
+    # Child Heavy Tasks URLs
+    path('child-heavy-tasks/data/', views.get_child_heavy_tasks_data, name='get_child_heavy_tasks_data'),
+    path('child-heavy-tasks/data/child/<int:child_id>/', views.get_child_heavy_tasks_data, name='get_child_heavy_tasks_data_for_child'),
+
+
+    #################################################################################################################
+
+    # path('quality/validate-data/', views.validate_data_list, name='quality'),
+    # path('quality/validate-data/', views.validate_data_list, name='validate_data_list'),
+    # path('quality/validate-data/data/', views.get_validation_data, name='get_validation_data'),
+    # path('quality/validate-data/stats/', views.get_validation_stats, name='get_validation_stats'),
+    # path('quality/validate-data/household/<int:household_id>/', views.get_household_details, name='get_household_details'),
+    # path('quality/validate-data/household/<int:household_id>/validate/', views.validate_household, name='validate_household'),
+
+    ##################################################################################################################################
+
+    path('quality/audit-checks/', views.AuditChecksView.as_view(), name='audit_checks'),
+    path('quality/audit-checks/data/', views.get_audit_checks_data, name='get_audit_checks_data'),
+    path('quality/audit-checks/details/', views.get_audit_check_details, name='get_audit_check_details'),
+    path('quality/audit-checks/create/', views.create_audit_check, name='create_audit_check'),
+    path('quality/audit-checks/update/<int:audit_id>/', views.update_audit_check, name='update_audit_check'),
+    path('quality/audit-checks/delete/<int:audit_id>/', views.delete_audit_check, name='delete_audit_check'),
+    path('quality/audit-checks/options/', views.get_audit_options_data, name='get_audit_options'),
+
+
+
+
+    ###################################################################################################################################
+
+     # Quality Control pages
+    path('quality/validate-data/', views.validate_data_view, name='validate_data'),
+    path('quality/approve-surveys/', views.approve_surveys_view, name='approve_surveys'),
+    path('quality/audit-checks/', views.audit_checks_view, name='audit_checks'),
+    path('quality/spot-checks/', views.spot_checks_view, name='spot_checks'),
+    
+    # API endpoints
+    path('api/quality/household-surveys/', views.household_surveys_list_api, name='household_surveys_list_api'),
+    path('api/quality/household-surveys/<int:survey_id>/validate/', views.validate_household_survey_api, name='validate_household_survey_api'),
+    path('api/quality/household-surveys/<int:survey_id>/reject/', views.reject_household_survey_api, name='reject_household_survey_api'),
+    path('api/quality/household-surveys/<int:survey_id>/details/', views.household_survey_detail_api, name='household_survey_detail_api'),
+    path('api/quality/validation-rules/', views.get_validation_rules_api, name='get_validation_rules_api'),
+    
+    # Filter endpoints
+    path('api/quality/enumerators/', views.get_enumerators_api, name='get_enumerators_api'),
+    path('api/quality/communities/', views.get_communities_api, name='get_communities_api'),
+
+
+    #################################################################################################################################################
+
+    # Map Overview URLs
+   path('map-overview/', views.map_overview_view, name='map_overview'),
+    path('api/survey-locations/', views.get_survey_locations_api, name='survey_locations_api'),
+    path('api/survey-details/<int:survey_id>/', views.get_survey_details_api, name='survey_details_api'),
+    path('api/enumerators/', views.get_enumerators_api, name='get_enumerators_api'),
+    path('api/districts/', views.get_districts_api, name='get_districts_api'),
+    path('api/enumerator-tracking/<int:enumerator_id>/', views.get_enumerator_tracking_api, name='enumerator_tracking_api'),
+    path('api/map-clusters/', views.get_map_clusters_api, name='map_clusters_api'),
+    path('api/export-map-data/', views.export_map_data_api, name='export_map_data_api'),
 ]

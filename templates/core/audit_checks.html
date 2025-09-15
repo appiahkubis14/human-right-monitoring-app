@@ -1,0 +1,938 @@
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <br>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="mb-3">
+                            <div>
+                                <h4 style="font-weight: bolder;">RANDOM AUDIT CHECKS</h4>
+                                <p class="mb-0">Manage and track random audit checks for quality control</p>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-gradient-primary btn-sm me-2" id="addAuditBtn">
+                                <i class="fas fa-plus"></i> NEW AUDIT
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" id="generateRandomBtn">
+                                <i class="fas fa-random"></i> GENERATE RANDOM
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-primary filter-btn active" data-filter="all">
+                                        All Audits
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="Pending">
+                                        Pending
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="In Progress">
+                                        In Progress
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="Completed">
+                                        Completed
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="Failed">
+                                        Failed
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary filter-btn" data-filter="high_priority">
+                                        High Priority
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="auditsTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>AUDIT ID</th>
+                                        <th>TITLE</th>
+                                        <th>TYPE</th>
+                                        <th>STATUS</th>
+                                        <th>METHOD</th>
+                                        <th>ASSIGNED TO</th>
+                                        <th>SCHEDULED DATE</th>
+                                        <th>DUE DATE</th>
+                                        <th>SCORE</th>
+                                        <th>PRIORITY</th>
+                                        <th>DAYS LEFT</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Modal -->
+        <div class="modal fade" id="auditModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title" id="modalTitle">New Audit Check</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="auditForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" id="auditId" name="auditId">
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Basic Information</h6>
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="title" class="form-label">Title*</label>
+                                                <input type="text" class="form-control" id="title" name="title" required>
+                                                <div class="invalid-feedback">Please enter audit title</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="audit_type_id" class="form-label">Audit Type*</label>
+                                                <select class="form-select select2-single" id="audit_type_id" name="audit_type_id" required>
+                                                    <option value="" selected disabled>Select Audit Type</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                                <div class="invalid-feedback">Please select audit type</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="audit_method" class="form-label">Audit Method*</label>
+                                                <select class="form-select" id="audit_method" name="audit_method" required>
+                                                    <option value="" selected disabled>Select Method</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                                <div class="invalid-feedback">Please select audit method</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="assigned_to_id" class="form-label">Assigned To*</label>
+                                                <select class="form-select select2-single" id="assigned_to_id" name="assigned_to_id" required>
+                                                    <option value="" selected disabled>Select Staff</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                                <div class="invalid-feedback">Please select assigned staff</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="status_id" class="form-label">Status</label>
+                                                <select class="form-select select2-single" id="status_id" name="status_id">
+                                                    <option value="" selected disabled>Select Status</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="scheduled_date" class="form-label">Scheduled Date*</label>
+                                                <input type="datetime-local" class="form-control" id="scheduled_date" name="scheduled_date" required>
+                                                <div class="invalid-feedback">Please select scheduled date</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="due_date" class="form-label">Due Date</label>
+                                                <input type="datetime-local" class="form-control" id="due_date" name="due_date">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="is_high_priority" name="is_high_priority">
+                                                <label class="form-check-label" for="is_high_priority">
+                                                    High Priority
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="is_random_selection" name="is_random_selection" checked>
+                                                <label class="form-check-label" for="is_random_selection">
+                                                    Random Selection
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6 class="text-primary">Related Entities</h6>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="household_id" class="form-label">Household</label>
+                                                <select class="form-select select2-single" id="household_id" name="household_id">
+                                                    <option value="" selected disabled>Select Household</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="farmer_id" class="form-label">Farmer</label>
+                                                <select class="form-select select2-single" id="farmer_id" name="farmer_id">
+                                                    <option value="" selected disabled>Select Farmer</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="child_id" class="form-label">Child</label>
+                                                <select class="form-select select2-single" id="child_id" name="child_id">
+                                                    <option value="" selected disabled>Select Child</option>
+                                                    <!-- Options will be loaded via AJAX -->
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <h6 class="text-primary">Results & Findings</h6>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="score" class="form-label">Score (%)</label>
+                                                <input type="number" class="form-control" id="score" name="score" min="0" max="100" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check mt-4">
+                                                <input class="form-check-input" type="checkbox" id="is_passed" name="is_passed">
+                                                <label class="form-check-label" for="is_passed">
+                                                    Passed Audit
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="findings" class="form-label">Findings</label>
+                                                <textarea class="form-control" id="findings" name="findings" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="recommendations" class="form-label">Recommendations</label>
+                                                <textarea class="form-control" id="recommendations" name="recommendations" rows="2"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="requires_follow_up" name="requires_follow_up">
+                                                <label class="form-check-label" for="requires_follow_up">
+                                                    Requires Follow-up
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="description" class="form-label">Description</label>
+                                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3" id="statusField" style="display: none;">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="status_text" class="form-label">Status*</label>
+                                        <select class="form-select" id="status_text" name="status_text" required>
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="saveBtn">Create Audit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    var auditsTable = $('#auditsTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "{% url 'get_audit_checks_data' %}",
+            type: "GET",
+            dataSrc: function(json) {
+                if (json.success) {
+                    return json.data;
+                } else {
+                    console.error('Error loading audits:', json.message);
+                    showErrorAlert(json.message || 'Failed to load audit data');
+                    return [];
+                }
+            },
+            error: function(xhr, error, thrown) {
+                console.error('AJAX error:', error, thrown);
+                showErrorAlert('Failed to load audit data. Please check console for details.');
+            }
+        },
+        columns: [
+            { data: 'id' },
+            { 
+                data: 'audit_id',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { 
+                data: 'title',
+                render: function(data) {
+                    return data || 'No Title';
+                }
+            },
+            { 
+                data: 'audit_type',
+                render: function(data) {
+                    return data || 'N/A';
+                }
+            },
+            { 
+                data: 'status',
+                render: function(data, type, row) {
+                    var badgeClass = '';
+                    switch(data) {
+                        case 'Pending': badgeClass = 'bg-secondary'; break;
+                        case 'In Progress': badgeClass = 'bg-primary'; break;
+                        case 'Completed': badgeClass = 'bg-success'; break;
+                        case 'Failed': badgeClass = 'bg-danger'; break;
+                        default: badgeClass = 'bg-secondary';
+                    }
+                    return `<span class="badge ${badgeClass}">${data}</span>`;
+                }
+            },
+            { 
+                data: 'audit_method',
+                render: function(data) {
+                    return data ? data.replace('_', ' ').toUpperCase() : 'N/A';
+                }
+            },
+            { 
+                data: 'assigned_to',
+                render: function(data) {
+                    return data || 'Unassigned';
+                }
+            },
+            { 
+                data: 'scheduled_date',
+                render: function(data) {
+                    return data ? new Date(data).toLocaleString() : 'N/A';
+                }
+            },
+            { 
+                data: 'due_date',
+                render: function(data) {
+                    return data ? new Date(data).toLocaleString() : 'N/A';
+                }
+            },
+            { 
+                data: 'score',
+                render: function(data) {
+                    if (data === null || data === undefined) return 'N/A';
+                    var badgeClass = data >= 80 ? 'bg-success' : (data >= 60 ? 'bg-warning' : 'bg-danger');
+                    return `<span class="badge ${badgeClass}">${data}%</span>`;
+                }
+            },
+            { 
+                data: 'is_high_priority',
+                render: function(data) {
+                    return data ? '<span class="badge bg-danger">HIGH</span>' : '<span class="badge bg-secondary">NORMAL</span>';
+                }
+            },
+            { 
+                data: 'days_remaining',
+                render: function(data, type, row) {
+                    if (data === null || data === undefined) return 'N/A';
+                    var badgeClass = data <= 1 ? 'bg-danger' : (data <= 3 ? 'bg-warning' : 'bg-success');
+                    var text = row.is_overdue ? 'OVERDUE' : `${data} days left`;
+                    return `<span class="badge ${badgeClass}">${text}</span>`;
+                }
+            },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm edit-btn" data-id="${data}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-btn" data-id="${data}">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </div>
+                    `;
+                },
+                orderable: false
+            }
+        ],
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: "copy",
+                text: '<i class="fas fa-copy"></i> Copy',
+                className: "btn btn-sm btn-outline-secondary",
+            },
+            {
+                extend: "csv",
+                text: '<i class="fas fa-file-csv"></i> CSV',
+                className: "btn btn-sm btn-outline-success",
+            },
+            {
+                extend: "excel",
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: "btn btn-sm btn-outline-primary",
+            },
+            {
+                extend: "pdf",
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: "btn btn-sm btn-outline-danger",
+            },
+        ],
+        language: {
+            emptyTable: "No audit checks found. Click 'New Audit' to add one.",
+            zeroRecords: "No matching audit checks found.",
+            processing: '<i class="fa fa-spinner fa-spin"></i> Loading audit checks...'
+        }
+    });
+
+    // Filter functionality
+    $('.filter-btn').click(function() {
+        $('.filter-btn').removeClass('active');
+        $(this).addClass('active');
+        
+        var filter = $(this).data('filter');
+        if (filter === 'all') {
+            auditsTable.search('').draw();
+        } else if (filter === 'high_priority') {
+            auditsTable.column(10).search('^HIGH$', true, false).draw();
+        } else {
+            auditsTable.column(4).search(filter).draw();
+        }
+    });
+
+    // Generate random audit
+    $('#generateRandomBtn').click(function() {
+        Swal.fire({
+            title: 'Generate Random Audit',
+            text: 'How many random audits would you like to generate?',
+            input: 'number',
+            inputAttributes: {
+                min: 1,
+                max: 20,
+                step: 1
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Generate',
+            cancelButtonText: 'Cancel',
+            showLoaderOnConfirm: true,
+            preConfirm: (count) => {
+                if (!count || count < 1 || count > 20) {
+                    Swal.showValidationMessage('Please enter a number between 1 and 20');
+                }
+                return count;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                generateRandomAudits(result.value);
+            }
+        });
+    });
+
+    function generateRandomAudits(count) {
+        $.ajax({
+            url: "",
+            type: "POST",
+            data: JSON.stringify({ count: count }),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Generating random audits...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert(`Successfully generated ${count} random audits`);
+                    auditsTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to generate random audits');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'generate random audits');
+            }
+        });
+    }
+
+    // Load options data
+    function loadOptionsData() {
+        $.ajax({
+            url: "{% url 'get_audit_options' %}",
+            type: "GET",
+            success: function(response) {
+                if (response.success) {
+                    // Load audit types
+                    $('#audit_type_id').empty().append('<option value="" selected disabled>Select Audit Type</option>');
+                    $.each(response.audit_types, function(index, item) {
+                        $('#audit_type_id').append($('<option>', {
+                            value: item.id,
+                            text: item.name
+                        }));
+                    });
+                    
+                    // Load audit statuses
+                    $('#status_id').empty().append('<option value="" selected disabled>Select Status</option>');
+                    $.each(response.audit_statuses, function(index, item) {
+                        $('#status_id').append($('<option>', {
+                            value: item.id,
+                            text: item.name
+                        }));
+                    });
+                    
+                    // Load audit methods
+                    $('#audit_method').empty().append('<option value="" selected disabled>Select Method</option>');
+                    $.each(response.audit_methods, function(index, item) {
+                        $('#audit_method').append($('<option>', {
+                            value: item.value,
+                            text: item.label
+                        }));
+                    });
+                    
+                    // Load staff options
+                    $('#assigned_to_id').empty().append('<option value="" selected disabled>Select Staff</option>');
+                    $.each(response.staff, function(index, item) {
+                        $('#assigned_to_id').append($('<option>', {
+                            value: item.id,
+                            text: item.name
+                        }));
+                    });
+                    
+                    // Load household options
+                    $('#household_id').empty().append('<option value="" selected disabled>Select Household</option>');
+                    $.each(response.households, function(index, item) {
+                        $('#household_id').append($('<option>', {
+                            value: item.id,
+                            text: item.name
+                        }));
+                    });
+                    
+                    // Load farmer options
+                    $('#farmer_id').empty().append('<option value="" selected disabled>Select Farmer</option>');
+                    $.each(response.farmers, function(index, item) {
+                        $('#farmer_id').append($('<option>', {
+                            value: item.id,
+                            text: item.name
+                        }));
+                    });
+                    
+                    // Load child options
+                    $('#child_id').empty().append('<option value="" selected disabled>Select Child</option>');
+                    $.each(response.children, function(index, item) {
+                        $('#child_id').append($('<option>', {
+                            value: item.id,
+                            text: item.name
+                        }));
+                    });
+                    
+                    // Initialize select2
+                    $('.select2-single').select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        dropdownParent: $('#auditModal')
+                    });
+                } else {
+                    showErrorAlert(response.message || 'Failed to load options');
+                }
+            },
+            error: function() {
+                showErrorAlert('Failed to load options data');
+            }
+        });
+    }
+
+    // ----- CREATE -----
+    $('#addAuditBtn').click(function() {
+        $('#auditForm')[0].reset();
+        $('#modalTitle').text('New Audit Check');
+        $('#auditId').val('');
+        $('#statusField').hide();
+        $('#is_high_priority').prop('checked', false);
+        $('#is_random_selection').prop('checked', true);
+        $('#is_passed').prop('checked', false);
+        $('#requires_follow_up').prop('checked', false);
+        loadOptionsData();
+        $('#auditModal').modal('show');
+    });
+
+    $('#auditForm').submit(function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!this.checkValidity()) {
+            e.stopPropagation();
+            this.classList.add('was-validated');
+            return;
+        }
+        
+        var formData = {
+            'title': $('#title').val(),
+            'description': $('#description').val(),
+            'audit_type_id': $('#audit_type_id').val(),
+            'audit_method': $('#audit_method').val(),
+            'assigned_to_id': $('#assigned_to_id').val(),
+            'status_id': $('#status_id').val(),
+            'scheduled_date': $('#scheduled_date').val(),
+            'due_date': $('#due_date').val(),
+            'household_id': $('#household_id').val(),
+            'farmer_id': $('#farmer_id').val(),
+            'child_id': $('#child_id').val(),
+            'score': $('#score').val(),
+            'findings': $('#findings').val(),
+            'recommendations': $('#recommendations').val(),
+            'is_passed': $('#is_passed').is(':checked'),
+            'is_high_priority': $('#is_high_priority').is(':checked'),
+            'is_random_selection': $('#is_random_selection').is(':checked'),
+            'requires_follow_up': $('#requires_follow_up').is(':checked')
+        };
+        
+        if ($('#auditId').val()) {
+            // Update existing audit
+            var auditId = $('#auditId').val();
+            formData.status_text = $('#status_text').val();
+            updateAuditCheck(auditId, formData);
+        } else {
+            // Create new audit
+            createAuditCheck(formData);
+        }
+    });
+
+    function createAuditCheck(formData) {
+        $.ajax({
+            url: "{% url 'create_audit_check' %}",
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Audit check created successfully');
+                    $('#auditModal').modal('hide');
+                    $('#auditForm').removeClass('was-validated');
+                    auditsTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to create audit check');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'create audit check');
+            },
+            complete: function() {
+                $('#saveBtn').prop('disabled', false).html('Create Audit');
+            }
+        });
+    }
+
+    // ----- UPDATE -----
+    $(document).on('click', '.edit-btn', function() {
+        var auditId = $(this).data('id');
+        getAuditCheckDetails(auditId);
+    });
+
+    function getAuditCheckDetails(auditId) {
+        $.ajax({
+            url: "{% url 'get_audit_check_details' %}",
+            type: "GET",
+            data: { audit_id: auditId },
+            beforeSend: function() {
+                showLoadingAlert('Loading audit details...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    var audit = response.data;
+                    $('#auditForm')[0].reset();
+                    $('#modalTitle').text('Edit Audit Check');
+                    $('#auditId').val(auditId);
+                    $('#statusField').show();
+                    $('#status_text').val(audit.status_text);
+                    
+                    // Set form values
+                    $('#title').val(audit.title);
+                    $('#description').val(audit.description);
+                    $('#scheduled_date').val(audit.scheduled_date);
+                    $('#due_date').val(audit.due_date);
+                    $('#score').val(audit.score);
+                    $('#findings').val(audit.findings);
+                    $('#recommendations').val(audit.recommendations);
+                    $('#is_passed').prop('checked', audit.is_passed);
+                    $('#is_high_priority').prop('checked', audit.is_high_priority);
+                    $('#is_random_selection').prop('checked', audit.is_random_selection);
+                    $('#requires_follow_up').prop('checked', audit.requires_follow_up);
+                    
+                    loadOptionsData();
+                    
+                    // Set values after select2 is initialized
+                    setTimeout(function() {
+                        $('#audit_type_id').val(audit.audit_type_id).trigger('change');
+                        $('#audit_method').val(audit.audit_method).trigger('change');
+                        $('#status_id').val(audit.status_id).trigger('change');
+                        $('#assigned_to_id').val(audit.assigned_to_id).trigger('change');
+                        $('#household_id').val(audit.household_id).trigger('change');
+                        $('#farmer_id').val(audit.farmer_id).trigger('change');
+                        $('#child_id').val(audit.child_id).trigger('change');
+                        $('#auditModal').modal('show');
+                    }, 500);
+                } else {
+                    showErrorAlert(response.message || 'Failed to load audit details');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load audit details');
+            }
+        });
+    }
+
+    function updateAuditCheck(auditId, formData) {
+        $.ajax({
+            url: "{% url 'update_audit_check' 0 %}".replace('0', auditId),
+            type: "POST",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                $('#saveBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessAlert('Audit check updated successfully');
+                    $('#auditModal').modal('hide');
+                    $('#auditForm').removeClass('was-validated');
+                    auditsTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to update audit check');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'update audit check');
+            },
+            complete: function() {
+                $('#saveBtn').prop('disabled', false).html('Update Audit');
+            }
+        });
+    }
+
+    // ----- DELETE -----
+    $(document).on('click', '.delete-btn', function() {
+        var auditId = $(this).data('id');
+        
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This audit check will be deleted. This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteAuditCheck(auditId);
+            }
+        });
+    });
+
+    function deleteAuditCheck(auditId) {
+        $.ajax({
+            url: "{% url 'delete_audit_check' 0 %}".replace('0', auditId),
+            type: "DELETE",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Deleting audit check...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert('Audit check deleted successfully');
+                    auditsTable.ajax.reload(null, false);
+                } else {
+                    showErrorAlert(response.message || 'Failed to delete audit check');
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'delete audit check');
+            }
+        });
+    }
+
+    // ==================== HELPER FUNCTIONS ====================
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showSuccessAlert(message) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function showErrorAlert(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message
+        });
+    }
+
+    function showLoadingAlert(message) {
+        Swal.fire({
+            title: 'Please wait...',
+            text: message,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    function handleAjaxError(xhr, action) {
+        let errorMsg = `An error occurred while trying to ${action}`;
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.message) {
+                errorMsg = xhr.responseJSON.message;
+            } else if (xhr.responseJSON.error) {
+                errorMsg = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.detail) {
+                errorMsg = xhr.responseJSON.detail;
+            }
+        } else if (xhr.status === 0) {
+            errorMsg = 'Network error. Please check your connection.';
+        } else if (xhr.statusText) {
+            errorMsg = xhr.statusText;
+        }
+        
+        showErrorAlert(errorMsg);
+    }
+
+    // Add error handling for the table
+    auditsTable.on('error.dt', function(e, settings, techNote, message) {
+        console.error('DataTables error:', message);
+        showErrorAlert('Error loading audit data. Please check console for details.');
+    });
+});
+</script>
+
+<style>
+.btn-gradient-primary {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    border: none;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.btn-gradient-primary:hover {
+    background: linear-gradient(45deg, #2e59d9, #1e3a8a);
+    transform: translateY(-1px);
+}
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.filter-btn.active {
+    background-color: #4e73df;
+    color: white;
+    border-color: #4e73df;
+}
+</style>
+{% endblock %}

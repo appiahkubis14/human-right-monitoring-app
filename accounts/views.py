@@ -72,7 +72,7 @@ class LoginView(View):
 
 
 class RegistrationView(View):
-    template_name = 'auth/register.html'
+    template_name = 'auth/auth-register.html'
     form_class = RegistrationForm
 
     def get(self, request):

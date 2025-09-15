@@ -1,0 +1,684 @@
+{% extends 'base/web_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-container">
+        <br>
+        
+        <!-- Statistics Cards -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Surveys</h5>
+                        <h2 id="totalSurveys" class="card-text">0</h2>
+                        <p class="card-text">Household surveys submitted</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Validated</h5>
+                        <h2 id="validatedSurveys" class="card-text">0</h2>
+                        <p class="card-text">Surveys validated</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Pending</h5>
+                        <h2 id="pendingSurveys" class="card-text">0</h2>
+                        <p class="card-text">Surveys pending validation</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Validation Rate</h5>
+                        <h2 id="validationRate" class="card-text">0%</h2>
+                        <p class="card-text">Overall validation progress</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Actions -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="mb-3">
+                            <div>
+                                <h4 style="font-weight: bolder;">VALIDATE SUBMITTED DATA</h4>
+                                <p class="mb-0">Review and validate household survey data</p>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary btn-sm" id="refreshBtn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" id="exportBtn">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="statusFilter" class="form-label">Validation Status</label>
+                                <select class="form-select" id="statusFilter">
+                                    <option value="all">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="changes_requested">Changes Requested</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="riskFilter" class="form-label">Risk Level</label>
+                                <select class="form-select" id="riskFilter">
+                                    <option value="all">All Risk Levels</option>
+                                    <option value="no_risk">No Risk</option>
+                                    <option value="light_risk">Light Risk</option>
+                                    <option value="heavy_risk">Heavy Risk</option>
+                                    <option value="both_risk">Both Risks</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="dateFilter" class="form-label">Date Range</label>
+                                <input type="date" class="form-control" id="dateFilter">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button class="btn btn-primary w-100" id="applyFilters">
+                                    <i class="fas fa-filter"></i> Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table id="validationTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>FARMER NAME</th>
+                                        <th>FARMER CODE</th>
+                                        <th>ENUMERATOR</th>
+                                        <th>INTERVIEW DATE</th>
+                                        <th>CHILDREN</th>
+                                        <th>ADULTS</th>
+                                        <th>RISK LEVEL</th>
+                                        <th>STATUS</th>
+                                        <th>SUBMITTED</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation Modal -->
+        <div class="modal fade" id="validationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header text-white bg-primary">
+                        <h5 class="modal-title" id="modalTitle">Validate Household Survey</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="householdDetails">
+                            <!-- Details will be loaded via AJAX -->
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Loading household details...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6>Validation Actions</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="validationForm">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label for="validationNotes" class="form-label">Validation Notes</label>
+                                                        <textarea class="form-control" id="validationNotes" rows="4" placeholder="Enter validation notes or reasons for rejection..."></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row mt-3">
+                                                <div class="col-md-3">
+                                                    <button type="button" class="btn btn-success w-100" onclick="submitValidation('approve')">
+                                                        <i class="fas fa-check"></i> Approve
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <button type="button" class="btn btn-warning w-100" onclick="submitValidation('request_changes')">
+                                                        <i class="fas fa-edit"></i> Request Changes
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <button type="button" class="btn btn-danger w-100" onclick="submitValidation('reject')">
+                                                        <i class="fas fa-times"></i> Reject
+                                                    </button>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+                                                        <i class="fas fa-times"></i> Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    let currentHouseholdId = null;
+    
+    // Initialize DataTable
+    var validationTable = $('#validationTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        info: true,
+        responsive: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: true,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "{% url 'get_validation_data' %}",
+            type: "GET",
+            data: function (d) {
+                d.status = $('#statusFilter').val();
+                d.risk = $('#riskFilter').val();
+            },
+            dataSrc: function (json) {
+                if (json.error) {
+                    showErrorAlert(json.error);
+                    return [];
+                }
+                return json.data;
+            },
+            error: function(xhr, error, thrown) {
+                showErrorAlert('Failed to load validation data');
+            }
+        },
+        columns: [
+            { data: 'id' },
+            { data: 'farmer_name' },
+            { data: 'farmer_code' },
+            { data: 'enumerator' },
+            { data: 'interview_date' },
+            { data: 'total_children' },
+            { data: 'total_adults' },
+            { 
+                data: 'risk_level',
+                render: function(data, type, row) {
+                    const riskClasses = {
+                        'no_risk': 'bg-success',
+                        'light_risk': 'bg-info',
+                        'heavy_risk': 'bg-warning',
+                        'both_risk': 'bg-danger',
+                        'unknown': 'bg-secondary'
+                    };
+                    return `<span class="badge ${riskClasses[data] || 'bg-secondary'}">${row.risk_display}</span>`;
+                }
+            },
+            { 
+                data: 'validation_status',
+                render: function(data) {
+                    const statusClasses = {
+                        'pending': 'bg-secondary',
+                        'approved': 'bg-success',
+                        'rejected': 'bg-danger',
+                        'changes_requested': 'bg-warning'
+                    };
+                    return `<span class="badge ${statusClasses[data] || 'bg-secondary'}">${data}</span>`;
+                }
+            },
+            { data: 'created_at' },
+            {
+                data: 'id',
+                render: function(data, type, row) {
+                    return `
+                        <div class="btn-group">
+                            <button class="btn btn-primary btn-sm view-btn" data-id="${data}">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button class="btn btn-info btn-sm validate-btn" data-id="${data}">
+                                <i class="fas fa-check-circle"></i> Validate
+                            </button>
+                        </div>
+                    `;
+                },
+                orderable: false
+            }
+        ],
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: "copy",
+                text: '<i class="fas fa-copy"></i> Copy',
+                className: "btn btn-sm btn-outline-secondary",
+            },
+            {
+                extend: "csv",
+                text: '<i class="fas fa-file-csv"></i> CSV',
+                className: "btn btn-sm btn-outline-success",
+            },
+            {
+                extend: "excel",
+                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: "btn btn-sm btn-outline-primary",
+            },
+            {
+                extend: "pdf",
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                className: "btn btn-sm btn-outline-danger",
+            },
+            {
+                text: '<i class="fas fa-sync-alt"></i> Refresh',
+                className: "btn btn-sm btn-outline-info",
+                action: function (e, dt, node, config) {
+                    dt.ajax.reload();
+                    loadValidationStats();
+                }
+            }
+        ],
+        language: {
+            emptyTable: "No household surveys found for validation.",
+            zeroRecords: "No matching household surveys found.",
+            processing: '<i class="fas fa-spinner fa-spin"></i> Loading...'
+        }
+    });
+
+    // Load validation statistics
+    function loadValidationStats() {
+        $.ajax({
+            url: "{% url 'get_validation_stats' %}",
+            type: "GET",
+            success: function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    $('#totalSurveys').text(data.total_households);
+                    $('#validatedSurveys').text(data.validated_households);
+                    $('#pendingSurveys').text(data.total_households - data.validated_households);
+                    $('#validationRate').text(`${data.validation_rate.toFixed(1)}%`);
+                }
+            },
+            error: function(xhr) {
+                console.error('Error loading validation stats:', xhr);
+            }
+        });
+    }
+
+    // Apply filters
+    $('#applyFilters').click(function() {
+        validationTable.ajax.reload();
+        loadValidationStats();
+    });
+
+    // View household details
+    $(document).on('click', '.view-btn', function() {
+        const householdId = $(this).data('id');
+        viewHouseholdDetails(householdId);
+    });
+
+    // Open validation modal
+    $(document).on('click', '.validate-btn', function() {
+        currentHouseholdId = $(this).data('id');
+        $('#validationModal').modal('show');
+        loadHouseholdDetails(currentHouseholdId);
+    });
+
+    // Load household details for validation
+    function loadHouseholdDetails(householdId) {
+        $('#householdDetails').html(`
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading household details...</p>
+            </div>
+        `);
+
+        $.ajax({
+            url: "{% url 'get_household_details' 0 %}".replace('0', householdId),
+            type: "GET",
+            success: function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    renderHouseholdDetails(data);
+                } else {
+                    showErrorAlert(response.message);
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'load household details');
+            }
+        });
+    }
+
+    // Render household details
+    function renderHouseholdDetails(data) {
+        const household = data.household;
+        const html = `
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>Household Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Farmer Name:</th>
+                                    <td>${household.farmer}</td>
+                                </tr>
+                                <tr>
+                                    <th>Farmer Code:</th>
+                                    <td>${household.farmer_code}</td>
+                                </tr>
+                                <tr>
+                                    <th>Interview Date:</th>
+                                    <td>${household.interview_date}</td>
+                                </tr>
+                                <tr>
+                                    <th>Community:</th>
+                                    <td>${household.community}</td>
+                                </tr>
+                                <tr>
+                                    <th>GPS Coordinates:</th>
+                                    <td>${household.gps_coordinates}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Members:</th>
+                                    <td>${household.total_members}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>Validation Status</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Current Status:</th>
+                                    <td><span class="badge bg-info">${data.validation_info.status}</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Last Updated:</th>
+                                    <td>${data.validation_info.last_updated}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>Adult Household Members (${data.adults.length})</h6>
+                        </div>
+                        <div class="card-body">
+                            ${data.adults.length > 0 ? `
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Relationship</th>
+                                                <th>Gender</th>
+                                                <th>Age</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.adults.map(adult => `
+                                                <tr>
+                                                    <td>${adult.name}</td>
+                                                    <td>${adult.relationship}</td>
+                                                    <td>${adult.gender}</td>
+                                                    <td>${adult.age}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ` : '<p class="text-muted">No adult members found</p>'}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>Children in Household (${data.children.length})</h6>
+                        </div>
+                        <div class="card-body">
+                            ${data.children.length > 0 ? `
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Gender</th>
+                                                <th>Age</th>
+                                                <th>Education</th>
+                                                <th>Risk Level</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.children.map(child => `
+                                                <tr>
+                                                    <td>${child.name}</td>
+                                                    <td>${child.gender}</td>
+                                                    <td>${child.age}</td>
+                                                    <td>${child.education_status}</td>
+                                                    <td><span class="badge ${getRiskBadgeClass(child.risk_level)}">${child.risk_level}</span></td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ` : '<p class="text-muted">No children found</p>'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#householdDetails').html(html);
+    }
+
+    // Get risk badge class
+    function getRiskBadgeClass(riskLevel) {
+        const riskClasses = {
+            'No Risk': 'bg-success',
+            'Light Task Risk': 'bg-info',
+            'Heavy Task Risk': 'bg-warning',
+            'Both Light and Heavy Task Risk': 'bg-danger'
+        };
+        return riskClasses[riskLevel] || 'bg-secondary';
+    }
+
+    // Submit validation
+    function submitValidation(action) {
+        const notes = $('#validationNotes').val().trim();
+        
+        if ((action === 'reject' || action === 'request_changes') && !notes) {
+            showErrorAlert('Please provide notes for rejection or change request');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to ${action} this household survey.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, proceed!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                performValidation(action, notes);
+            }
+        });
+    }
+
+    // Perform validation
+    function performValidation(action, notes) {
+        $.ajax({
+            url: "{% url 'validate_household' 0 %}".replace('0', currentHouseholdId),
+            type: "POST",
+            data: JSON.stringify({
+                action: action,
+                notes: notes
+            }),
+            contentType: "application/json",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            beforeSend: function() {
+                showLoadingAlert('Processing validation...');
+            },
+            success: function(response) {
+                Swal.close();
+                if (response.success) {
+                    showSuccessAlert(response.message);
+                    $('#validationModal').modal('hide');
+                    validationTable.ajax.reload();
+                    loadValidationStats();
+                } else {
+                    showErrorAlert(response.message);
+                }
+            },
+            error: function(xhr) {
+                handleAjaxError(xhr, 'perform validation');
+            }
+        });
+    }
+
+    // ==================== HELPER FUNCTIONS ====================
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showSuccessAlert(message) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function showErrorAlert(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message
+        });
+    }
+
+    function showLoadingAlert(message) {
+        Swal.fire({
+            title: 'Please wait...',
+            text: message,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    function handleAjaxError(xhr, action) {
+        let errorMsg = `An error occurred while trying to ${action}`;
+        
+        try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.message) {
+                errorMsg = response.message;
+            } else if (response.error) {
+                errorMsg = response.error;
+            }
+        } catch (e) {
+            if (xhr.status === 0) {
+                errorMsg = 'Network error. Please check your connection.';
+            } else if (xhr.statusText) {
+                errorMsg = xhr.statusText;
+            }
+        }
+        
+        showErrorAlert(errorMsg);
+    }
+
+    // Initial load
+    loadValidationStats();
+});
+</script>
+
+<style>
+.badge {
+    font-size: 0.85em;
+    padding: 0.5em 0.75em;
+}
+.card {
+    margin-bottom: 1rem;
+}
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+.btn-group .btn {
+    margin-right: 0.25rem;
+}
+</style>
+{% endblock %}

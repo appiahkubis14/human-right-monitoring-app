@@ -18,7 +18,7 @@
                         </div>
                         <div>
                             <button class="btn btn-warning btn-sm me-2" id="reassessAllBtn">
-                                <i class="fas fa-sync-alt"></i> REASSESS ALL
+                                <i class="fas fa-sync-alt"></i><span></span> RE-ASSESS ALL
                             </button>
                             <button class="btn btn-info btn-sm" id="generateReportBtn">
                                 <i class="fas fa-chart-bar"></i> GENERATE REPORT
@@ -65,41 +65,41 @@
                         <!-- Statistics Cards -->
                         <div class="row mb-4">
                             <div class="col-md-3">
-                                <div class="card bg-success text-white">
+                                <div class="card bg-success-subtle border-success-subtle  text-dark">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between">
                                             <div>
-                                                <h6 class="card-title">NO RISK</h6>
-                                                <h3 id="noRiskCount">0</h3>
+                                                <h6 class="card-title text-muted small text-uppercase fw-bold">NO RISK</h6>
+                                                <h3 class="fw-bold text-success" id="noRiskCount">0</h3>
                                             </div>
                                             <div class="align-self-center">
-                                                <i class="fas fa-shield-alt fa-2x"></i>
+                                                <i class="fas fa-shield-alt fa-2x ext-success opacity-75"></i>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="card bg-warning text-white">
+                                <div class="card bg-warning-subtle border-warning-subtle  text-dark">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between">
                                             <div>
-                                                <h6 class="card-title">LIGHT TASK RISK</h6>
-                                                <h3 id="lightRiskCount">0</h3>
+                                                <h6 class="card-title text-muted small text-uppercase fw-bold">LIGHT TASK RISK</h6>
+                                                <h3 class="fw-bold text-warning" id="lightRiskCount">0</h3>
                                             </div>
                                             <div class="align-self-center">
-                                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                                <i class="fas fa-exclamation-triangle fa-2x ext-warning opacity-75"></i>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="card bg-danger text-white">
+                                <div class="card bg-danger-subtle border-danger-subtle  text-dark ">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between">
                                             <div>
-                                                <h6 class="card-title">HEAVY TASK RISK</h6>
+                                                <h6 class="card-title text-muted small text-uppercase fw-bold">HEAVY TASK RISK</h6>
                                                 <h3 id="heavyRiskCount">0</h3>
                                             </div>
                                             <div class="align-self-center">
@@ -110,15 +110,15 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <div class="card bg-info text-white">
+                                <div class="card bg-info-subtle border-info-subtle  text-dark">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between">
                                             <div>
-                                                <h6 class="card-title">BOTH RISKS</h6>
-                                                <h3 id="bothRiskCount">0</h3>
+                                                <h6 class="card-title text-muted small text-uppercase fw-bold">BOTH RISKS</h6>
+                                                <h3 class="fw-bold text-info" id="bothRiskCount">0</h3>
                                             </div>
                                             <div class="align-self-center">
-                                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                                                <i class="fas fa-exclamation-circle fa-2x ext-info opacity-75"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -159,7 +159,7 @@
         <div class="modal fade" id="riskDetailModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
-                    <div class="modal-header text-white bg-primary">
+                    <div class="modal-header  bg-primary">
                         <h5 class="modal-title">Risk Assessment Details</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -179,6 +179,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
+    reassessAllRisks()
     // Initialize DataTable
     const riskTable = $('#riskAssessmentTable').DataTable({
         paging: true,
@@ -381,7 +382,7 @@ $(document).ready(function() {
 
             ${data.total_heavy_risks > 0 ? `
             <div class="card mb-4">
-                <div class="card-header bg-danger text-white">
+                <div class="card-header bg-danger ">
                     <h6 class="mb-0">Heavy Task Risks (${data.total_heavy_risks})</h6>
                 </div>
                 <div class="card-body">
@@ -411,7 +412,7 @@ $(document).ready(function() {
 
             ${data.total_light_risks > 0 ? `
             <div class="card mb-4">
-                <div class="card-header bg-warning text-white">
+                <div class="card-header bg-warning ">
                     <h6 class="mb-0">Light Task Risks (${data.total_light_risks})</h6>
                 </div>
                 <div class="card-body">
@@ -505,12 +506,14 @@ $(document).ready(function() {
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
+                Swal.showLoading();
                 reassessAllRisks();
             }
         });
     });
 
     function reassessAllRisks() {
+        console.log('Reassessing all risks...');
         $.ajax({
             url: "{% url 'reassess_all_risks_api' %}",
             type: "POST",
@@ -595,9 +598,70 @@ $(document).ready(function() {
     loadFilterOptions();
     riskTable.ajax.reload();
 });
+// ==================== HELPER FUNCTIONS ====================
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
-// Include helper functions from previous implementation
-// getCookie, showSuccessAlert, showErrorAlert, showLoadingAlert, handleAjaxError
+    function showSuccessAlert(message) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function showErrorAlert(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message
+        });
+    }
+
+    function showLoadingAlert(message) {
+        Swal.fire({
+            title: 'Please wait...',
+            text: message,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+    }
+
+    function handleAjaxError(xhr, action) {
+        let errorMsg = `An error occurred while trying to ${action}`;
+        
+        if (xhr.responseJSON) {
+            if (xhr.responseJSON.message) {
+                errorMsg = xhr.responseJSON.message;
+            } else if (xhr.responseJSON.error) {
+                errorMsg = xhr.responseJSON.error;
+            } else if (xhr.responseJSON.detail) {
+                errorMsg = xhr.responseJSON.detail;
+            }
+        } else if (xhr.status === 0) {
+            errorMsg = 'Network error. Please check your connection.';
+        } else if (xhr.statusText) {
+            errorMsg = xhr.statusText;
+        }
+        
+        showErrorAlert(errorMsg);
+    }
 </script>
 
 <style>

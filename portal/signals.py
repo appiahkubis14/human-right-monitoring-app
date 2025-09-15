@@ -28,7 +28,8 @@ def ready():
     import django
     if django.apps.apps.ready:
         from django.apps import AppConfig
-        class YourAppConfig(AppConfig):
+        class PortalConfig(AppConfig):
             name = 'your_app_name'
             def ready(self):
                 import portal.signals
+
